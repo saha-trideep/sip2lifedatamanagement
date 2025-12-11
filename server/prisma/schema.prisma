@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("EMPLOYEE")
+  createdAt DateTime @default(now())
+  documents Document[]
+  folders   Folder[] 
+  registers RegisterLink[]
+}
+
+model Folder {
+  id        Int        @id @default(autoincrement())
+  name      String
+  department String?    
+  createdAt DateTime   @default(now())
+  userId    Int
+  user      User       @relation(fields: [userId], references: [id])
+  documents Document[]
+}
+
+model Document {
+  id          Int      @id @default(autoincrement())
+  title       String   
+  filename    String   
+  path        String   
+  type        String   
+  description String?
+  department  String   
+  uploadedAt  DateTime @default(now())
+  
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  
+  folderId    Int?
+  folder      Folder?  @relation(fields: [folderId], references: [id])
+}
+
+model RegisterLink {
+  id          Int      @id @default(autoincrement())
+  name        String
+  url         String
+  createdAt   DateTime @default(now())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+}
