@@ -34,8 +34,24 @@ app.get('/api/init-db', async (req, res) => {
 
     try {
         const bcrypt = require('bcryptjs');
+        const { execSync } = require('child_process');
 
-        // Check if admin exists
+        // Step 1: Create tables using Prisma
+        console.log('Creating database tables...');
+        try {
+            execSync('npx prisma db push --accept-data-loss --skip-generate', {
+                cwd: __dirname,
+                stdio: 'inherit'
+            });
+        } catch (dbError) {
+            console.error('DB Push Error:', dbError);
+            return res.status(500).json({
+                error: 'Failed to create database tables',
+                details: dbError.message
+            });
+        }
+
+        // Step 2: Check if admin exists
         const existingAdmin = await prisma.user.findUnique({
             where: { email: 'admin@sip2life.com' }
         });
@@ -52,10 +68,13 @@ app.get('/api/init-db', async (req, res) => {
                 }
             });
             dbInitialized = true;
-            return res.json({ message: 'Database initialized successfully! Admin user created.' });
+            return res.json({
+                message: 'Database initialized successfully! Tables created and admin user added.',
+                admin: { email: 'admin@sip2life.com', password: 'admin' }
+            });
         } else {
             dbInitialized = true;
-            return res.json({ message: 'Admin user already exists' });
+            return res.json({ message: 'Database already initialized. Admin user exists.' });
         }
     } catch (error) {
         console.error('DB Init Error:', error);
