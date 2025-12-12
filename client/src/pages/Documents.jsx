@@ -6,6 +6,7 @@ import {
     Image as ImageIcon, Loader, ArrowLeft, Search, Filter,
     Folder, FolderPlus, Grid, List as ListIcon, MoreVertical, X
 } from 'lucide-react';
+import { API_URL } from '../config';
 
 const DEPARTMENTS = ["General", "Maintenance", "Sales", "Excise", "HR", "Production"];
 
@@ -46,7 +47,7 @@ const Documents = () => {
                 folderId: selectedFolder,
                 sort
             };
-            const res = await axios.get('http://localhost:3000/api/documents', { params });
+            const res = await axios.get(`${API_URL}/api/documents`, { params });
             setDocs(res.data);
         } catch (error) {
             console.error("Fetch error", error);
@@ -58,7 +59,7 @@ const Documents = () => {
     const fetchFolders = async () => {
         try {
             // Fetch folders relevant to department? For now fetch all
-            const res = await axios.get('http://localhost:3000/api/folders', {
+            const res = await axios.get(`${API_URL}/api/folders`, {
                 params: { department: selectedDept }
             });
             setFolders(res.data);
@@ -81,7 +82,7 @@ const Documents = () => {
         formData.append('userId', user ? user.id : 1);
 
         try {
-            const response = await axios.post('http://localhost:3000/api/documents/upload', formData, {
+            const response = await axios.post(`${API_URL}/api/documents/upload`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             setShowUploadModal(false);
@@ -105,7 +106,7 @@ const Documents = () => {
         e.preventDefault();
         try {
             const user = JSON.parse(localStorage.getItem('user'));
-            await axios.post('http://localhost:3000/api/folders', {
+            await axios.post(`${API_URL}/api/folders`, {
                 name: metaTitle, // reusing state var for folder name
                 department: metaDept,
                 userId: user ? user.id : 1
@@ -119,7 +120,7 @@ const Documents = () => {
     const handleDelete = async (id) => {
         if (!confirm("Delete this document?")) return;
         try {
-            await axios.delete(`http://localhost:3000/api/documents/${id}`);
+            await axios.delete(`${API_URL}/api/documents/${id}`);
             setDocs(docs.filter(d => d.id !== id));
         } catch (e) { alert("Delete failed"); }
     };
@@ -128,7 +129,7 @@ const Documents = () => {
         e.stopPropagation();
         if (!confirm("Delete this folder? Documents inside will be unsorted.")) return;
         try {
-            await axios.delete(`http://localhost:3000/api/folders/${id}`);
+            await axios.delete(`${API_URL}/api/folders/${id}`);
             fetchFolders();
             if (selectedFolder == id) setSelectedFolder('All');
         } catch (e) { alert("Delete failed"); }
