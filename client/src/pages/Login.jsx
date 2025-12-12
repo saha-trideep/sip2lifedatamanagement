@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Lock, User } from 'lucide-react';
+import { Lock, User, ArrowLeft } from 'lucide-react';
+import { API_URL } from '../config';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -12,7 +13,6 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
             const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
@@ -25,6 +25,13 @@ const Login = () => {
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
             <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+                <button
+                    onClick={() => navigate('/')}
+                    className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition"
+                >
+                    <ArrowLeft size={20} />
+                    <span>Back to Home</span>
+                </button>
                 <div className="text-center">
                     <h1 className="text-3xl font-bold text-gray-900">SIP2LIFE</h1>
                     <p className="text-gray-500">Employee Login</p>

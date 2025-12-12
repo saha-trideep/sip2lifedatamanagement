@@ -33,6 +33,7 @@ const Registers = () => {
             setShowForm(false);
             setNewName('');
             setNewUrl('');
+            alert(`✅ Register "${newName}" saved successfully!`);
         } catch (error) {
             console.error(error);
             alert("Error adding register: " + (error.response?.data?.details || error.message));
