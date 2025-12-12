@@ -25,6 +25,45 @@ app.use('/api/folders', require('./routes/folders'));
 app.use('/api/registers', registerRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
+// Database Initialization Endpoint (for production without shell access)
+let dbInitialized = false;
+app.get('/api/init-db', async (req, res) => {
+    if (dbInitialized) {
+        return res.json({ message: 'Database already initialized' });
+    }
+
+    try {
+        const bcrypt = require('bcryptjs');
+
+        // Check if admin exists
+        const existingAdmin = await prisma.user.findUnique({
+            where: { email: 'admin@sip2life.com' }
+        });
+
+        if (!existingAdmin) {
+            // Create admin user
+            const hashedPassword = await bcrypt.hash('admin', 10);
+            await prisma.user.create({
+                data: {
+                    email: 'admin@sip2life.com',
+                    password: hashedPassword,
+                    name: 'Admin User',
+                    role: 'ADMIN'
+                }
+            });
+            dbInitialized = true;
+            return res.json({ message: 'Database initialized successfully! Admin user created.' });
+        } else {
+            dbInitialized = true;
+            return res.json({ message: 'Admin user already exists' });
+        }
+    } catch (error) {
+        console.error('DB Init Error:', error);
+        return res.status(500).json({ error: 'Failed to initialize database', details: error.message });
+    }
+});
+
+
 // Basic Health Check
 app.get('/', (req, res) => {
     res.json({ message: 'SIP2LIFE Server is running' });
