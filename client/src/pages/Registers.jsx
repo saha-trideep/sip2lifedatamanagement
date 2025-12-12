@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, Trash2, ExternalLink, FileSpreadsheet, ArrowLeft } from 'lucide-react';
+import { API_URL } from '../config';
 
 const Registers = () => {
     const [registers, setRegisters] = useState([]);
@@ -17,7 +18,7 @@ const Registers = () => {
 
     const fetchRegisters = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/registers');
+            const res = await axios.get(`${API_URL}/api/registers`);
             setRegisters(res.data);
         } catch (error) {
             console.error(error);
@@ -27,7 +28,7 @@ const Registers = () => {
     const handleAdd = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('http://localhost:3000/api/registers', { name: newName, url: newUrl });
+            const res = await axios.post(`${API_URL}/api/registers`, { name: newName, url: newUrl });
             setRegisters([res.data, ...registers]);
             setShowForm(false);
             setNewName('');
@@ -42,7 +43,7 @@ const Registers = () => {
         e.stopPropagation();
         if (!window.confirm("Delete this register link?")) return;
         try {
-            await axios.delete(`http://localhost:3000/api/registers/${id}`);
+            await axios.delete(`${API_URL}/api/registers/${id}`);
             const updated = registers.filter(r => r.id !== id);
             setRegisters(updated);
             if (viewRegister && viewRegister.id === id) {

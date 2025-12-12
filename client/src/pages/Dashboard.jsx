@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FileText, FileSpreadsheet } from 'lucide-react';
+import { API_URL } from '../config';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -18,7 +19,7 @@ const Dashboard = () => {
         }
 
         // Fetch stats
-        axios.get('http://localhost:3000/api/dashboard/stats')
+        axios.get(`${API_URL}/api/dashboard/stats`)
             .then(res => setStats(res.data))
             .catch(err => console.error(err));
 
