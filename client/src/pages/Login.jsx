@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Lock, User, ArrowLeft } from 'lucide-react';
+import { Lock, User, ArrowLeft, Loader } from 'lucide-react';
 import { API_URL } from '../config';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setError('');
         try {
             const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
             localStorage.setItem('token', res.data.token);
@@ -19,6 +22,8 @@ const Login = () => {
             navigate('/dashboard');
         } catch (err) {
             setError('Invalid credentials');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -47,6 +52,7 @@ const Login = () => {
                             onChange={(e) => setEmail(e.target.value)}
                             className="w-full p-3 pl-10 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
+                            disabled={loading}
                         />
                     </div>
                     <div className="relative">
@@ -58,13 +64,22 @@ const Login = () => {
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full p-3 pl-10 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
+                            disabled={loading}
                         />
                     </div>
                     <button
                         type="submit"
-                        className="w-full p-3 text-white bg-blue-600 rounded hover:bg-blue-700 transition"
+                        disabled={loading}
+                        className="w-full p-3 text-white bg-blue-600 rounded hover:bg-blue-700 transition flex items-center justify-center gap-2 disabled:bg-blue-400 disabled:cursor-not-allowed"
                     >
-                        Sign In
+                        {loading ? (
+                            <>
+                                <Loader className="animate-spin" size={20} />
+                                <span>Signing in...</span>
+                            </>
+                        ) : (
+                            <span>Sign In</span>
+                        )}
                     </button>
                 </form>
             </div>

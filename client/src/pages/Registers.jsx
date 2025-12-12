@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Trash2, ExternalLink, FileSpreadsheet, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, ExternalLink, FileSpreadsheet, ArrowLeft, Loader } from 'lucide-react';
 import { API_URL } from '../config';
 
 const Registers = () => {
     const [registers, setRegisters] = useState([]);
     const [viewRegister, setViewRegister] = useState(null); // If set, we are viewing this register
     const [showForm, setShowForm] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     // Form State
     const [newName, setNewName] = useState('');
@@ -27,6 +28,7 @@ const Registers = () => {
 
     const handleAdd = async (e) => {
         e.preventDefault();
+        setLoading(true);
         try {
             const res = await axios.post(`${API_URL}/api/registers`, { name: newName, url: newUrl });
             setRegisters([res.data, ...registers]);
@@ -37,6 +39,8 @@ const Registers = () => {
         } catch (error) {
             console.error(error);
             alert("Error adding register: " + (error.response?.data?.details || error.message));
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -122,7 +126,20 @@ const Registers = () => {
                                 required
                             />
                         </div>
-                        <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 h-10">Save</button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 h-10 flex items-center gap-2 disabled:bg-green-400 disabled:cursor-not-allowed"
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader className="animate-spin" size={16} />
+                                    <span>Saving...</span>
+                                </>
+                            ) : (
+                                <span>Save</span>
+                            )}
+                        </button>
                     </form>
                 </div>
             )}
