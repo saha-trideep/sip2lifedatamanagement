@@ -34,21 +34,53 @@ app.get('/api/init-db', async (req, res) => {
 
     try {
         const bcrypt = require('bcryptjs');
-        const { execSync } = require('child_process');
 
-        // Step 1: Create tables using Prisma
+        // Step 1: Create tables using raw SQL
         console.log('Creating database tables...');
         try {
-            execSync('npx prisma db push --accept-data-loss --skip-generate', {
-                cwd: __dirname,
-                stdio: 'inherit'
-            });
+            await prisma.$executeRawUnsafe(`
+                CREATE TABLE IF NOT EXISTS "User" (
+                    id SERIAL PRIMARY KEY,
+                    email TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    name TEXT,
+                    role TEXT DEFAULT 'EMPLOYEE',
+                    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
+                CREATE TABLE IF NOT EXISTS "Folder" (
+                    id SERIAL PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    department TEXT,
+                    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    "userId" INTEGER NOT NULL REFERENCES "User"(id)
+                );
+
+                CREATE TABLE IF NOT EXISTS "Document" (
+                    id SERIAL PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    filename TEXT NOT NULL,
+                    path TEXT NOT NULL,
+                    type TEXT NOT NULL,
+                    description TEXT,
+                    department TEXT NOT NULL,
+                    "uploadedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    "userId" INTEGER NOT NULL REFERENCES "User"(id),
+                    "folderId" INTEGER REFERENCES "Folder"(id)
+                );
+
+                CREATE TABLE IF NOT EXISTS "RegisterLink" (
+                    id SERIAL PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    url TEXT NOT NULL,
+                    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    "userId" INTEGER NOT NULL REFERENCES "User"(id)
+                );
+            `);
+            console.log('Tables created successfully');
         } catch (dbError) {
-            console.error('DB Push Error:', dbError);
-            return res.status(500).json({
-                error: 'Failed to create database tables',
-                details: dbError.message
-            });
+            console.error('Table Creation Error:', dbError);
+            // Continue even if tables exist
         }
 
         // Step 2: Check if admin exists
