@@ -35,9 +35,10 @@ app.get('/api/init-db', async (req, res) => {
     try {
         const bcrypt = require('bcryptjs');
 
-        // Step 1: Create tables using raw SQL
+        // Step 1: Create tables using raw SQL (one at a time)
         console.log('Creating database tables...');
         try {
+            // Create User table first
             await prisma.$executeRawUnsafe(`
                 CREATE TABLE IF NOT EXISTS "User" (
                     id SERIAL PRIMARY KEY,
@@ -47,7 +48,10 @@ app.get('/api/init-db', async (req, res) => {
                     role TEXT DEFAULT 'EMPLOYEE',
                     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
+            `);
 
+            // Create Folder table
+            await prisma.$executeRawUnsafe(`
                 CREATE TABLE IF NOT EXISTS "Folder" (
                     id SERIAL PRIMARY KEY,
                     name TEXT NOT NULL,
@@ -55,7 +59,10 @@ app.get('/api/init-db', async (req, res) => {
                     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     "userId" INTEGER NOT NULL REFERENCES "User"(id)
                 );
+            `);
 
+            // Create Document table
+            await prisma.$executeRawUnsafe(`
                 CREATE TABLE IF NOT EXISTS "Document" (
                     id SERIAL PRIMARY KEY,
                     title TEXT NOT NULL,
@@ -68,7 +75,10 @@ app.get('/api/init-db', async (req, res) => {
                     "userId" INTEGER NOT NULL REFERENCES "User"(id),
                     "folderId" INTEGER REFERENCES "Folder"(id)
                 );
+            `);
 
+            // Create RegisterLink table
+            await prisma.$executeRawUnsafe(`
                 CREATE TABLE IF NOT EXISTS "RegisterLink" (
                     id SERIAL PRIMARY KEY,
                     name TEXT NOT NULL,
@@ -77,10 +87,14 @@ app.get('/api/init-db', async (req, res) => {
                     "userId" INTEGER NOT NULL REFERENCES "User"(id)
                 );
             `);
+
             console.log('Tables created successfully');
         } catch (dbError) {
             console.error('Table Creation Error:', dbError);
-            // Continue even if tables exist
+            return res.status(500).json({
+                error: 'Failed to create tables',
+                details: dbError.message
+            });
         }
 
         // Step 2: Check if admin exists
