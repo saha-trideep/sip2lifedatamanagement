@@ -8,13 +8,14 @@ import {
 } from 'lucide-react';
 import { API_URL } from '../config';
 
-const DEPARTMENTS = ["General", "Maintenance", "Sales", "Excise", "HR", "Production"];
+const DEFAULT_DEPARTMENTS = ["General", "Maintenance", "Sales", "Excise", "HR", "Production"];
 
 const Documents = () => {
     // Data State
     const [docs, setDocs] = useState([]);
     const [folders, setFolders] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [allDepartments, setAllDepartments] = useState(DEFAULT_DEPARTMENTS);
 
     // Filter State
     const [search, setSearch] = useState('');
@@ -31,6 +32,8 @@ const Documents = () => {
     const [metaTitle, setMetaTitle] = useState('');
     const [metaDesc, setMetaDesc] = useState('');
     const [metaDept, setMetaDept] = useState('General');
+    const [customDept, setCustomDept] = useState(''); // For custom department input
+    const [showCustomDept, setShowCustomDept] = useState(false); // Toggle custom input
     const [metaFolder, setMetaFolder] = useState('');
 
     useEffect(() => {
@@ -49,6 +52,11 @@ const Documents = () => {
             };
             const res = await axios.get(`${API_URL}/api/documents`, { params });
             setDocs(res.data);
+
+            // Extract unique departments from documents
+            const uniqueDepts = [...new Set(res.data.map(doc => doc.department))];
+            const mergedDepts = [...new Set([...DEFAULT_DEPARTMENTS, ...uniqueDepts])];
+            setAllDepartments(mergedDepts.sort());
         } catch (error) {
             console.error("Fetch error", error);
         } finally {
@@ -74,7 +82,9 @@ const Documents = () => {
         formData.append('file', uploadFile);
         formData.append('title', metaTitle);
         formData.append('description', metaDesc);
-        formData.append('department', metaDept);
+        // Use custom department if provided, otherwise use selected department
+        const finalDept = showCustomDept && customDept.trim() ? customDept.trim() : metaDept;
+        formData.append('department', finalDept);
         if (metaFolder) formData.append('folderId', metaFolder);
 
         // Mock User ID (In real app, get from auth context)
@@ -139,6 +149,8 @@ const Documents = () => {
         setMetaTitle('');
         setMetaDesc('');
         setMetaDept('General');
+        setCustomDept('');
+        setShowCustomDept(false);
         setMetaFolder('');
     };
 
@@ -207,7 +219,7 @@ const Documents = () => {
                             >
                                 All Departments
                             </li>
-                            {DEPARTMENTS.map(dept => (
+                            {allDepartments.map(dept => (
                                 <li
                                     key={dept}
                                     className={`px-3 py-2 rounded cursor-pointer text-sm ${selectedDept === dept ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
@@ -456,9 +468,33 @@ const Documents = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                                    <select className="w-full p-2 border rounded-lg" value={metaDept} onChange={e => setMetaDept(e.target.value)}>
-                                        {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                                    <select
+                                        className="w-full p-2 border rounded-lg"
+                                        value={showCustomDept ? 'Other' : metaDept}
+                                        onChange={e => {
+                                            if (e.target.value === 'Other') {
+                                                setShowCustomDept(true);
+                                                setMetaDept('General');
+                                            } else {
+                                                setShowCustomDept(false);
+                                                setMetaDept(e.target.value);
+                                                setCustomDept('');
+                                            }
+                                        }}
+                                    >
+                                        {allDepartments.map(d => <option key={d} value={d}>{d}</option>)}
+                                        <option value="Other">Other...</option>
                                     </select>
+                                    {showCustomDept && (
+                                        <input
+                                            type="text"
+                                            className="w-full p-2 border rounded-lg mt-2"
+                                            placeholder="Enter department name"
+                                            value={customDept}
+                                            onChange={e => setCustomDept(e.target.value)}
+                                            required
+                                        />
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Folder</label>
