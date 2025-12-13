@@ -8,7 +8,12 @@ import { useTheme } from '../context/ThemeContext';
 const Dashboard = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
-    const [stats, setStats] = useState({ documents: 0, registers: 0 });
+    const [stats, setStats] = useState({
+        documents: 0,
+        registers: 0,
+        departmentCounts: [],
+        registerList: []
+    });
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { isDark, toggleTheme } = useTheme();
 
@@ -223,6 +228,78 @@ const Dashboard = () => {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Department Breakdown */}
+                        {stats.departmentCounts && stats.departmentCounts.length > 0 && (
+                            <div className={`
+                                ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} 
+                                p-6 rounded-2xl shadow-lg border mt-6
+                            `}>
+                                <h3 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                    Documents by Department
+                                </h3>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                                    {stats.departmentCounts.map((dept, idx) => (
+                                        <div
+                                            key={idx}
+                                            className={`
+                                                p-4 rounded-xl text-center transition-all hover:scale-105
+                                                ${isDark ? 'bg-gray-700' : 'bg-gradient-to-br from-blue-50 to-indigo-50'}
+                                            `}
+                                        >
+                                            <div className={`text-2xl font-bold mb-1 ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                                                {dept.count}
+                                            </div>
+                                            <div className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                                                {dept.department}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Register List */}
+                        {stats.registerList && stats.registerList.length > 0 && (
+                            <div className={`
+                                ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} 
+                                p-6 rounded-2xl shadow-lg border mt-6
+                            `}>
+                                <h3 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                    Recent Registers
+                                </h3>
+                                <div className="space-y-2">
+                                    {stats.registerList.map((register) => (
+                                        <div
+                                            key={register.id}
+                                            className={`
+                                                flex items-center justify-between p-3 rounded-lg transition-colors
+                                                ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'}
+                                            `}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-2 h-2 rounded-full ${isDark ? 'bg-green-400' : 'bg-green-500'}`}></div>
+                                                <span className={`font-medium text-sm ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                                                    {register.name}
+                                                </span>
+                                            </div>
+                                            <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                {new Date(register.createdAt).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <a
+                                    href="/registers"
+                                    className={`
+                                        block mt-4 text-center py-2 rounded-lg text-sm font-medium transition-colors
+                                        ${isDark ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-50 hover:bg-blue-100 text-blue-600'}
+                                    `}
+                                >
+                                    View All Registers
+                                </a>
+                            </div>
+                        )}
                     </div>
                 </div>
             </main>
