@@ -187,24 +187,6 @@ const Landing = () => {
                 </div>
             </section>
 
-            {/* Stats Section */}
-            <section className="py-12 sm:py-16 px-4 sm:px-6 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
-                <div className="max-w-6xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-                    {[
-                        { label: "Production Capacity", value: "10M+", suffix: "L/Year" },
-                        { label: "Quality Standards", value: "ISO", suffix: "Certified" },
-                        { label: "Team Members", value: "500+", suffix: "Employees" },
-                        { label: "Years Experience", value: "25+", suffix: "Years" }
-                    ].map((stat, idx) => (
-                        <div key={idx} className="text-center">
-                            <div className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2">{stat.value}</div>
-                            <div className="text-xs sm:text-sm text-blue-200">{stat.suffix}</div>
-                            <div className="text-xs sm:text-sm text-blue-100 mt-1 sm:mt-2">{stat.label}</div>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
             {/* CTA Section */}
             <section className="py-12 sm:py-20 px-4 sm:px-6 bg-white">
                 <div className="max-w-4xl mx-auto text-center">
@@ -318,17 +300,17 @@ const Landing = () => {
             </section>
 
             {/* Subtle Technology Partner */}
-            <section className="py-6 sm:py-8 px-4 bg-gray-50 border-t border-gray-200">
+            <section className="py-6 sm:py-8 px-4 bg-gradient-to-r from-blue-600 to-cyan-600 border-t border-blue-700">
                 <div className="max-w-6xl mx-auto">
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
-                        <span className="text-xs sm:text-sm text-gray-500 font-medium">
+                        <span className="text-xs sm:text-sm text-white/90 font-medium">
                             Instrumentation & Automation by
                         </span>
-                        <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+                        <div className="bg-white px-6 py-3 rounded-lg shadow-lg">
                             <img
-                                src="/endress-hauser.jpg"
+                                src="/endress-hauser-logo.png"
                                 alt="Endress+Hauser"
-                                className="h-6 sm:h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
+                                className="h-8 sm:h-10 w-auto"
                             />
                         </div>
                     </div>
