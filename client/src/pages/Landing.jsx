@@ -187,72 +187,6 @@ const Landing = () => {
                 </div>
             </section>
 
-            {/* Technology Partners - Endress+Hauser */}
-            <section className="py-12 sm:py-20 px-4 sm:px-6 bg-white">
-                <div className="max-w-6xl mx-auto">
-                    <div className="text-center mb-12">
-                        <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4">Technology Partners</h2>
-                        <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                            Powered by world-class instrumentation and automation technology
-                        </p>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-8 sm:p-12 border border-blue-100">
-                        <div className="grid md:grid-cols-2 gap-8 items-center">
-                            {/* Logo */}
-                            <div className="text-center md:text-left">
-                                <div className="bg-white rounded-2xl p-8 shadow-lg inline-block">
-                                    <img
-                                        src="/endress-hauser.jpg"
-                                        alt="Endress+Hauser"
-                                        className="h-16 sm:h-20 w-auto"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Content */}
-                            <div className="space-y-4">
-                                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                                    Endress+Hauser
-                                </h3>
-                                <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
-                                    Our production facility is equipped with cutting-edge instrumentation from <span className="font-semibold text-blue-600">Endress+Hauser</span>, a global leader in measurement and automation technology.
-                                </p>
-                                <div className="space-y-3">
-                                    <div className="flex items-start gap-3">
-                                        <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                            <span className="text-white text-xs">✓</span>
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-gray-900">Mass Flow Meters</p>
-                                            <p className="text-sm text-gray-600">Precision flow measurement for accurate production control</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                        <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                            <span className="text-white text-xs">✓</span>
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-gray-900">Radar Level Transmitters</p>
-                                            <p className="text-sm text-gray-600">Advanced level monitoring for optimal tank management</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                        <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                            <span className="text-white text-xs">✓</span>
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-gray-900">System Development</p>
-                                            <p className="text-sm text-gray-600">Comprehensive automation solutions for enhanced efficiency</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             {/* Stats Section */}
             <section className="py-12 sm:py-16 px-4 sm:px-6 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
                 <div className="max-w-6xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
@@ -378,6 +312,24 @@ const Landing = () => {
                             <a href="mailto:production@sip2life.com" className="text-purple-600 font-medium hover:text-purple-700 text-sm sm:text-base">
                                 production@sip2life.com
                             </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Subtle Technology Partner */}
+            <section className="py-6 sm:py-8 px-4 bg-gray-50 border-t border-gray-200">
+                <div className="max-w-6xl mx-auto">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
+                        <span className="text-xs sm:text-sm text-gray-500 font-medium">
+                            Instrumentation & Automation by
+                        </span>
+                        <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+                            <img
+                                src="/endress-hauser.jpg"
+                                alt="Endress+Hauser"
+                                className="h-6 sm:h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
+                            />
                         </div>
                     </div>
                 </div>
