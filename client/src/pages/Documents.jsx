@@ -149,9 +149,13 @@ const Documents = () => {
             // Default Title from filename (remove extension and sanitize)
             const safeTitle = acceptedFiles[0].name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9 ]/g, " ");
             setMetaTitle(safeTitle);
+            // Auto-select current department filter if not "All"
+            if (selectedDept !== 'All') {
+                setMetaDept(selectedDept);
+            }
             setShowUploadModal(true);
         }
-    }, []);
+    }, [selectedDept]);
     const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
     const getIcon = (type) => {
@@ -180,6 +184,10 @@ const Documents = () => {
                         onClick={() => {
                             setUploadFile(null);
                             resetForm();
+                            // Auto-select current department filter if not "All"
+                            if (selectedDept !== 'All') {
+                                setMetaDept(selectedDept);
+                            }
                             document.getElementById('dropzone-input').click();
                         }}
                         className="w-full bg-blue-600 text-white py-2 rounded shadow hover:bg-blue-700 flex items-center justify-center gap-2"
