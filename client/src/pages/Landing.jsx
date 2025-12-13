@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Factory, Wine, FileText, Shield, TrendingUp, Users } from 'lucide-react';
+import { ArrowRight, Factory, Wine, FileText, Shield, TrendingUp, Users, FileSpreadsheet } from 'lucide-react';
 
 const Landing = () => {
     return (
