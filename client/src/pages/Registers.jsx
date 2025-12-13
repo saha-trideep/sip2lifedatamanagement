@@ -89,7 +89,7 @@ const Registers = () => {
                     <a href="/dashboard" className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition text-gray-600">
                         <ArrowLeft size={20} />
                     </a>
-                    <h1 className="text-3xl font-bold text-gray-800">Shop Registers</h1>
+                    <h1 className="text-3xl font-bold text-gray-800">Registers</h1>
                 </div>
                 <button
                     onClick={() => setShowForm(!showForm)}

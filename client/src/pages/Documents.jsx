@@ -259,31 +259,42 @@ const Documents = () => {
             {/* Main Area */}
             <main className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-10">
-                    <div className="flex items-center gap-4 flex-1">
-                        <div className="relative flex-1 max-w-lg">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <input
-                                type="text"
-                                placeholder="Search documents..."
-                                className="w-full pl-10 pr-4 py-2 bg-gray-100 border-none rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-4 ml-4">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Filter size={16} />
-                            <select
-                                value={sort}
-                                onChange={e => setSort(e.target.value)}
-                                className="border-none bg-transparent focus:ring-0 cursor-pointer font-medium"
+                <header className="bg-white border-b border-gray-200 p-3 sm:p-4 sticky top-0 z-10">
+                    <div className="flex items-center justify-between gap-2 sm:gap-4">
+                        {/* Left: Back Button & Search */}
+                        <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+                            <a
+                                href="/dashboard"
+                                className="flex-shrink-0 p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
                             >
-                                <option value="newest">Newest First</option>
-                                <option value="oldest">Oldest First</option>
-                                <option value="alpha_asc">A-Z</option>
-                            </select>
+                                <ArrowLeft size={18} className="text-gray-600" />
+                            </a>
+                            <div className="relative flex-1 max-w-lg">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                <input
+                                    type="text"
+                                    placeholder="Search..."
+                                    className="w-full pl-9 pr-3 py-2 text-sm bg-gray-100 border-none rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Right: Sort & View Toggle */}
+                        <div className="flex items-center gap-2">
+                            <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600">
+                                <Filter size={16} />
+                                <select
+                                    value={sort}
+                                    onChange={e => setSort(e.target.value)}
+                                    className="border-none bg-transparent focus:ring-0 cursor-pointer font-medium"
+                                >
+                                    <option value="newest">Newest First</option>
+                                    <option value="oldest">Oldest First</option>
+                                    <option value="alpha_asc">A-Z</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </header>
