@@ -243,16 +243,21 @@ const Dashboard = () => {
                                         <div
                                             key={idx}
                                             className={`
-                                                p-4 rounded-xl text-center transition-all hover:scale-105
+                                                p-4 rounded-xl transition-all hover:scale-105
                                                 ${isDark ? 'bg-gray-700' : 'bg-gradient-to-br from-blue-50 to-indigo-50'}
                                             `}
                                         >
                                             <div className={`text-2xl font-bold mb-1 ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
                                                 {dept.count}
                                             </div>
-                                            <div className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                                            <div className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                                                 {dept.department}
                                             </div>
+                                            {dept.latestDescription && (
+                                                <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} truncate`} title={dept.latestDescription}>
+                                                    Latest: {dept.latestDescription}
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

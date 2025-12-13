@@ -10,13 +10,30 @@ router.get('/stats', async (req, res) => {
         const documentCount = await prisma.document.count();
         const registerCount = await prisma.registerLink.count();
 
-        // Get department-wise document counts
+        // Get department-wise document counts with latest descriptions
         const departmentCounts = await prisma.document.groupBy({
             by: ['department'],
             _count: {
                 id: true
             }
         });
+
+        // For each department, get the latest document's description
+        const departmentStats = await Promise.all(
+            departmentCounts.map(async (dept) => {
+                const latestDoc = await prisma.document.findFirst({
+                    where: { department: dept.department },
+                    orderBy: { uploadedAt: 'desc' },
+                    select: { description: true }
+                });
+
+                return {
+                    department: dept.department,
+                    count: dept._count.id,
+                    latestDescription: latestDoc?.description || null
+                };
+            })
+        );
 
         // Get all register names
         const registers = await prisma.registerLink.findMany({
@@ -34,10 +51,7 @@ router.get('/stats', async (req, res) => {
         res.json({
             documents: documentCount,
             registers: registerCount,
-            departmentCounts: departmentCounts.map(d => ({
-                department: d.department,
-                count: d._count.id
-            })),
+            departmentCounts: departmentStats,
             registerList: registers
         });
     } catch (error) {

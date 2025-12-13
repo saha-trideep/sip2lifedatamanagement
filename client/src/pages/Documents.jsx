@@ -506,8 +506,17 @@ const Documents = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
-                                <textarea className="w-full p-2 border rounded-lg" rows="2" value={metaDesc} onChange={e => setMetaDesc(e.target.value)} placeholder="Brief notes about this file..." />
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Description <span className="text-red-500">*</span>
+                                </label>
+                                <textarea
+                                    required
+                                    className="w-full p-2 border rounded-lg"
+                                    rows="2"
+                                    value={metaDesc}
+                                    onChange={e => setMetaDesc(e.target.value)}
+                                    placeholder="Brief notes about this file (required)..."
+                                />
                             </div>
 
                             <button disabled={!uploadFile} type="submit" className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
