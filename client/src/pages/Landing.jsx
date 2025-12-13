@@ -11,7 +11,7 @@ const Landing = () => {
                     <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
                         <Factory className="text-white" size={20} />
                     </div>
-                    <span className="hidden sm:inline">SIP2LIFE DISTILLERIES PVT. LIMITED</span>
+                    <span className="hidden sm:inline">SIP2LIFE DISTILLERIES PVT. LTD.</span>
                     <span className="sm:hidden">SIP2LIFE</span>
                 </div>
                 <Link
@@ -240,7 +240,7 @@ const Landing = () => {
             <footer className="bg-gray-900 text-gray-400 py-6 sm:py-8 px-4">
                 <div className="max-w-6xl mx-auto text-center">
                     <p className="text-sm sm:text-base mb-2">
-                        &copy; {new Date().getFullYear()} <span className="font-semibold text-white">SIP2LIFE DISTILLERIES PVT. LIMITED</span>
+                        &copy; {new Date().getFullYear()} <span className="font-semibold text-white">SIP2LIFE DISTILLERIES PVT. LTD.</span>
                     </p>
                     <p className="text-xs sm:text-sm">All rights reserved.</p>
                 </div>

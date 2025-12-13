@@ -300,13 +300,13 @@ const Documents = () => {
                 </header>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 overflow-y-auto p-3 sm:p-6">
                     {loading ? (
                         <div className="flex justify-center items-center h-full"><Loader className="animate-spin text-blue-600" /></div>
                     ) : (
                         <div className="space-y-1">
-                            {/* Table Header */}
-                            <div className="grid grid-cols-12 gap-4 px-4 py-2 bg-gray-50 rounded-lg text-xs font-semibold text-gray-500 uppercase">
+                            {/* Table Header - Hidden on Mobile */}
+                            <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 bg-gray-50 rounded-lg text-xs font-semibold text-gray-500 uppercase">
                                 <div className="col-span-4">Name</div>
                                 <div className="col-span-2">Department</div>
                                 <div className="col-span-2">Uploader</div>
@@ -325,38 +325,79 @@ const Documents = () => {
                             {docs.map(doc => (
                                 <div
                                     key={doc.id}
-                                    className="grid grid-cols-12 gap-4 px-4 py-3 bg-white border border-gray-100 rounded-lg hover:shadow-md transition items-center group"
+                                    className="bg-white border border-gray-100 rounded-lg hover:shadow-md transition group"
                                 >
-                                    <div className="col-span-4 flex items-center gap-3 overflow-hidden">
-                                        <div className="p-2 bg-gray-50 rounded text-gray-500">
-                                            {getIcon(doc.type)}
+                                    {/* Desktop Grid Layout */}
+                                    <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 items-center">
+                                        <div className="col-span-4 flex items-center gap-3 overflow-hidden">
+                                            <div className="p-2 bg-gray-50 rounded text-gray-500">
+                                                {getIcon(doc.type)}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h4 className="font-medium text-gray-900 truncate" title={doc.title}>{doc.title}</h4>
+                                                <p className="text-xs text-gray-500 truncate" title={doc.filename}>{doc.filename}</p>
+                                            </div>
                                         </div>
-                                        <div className="min-w-0">
-                                            <h4 className="font-medium text-gray-900 truncate" title={doc.title}>{doc.title}</h4>
-                                            <p className="text-xs text-gray-500 truncate" title={doc.filename}>{doc.filename}</p>
+                                        <div className="col-span-2">
+                                            <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">{doc.department}</span>
+                                        </div>
+                                        <div className="col-span-2 text-sm text-gray-600 truncate">
+                                            {doc.user?.name || doc.user?.role || "Admin"}
+                                        </div>
+                                        <div className="col-span-2 text-sm text-gray-500 truncate">
+                                            {doc.description || '-'}
+                                        </div>
+                                        <div className="col-span-2 flex items-center justify-end gap-3">
+                                            <span className="text-xs text-gray-400">{new Date(doc.uploadedAt).toLocaleDateString()}</span>
+                                            <div className="hidden group-hover:flex gap-2">
+                                                <a
+                                                    href={`http://localhost:3000/${doc.path.replace(/\\/g, '/')}`}
+                                                    target="_blank" rel="noreferrer"
+                                                    className="p-1 text-gray-400 hover:text-blue-600"
+                                                >
+                                                    <Download size={16} />
+                                                </a>
+                                                <button onClick={() => handleDelete(doc.id)} className="p-1 text-gray-400 hover:text-red-600">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="col-span-2">
-                                        <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">{doc.department}</span>
-                                    </div>
-                                    <div className="col-span-2 text-sm text-gray-600 truncate">
-                                        {doc.user?.name || doc.user?.role || "Admin"}
-                                    </div>
-                                    <div className="col-span-2 text-sm text-gray-500 truncate">
-                                        {doc.description || '-'}
-                                    </div>
-                                    <div className="col-span-2 flex items-center justify-end gap-3">
-                                        <span className="text-xs text-gray-400">{new Date(doc.uploadedAt).toLocaleDateString()}</span>
-                                        <div className="hidden group-hover:flex gap-2">
+
+                                    {/* Mobile Stack Layout */}
+                                    <div className="md:hidden p-3 space-y-2">
+                                        <div className="flex items-start gap-3">
+                                            <div className="p-2 bg-gray-50 rounded text-gray-500 flex-shrink-0">
+                                                {getIcon(doc.type)}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-medium text-gray-900 text-sm">{doc.title}</h4>
+                                                <p className="text-xs text-gray-500 truncate">{doc.filename}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 text-xs">
+                                            <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full">{doc.department}</span>
+                                            <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full">{doc.user?.name || "Admin"}</span>
+                                            <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded-full">{new Date(doc.uploadedAt).toLocaleDateString()}</span>
+                                        </div>
+                                        {doc.description && (
+                                            <p className="text-xs text-gray-500">{doc.description}</p>
+                                        )}
+                                        <div className="flex gap-2 pt-2">
                                             <a
                                                 href={`http://localhost:3000/${doc.path.replace(/\\/g, '/')}`}
                                                 target="_blank" rel="noreferrer"
-                                                className="p-1 text-gray-400 hover:text-blue-600"
+                                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"
                                             >
-                                                <Download size={16} />
+                                                <Download size={14} />
+                                                <span>Download</span>
                                             </a>
-                                            <button onClick={() => handleDelete(doc.id)} className="p-1 text-gray-400 hover:text-red-600">
-                                                <Trash2 size={16} />
+                                            <button
+                                                onClick={() => handleDelete(doc.id)}
+                                                className="flex items-center justify-center gap-2 px-3 py-2 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100"
+                                            >
+                                                <Trash2 size={14} />
+                                                <span>Delete</span>
                                             </button>
                                         </div>
                                     </div>
