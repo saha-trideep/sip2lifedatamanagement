@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FileText, FileSpreadsheet } from 'lucide-react';
+import { FileText, FileSpreadsheet, LogOut, Moon, Sun, Menu, X, Home, FolderOpen, FileText as FileIcon } from 'lucide-react';
 import { API_URL } from '../config';
+import { useTheme } from '../context/ThemeContext';
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [stats, setStats] = useState({ documents: 0, registers: 0 });
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const { isDark, toggleTheme } = useTheme();
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -33,43 +36,192 @@ const Dashboard = () => {
 
     if (!user) return null;
 
+    const navItems = [
+        { name: 'Dashboard', path: '/dashboard', icon: Home },
+        { name: 'Registers', path: '/registers', icon: FileSpreadsheet },
+        { name: 'Documents', path: '/documents', icon: FileIcon }
+    ];
+
     return (
-        <div className="flex min-h-screen bg-gray-50">
-            {/* Sidebar Placeholder */}
-            <aside className="w-64 bg-blue-900 text-white p-6 hidden md:block">
-                <h2 className="text-2xl font-bold mb-8">SIP2LIFE</h2>
-                <nav className="space-y-4">
-                    <a href="/dashboard" className="block p-2 bg-blue-800 rounded">Dashboard</a>
-                    <a href="/registers" className="block p-2 hover:bg-blue-800 rounded opacity-70">Registers</a>
-                    <a href="/documents" className="block p-2 hover:bg-blue-800 rounded opacity-70">Documents</a>
-                </nav>
+        <div className={`flex min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-gray-50 to-blue-50'} transition-colors duration-300`}>
+            {/* Mobile Sidebar Overlay */}
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside className={`
+                fixed md:static inset-y-0 left-0 z-50
+                w-64 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} 
+                border-r transition-all duration-300 transform
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+            `}>
+                <div className="flex flex-col h-full">
+                    {/* Logo & Close Button */}
+                    <div className={`p-6 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'} flex items-center justify-between`}>
+                        <h2 className={`text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent`}>
+                            SIP2LIFE
+                        </h2>
+                        <button
+                            onClick={() => setSidebarOpen(false)}
+                            className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                        >
+                            <X size={20} className={isDark ? 'text-gray-300' : 'text-gray-600'} />
+                        </button>
+                    </div>
+
+                    {/* Navigation */}
+                    <nav className="flex-1 p-4 space-y-2">
+                        {navItems.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = window.location.pathname === item.path;
+                            return (
+                                <a
+                                    key={item.path}
+                                    href={item.path}
+                                    className={`
+                                        flex items-center gap-3 px-4 py-3 rounded-lg transition-all
+                                        ${isActive
+                                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                                            : isDark
+                                                ? 'text-gray-300 hover:bg-gray-700'
+                                                : 'text-gray-700 hover:bg-gray-100'
+                                        }
+                                    `}
+                                >
+                                    <Icon size={20} />
+                                    <span className="font-medium">{item.name}</span>
+                                </a>
+                            );
+                        })}
+                    </nav>
+
+                    {/* Theme Toggle & User Info */}
+                    <div className={`p-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'} space-y-3`}>
+                        <button
+                            onClick={toggleTheme}
+                            className={`
+                                w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all
+                                ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}
+                            `}
+                        >
+                            <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                                {isDark ? 'Dark Mode' : 'Light Mode'}
+                            </span>
+                            {isDark ? <Moon size={20} className="text-blue-400" /> : <Sun size={20} className="text-yellow-500" />}
+                        </button>
+
+                        <div className={`px-4 py-3 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                            <p className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{user.name}</p>
+                            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{user.email}</p>
+                        </div>
+                    </div>
+                </div>
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 p-8">
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold text-gray-800">Welcome, {user.name}</h1>
-                    <button onClick={handleLogout} className="px-4 py-2 text-red-600 border border-red-600 rounded hover:bg-red-50">
-                        Logout
-                    </button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white p-6 rounded shadow flex items-center gap-4">
-                        <div className="p-4 bg-blue-100 rounded-full text-blue-600">
-                            <FileText size={32} />
+            <main className="flex-1 flex flex-col min-h-screen">
+                {/* Top Bar */}
+                <header className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b px-4 sm:px-6 py-4 sticky top-0 z-30`}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => setSidebarOpen(true)}
+                                className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                            >
+                                <Menu size={24} className={isDark ? 'text-gray-300' : 'text-gray-600'} />
+                            </button>
+                            <h1 className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                                Welcome, {user.name}
+                            </h1>
                         </div>
-                        <div>
-                            <h3 className="font-bold text-gray-500">Total Documents</h3>
-                            <p className="text-3xl font-bold text-blue-600">{stats.documents}</p>
-                        </div>
+                        <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-red-600 border border-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm sm:text-base"
+                        >
+                            <LogOut size={18} />
+                            <span className="hidden sm:inline">Logout</span>
+                        </button>
                     </div>
-                    <div className="bg-white p-6 rounded shadow flex items-center gap-4">
-                        <div className="p-4 bg-green-100 rounded-full text-green-600">
-                            <FileSpreadsheet size={32} />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-gray-500">Live Registers</h3>
-                            <p className="text-3xl font-bold text-green-600">{stats.registers}</p>
+                </header>
+
+                {/* Dashboard Content */}
+                <div className="flex-1 p-4 sm:p-6 lg:p-8">
+                    <div className="max-w-7xl mx-auto">
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                            {/* Documents Card */}
+                            <div className={`
+                                ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} 
+                                p-6 rounded-2xl shadow-lg border hover:shadow-xl transition-all duration-300 hover:-translate-y-1
+                            `}>
+                                <div className="flex items-center gap-4">
+                                    <div className="p-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg">
+                                        <FileText size={32} className="text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                            Total Documents
+                                        </h3>
+                                        <p className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                            {stats.documents}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Registers Card */}
+                            <div className={`
+                                ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} 
+                                p-6 rounded-2xl shadow-lg border hover:shadow-xl transition-all duration-300 hover:-translate-y-1
+                            `}>
+                                <div className="flex items-center gap-4">
+                                    <div className="p-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg">
+                                        <FileSpreadsheet size={32} className="text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                            Live Registers
+                                        </h3>
+                                        <p className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                            {stats.registers}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Quick Actions Card */}
+                            <div className={`
+                                ${isDark ? 'bg-gradient-to-br from-purple-900/50 to-blue-900/50 border-purple-700' : 'bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200'} 
+                                p-6 rounded-2xl shadow-lg border hover:shadow-xl transition-all duration-300 hover:-translate-y-1
+                            `}>
+                                <h3 className={`text-sm font-medium mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    Quick Actions
+                                </h3>
+                                <div className="space-y-2">
+                                    <a
+                                        href="/documents"
+                                        className={`
+                                            block px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                                            ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-white hover:bg-gray-50 text-gray-700'}
+                                        `}
+                                    >
+                                        Upload Document
+                                    </a>
+                                    <a
+                                        href="/registers"
+                                        className={`
+                                            block px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                                            ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-white hover:bg-gray-50 text-gray-700'}
+                                        `}
+                                    >
+                                        Add Register
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
