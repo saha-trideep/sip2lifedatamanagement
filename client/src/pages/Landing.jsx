@@ -169,6 +169,24 @@ const Landing = () => {
                 </div>
             </section>
 
+            {/* Stats Section */}
+            <section className="py-12 sm:py-16 px-4 sm:px-6 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
+                <div className="max-w-6xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+                    {[
+                        { label: "Production Capacity", value: "10M+", suffix: "L/Year" },
+                        { label: "Quality Standards", value: "ISO", suffix: "Certified" },
+                        { label: "Team Members", value: "500+", suffix: "Employees" },
+                        { label: "Years Experience", value: "25+", suffix: "Years" }
+                    ].map((stat, idx) => (
+                        <div key={idx} className="text-center">
+                            <div className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2">{stat.value}</div>
+                            <div className="text-xs sm:text-sm text-blue-200">{stat.suffix}</div>
+                            <div className="text-xs sm:text-sm text-blue-100 mt-1 sm:mt-2">{stat.label}</div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
             {/* Technology Partners - Endress+Hauser */}
             <section className="py-12 sm:py-20 px-4 sm:px-6 bg-white">
                 <div className="max-w-6xl mx-auto">
