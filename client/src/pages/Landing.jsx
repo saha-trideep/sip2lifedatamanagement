@@ -106,6 +106,135 @@ const Landing = () => {
                 </div>
             </section>
 
+            {/* Leadership Section - Sayantan Das */}
+            <section className="py-12 sm:py-20 px-4 sm:px-6 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+                <div className="max-w-6xl mx-auto">
+                    <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+                        <div className="grid md:grid-cols-2 gap-0">
+                            {/* Left - Image/Visual */}
+                            <div className="relative bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 p-8 sm:p-12 flex items-center justify-center">
+                                <div className="text-center">
+                                    <div className="w-32 h-32 sm:w-40 sm:h-40 mx-auto mb-6 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border-4 border-white/30">
+                                        <Users className="text-white" size={80} />
+                                    </div>
+                                    <div className="text-white/90 text-sm sm:text-base font-medium">
+                                        Visionary Leadership
+                                    </div>
+                                </div>
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
+                                <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12"></div>
+                            </div>
+
+                            {/* Right - Content */}
+                            <div className="p-8 sm:p-12">
+                                <div className="inline-block px-4 py-2 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full mb-4">
+                                    <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                        Leadership Excellence
+                                    </span>
+                                </div>
+                                <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+                                    Sayantan Das
+                                </h2>
+                                <p className="text-lg sm:text-xl text-blue-600 font-semibold mb-6">
+                                    Managing Director
+                                </p>
+                                <div className="space-y-4 text-gray-600">
+                                    <p className="text-base sm:text-lg leading-relaxed">
+                                        Under the visionary leadership of <span className="font-semibold text-gray-900">Sayantan Das</span>, SIP2LIFE Distilleries has emerged as a pioneer in the Indian liquor manufacturing industry.
+                                    </p>
+                                    <p className="text-sm sm:text-base leading-relaxed">
+                                        With a perfect blend of traditional values and modern innovation, he has steered the company towards unprecedented growth, establishing state-of-the-art production facilities and implementing cutting-edge technology partnerships.
+                                    </p>
+                                    <p className="text-sm sm:text-base leading-relaxed">
+                                        His commitment to quality, sustainability, and excellence has positioned SIP2LIFE as a trusted name in premium liquor production, while maintaining the highest standards of operational efficiency and environmental responsibility.
+                                    </p>
+                                </div>
+                                <div className="mt-8 flex flex-wrap gap-4">
+                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                        <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                                        <span>Strategic Vision</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                        <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
+                                        <span>Innovation Leader</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                        <div className="w-2 h-2 bg-indigo-600 rounded-full"></div>
+                                        <span>Quality Champion</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Technology Partners - Endress+Hauser */}
+            <section className="py-12 sm:py-20 px-4 sm:px-6 bg-white">
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-12">
+                        <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4">Technology Partners</h2>
+                        <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+                            Powered by world-class instrumentation and automation technology
+                        </p>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-8 sm:p-12 border border-blue-100">
+                        <div className="grid md:grid-cols-2 gap-8 items-center">
+                            {/* Logo */}
+                            <div className="text-center md:text-left">
+                                <div className="bg-white rounded-2xl p-8 shadow-lg inline-block">
+                                    <img
+                                        src="/endress-hauser.jpg"
+                                        alt="Endress+Hauser"
+                                        className="h-16 sm:h-20 w-auto"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Content */}
+                            <div className="space-y-4">
+                                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                                    Endress+Hauser
+                                </h3>
+                                <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
+                                    Our production facility is equipped with cutting-edge instrumentation from <span className="font-semibold text-blue-600">Endress+Hauser</span>, a global leader in measurement and automation technology.
+                                </p>
+                                <div className="space-y-3">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <span className="text-white text-xs">✓</span>
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-900">Mass Flow Meters</p>
+                                            <p className="text-sm text-gray-600">Precision flow measurement for accurate production control</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <span className="text-white text-xs">✓</span>
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-900">Radar Level Transmitters</p>
+                                            <p className="text-sm text-gray-600">Advanced level monitoring for optimal tank management</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <span className="text-white text-xs">✓</span>
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-900">System Development</p>
+                                            <p className="text-sm text-gray-600">Comprehensive automation solutions for enhanced efficiency</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* Stats Section */}
             <section className="py-12 sm:py-16 px-4 sm:px-6 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
                 <div className="max-w-6xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">

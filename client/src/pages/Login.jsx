@@ -28,8 +28,18 @@ const Login = () => {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4 sm:px-6">
-            <div className="w-full max-w-md p-6 sm:p-8 space-y-6 bg-white rounded-2xl shadow-xl border border-gray-100">
+        <div className="flex items-center justify-center min-h-screen relative overflow-hidden px-4 sm:px-6">
+            {/* Background Image with Overlay */}
+            <div className="absolute inset-0 z-0">
+                <img
+                    src="/factory-bg.jpg"
+                    alt="Factory"
+                    className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-900/90 via-indigo-900/85 to-purple-900/90"></div>
+            </div>
+
+            <div className="relative z-10 w-full max-w-md p-6 sm:p-8 space-y-6 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-100">
                 <button
                     onClick={() => navigate('/')}
                     className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"

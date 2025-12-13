@@ -299,6 +299,21 @@ const Documents = () => {
                     </div>
                 </header>
 
+                {/* Mobile Upload FAB (Floating Action Button) */}
+                <button
+                    onClick={() => {
+                        setUploadFile(null);
+                        resetForm();
+                        if (selectedDept !== 'All') {
+                            setMetaDept(selectedDept);
+                        }
+                        document.getElementById('dropzone-input').click();
+                    }}
+                    className="md:hidden fixed bottom-6 right-6 z-20 w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-2xl hover:shadow-3xl flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+                >
+                    <Upload size={24} />
+                </button>
+
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-3 sm:p-6">
                     {loading ? (
