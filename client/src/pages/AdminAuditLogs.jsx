@@ -236,5 +236,6 @@ export default function AdminAuditLogs() {
                     </div>
                 </div>
             </div>
-            );
+        </div>
+    );
 }
