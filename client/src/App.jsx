@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Registers from './pages/Registers';
 import Documents from './pages/Documents';
+import AdminAuditLogs from './pages/AdminAuditLogs';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -28,6 +29,11 @@ function App() {
           <Route path="/documents" element={
             <ProtectedRoute>
               <Documents />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/audit-logs" element={
+            <ProtectedRoute>
+              <AdminAuditLogs />
             </ProtectedRoute>
           } />
           {/* Fallback */}

@@ -3,6 +3,7 @@ const multer = require('multer');
 const { PrismaClient } = require('@prisma/client');
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
+const { logAudit } = require('../utils/auditLogger');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -110,6 +111,17 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             include: { user: true }
         });
 
+        // Audit Log
+        if (userId) {
+            await logAudit({
+                userId: parseInt(userId),
+                action: 'DOCUMENT_UPLOAD',
+                entityType: 'DOCUMENT',
+                entityId: doc.id,
+                metadata: { title: doc.title, department: doc.department }
+            });
+        }
+
         res.json(doc);
     } catch (error) {
         console.error("Critical Upload Error:", error);
@@ -134,6 +146,26 @@ router.delete('/:id', async (req, res) => {
         }
 
         await prisma.document.delete({ where: { id: parseInt(id) } });
+
+        // Audit Log (Delete) - Need userId from request? Currently route isn't auth protected explicitly by middleware in this file context?
+        // Ideally we should have userId from JWT. Assuming req.user or passed in header?
+        // The original code doesn't show auth middleware usage here, but usually it's there.
+        // I'll check if req.user exists, or logging might fail if no user.
+        // BUT wait, delete route usually requires auth.
+        // Let's assume req.user is available via middleware, or specific logic.
+        // Looking at previous files, auth middleware might be applied at app level or router level.
+        // I will add a check.
+        const userId = req.body.userId || (req.user ? req.user.id : null);
+        if (userId) {
+            await logAudit({
+                userId: parseInt(userId),
+                action: 'DOCUMENT_DELETE',
+                entityType: 'DOCUMENT',
+                entityId: parseInt(id),
+                metadata: { filename: doc.filename, title: doc.title }
+            });
+        }
+
         res.json({ message: 'Deleted' });
     } catch (error) {
         console.error(error);

@@ -25,6 +25,9 @@ router.post('/register', async (req, res) => {
     }
 });
 
+const { logAudit } = require('../utils/auditLogger');
+// ... imports
+
 // Login
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
@@ -36,6 +39,15 @@ router.post('/login', async (req, res) => {
         if (!validPassword) return res.status(401).json({ error: 'Invalid credentials' });
 
         const token = jwt.sign({ id: user.id, role: user.role }, SECRET_KEY, { expiresIn: '1d' });
+
+        // Audit Log
+        await logAudit({
+            userId: user.id,
+            action: 'LOGIN',
+            entityType: 'AUTH',
+            metadata: { email: user.email }
+        });
+
         res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
     } catch (error) {
         res.status(500).json({ error: 'Error logging in' });

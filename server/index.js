@@ -23,7 +23,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/folders', require('./routes/folders'));
 app.use('/api/registers', registerRoutes);
+app.use('/api/registers', registerRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/audit-logs', require('./routes/auditLogs'));
 
 // Database Initialization Endpoint (for production without shell access)
 let dbInitialized = false;

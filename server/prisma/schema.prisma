@@ -18,6 +18,7 @@ model User {
   documents Document[]
   folders   Folder[] 
   registers RegisterLink[]
+  auditLogs AuditLog[]
 }
 
 model Folder {
@@ -54,4 +55,20 @@ model RegisterLink {
   createdAt   DateTime @default(now())
   userId      Int
   user        User     @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     Int
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([action])
+  @@index([entityType])
+  @@index([createdAt])
 }

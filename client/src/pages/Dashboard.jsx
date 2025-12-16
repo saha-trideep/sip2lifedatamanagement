@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FileText, FileSpreadsheet, LogOut, Moon, Sun, Menu, X, Home, FolderOpen, FileText as FileIcon } from 'lucide-react';
+import { FileText, FileSpreadsheet, LogOut, Moon, Sun, Menu, X, Home, FolderOpen, FileText as FileIcon, Shield } from 'lucide-react';
 import { API_URL } from '../config';
 import { useTheme } from '../context/ThemeContext';
 
@@ -46,6 +46,10 @@ const Dashboard = () => {
         { name: 'Registers', path: '/registers', icon: FileSpreadsheet },
         { name: 'Documents', path: '/documents', icon: FileIcon }
     ];
+
+    if (user.role === 'ADMIN') {
+        navItems.push({ name: 'Audit Logs', path: '/admin/audit-logs', icon: Shield });
+    }
 
     return (
         <div className={`flex min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-gray-50 to-blue-50'} transition-colors duration-300`}>
