@@ -54,4 +54,128 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// GET /api/auth/validate-invite - Validate invite token
+router.get('/validate-invite', async (req, res) => {
+    try {
+        const { token } = req.query;
+
+        if (!token) {
+            return res.status(400).json({ error: 'Token is required' });
+        }
+
+        // Hash the token to find it in DB
+        const crypto = require('crypto');
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+        const invite = await prisma.userInvite.findUnique({
+            where: { tokenHash }
+        });
+
+        if (!invite) {
+            return res.status(404).json({ error: 'Invalid invite token' });
+        }
+
+        if (invite.usedAt) {
+            return res.status(400).json({ error: 'This invite has already been used' });
+        }
+
+        if (new Date() > invite.expiresAt) {
+            return res.status(400).json({ error: 'This invite has expired' });
+        }
+
+        // Return invite details (without sensitive data)
+        res.json({
+            email: invite.email,
+            name: invite.name,
+            role: invite.role
+        });
+
+    } catch (error) {
+        console.error('Validate invite error:', error);
+        res.status(500).json({ error: 'Failed to validate invite' });
+    }
+});
+
+// POST /api/auth/complete-registration - Complete registration with invite token
+router.post('/complete-registration', async (req, res) => {
+    try {
+        const { token, password, name } = req.body;
+
+        if (!token || !password) {
+            return res.status(400).json({ error: 'Token and password are required' });
+        }
+
+        // Hash the token to find it in DB
+        const crypto = require('crypto');
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+        const invite = await prisma.userInvite.findUnique({
+            where: { tokenHash }
+        });
+
+        if (!invite) {
+            return res.status(404).json({ error: 'Invalid invite token' });
+        }
+
+        if (invite.usedAt) {
+            return res.status(400).json({ error: 'This invite has already been used' });
+        }
+
+        if (new Date() > invite.expiresAt) {
+            return res.status(400).json({ error: 'This invite has expired' });
+        }
+
+        // Check if user already exists
+        const existingUser = await prisma.user.findUnique({
+            where: { email: invite.email }
+        });
+
+        if (existingUser) {
+            return res.status(400).json({ error: 'User already exists' });
+        }
+
+        // Create user
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = await prisma.user.create({
+            data: {
+                email: invite.email,
+                password: hashedPassword,
+                name: name || invite.name,
+                role: invite.role
+            }
+        });
+
+        // Mark invite as used
+        await prisma.userInvite.update({
+            where: { id: invite.id },
+            data: { usedAt: new Date() }
+        });
+
+        // Audit logs
+        await logAudit({
+            userId: user.id,
+            action: 'USER_REGISTERED',
+            entityType: 'AUTH',
+            metadata: { email: user.email, role: user.role }
+        });
+
+        await logAudit({
+            userId: invite.invitedById,
+            action: 'INVITE_ACCEPTED',
+            entityType: 'USER_INVITE',
+            entityId: invite.id,
+            metadata: { email: invite.email }
+        });
+
+        res.json({
+            message: 'Registration completed successfully',
+            user: { id: user.id, email: user.email, name: user.name, role: user.role }
+        });
+
+    } catch (error) {
+        console.error('Complete registration error:', error);
+        res.status(500).json({ error: 'Failed to complete registration' });
+    }
+});
+
 module.exports = router;

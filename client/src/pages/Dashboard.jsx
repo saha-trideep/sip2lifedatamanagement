@@ -4,6 +4,7 @@ import axios from 'axios';
 import { FileText, FileSpreadsheet, LogOut, Moon, Sun, Menu, X, Home, FolderOpen, FileText as FileIcon, Shield } from 'lucide-react';
 import { API_URL } from '../config';
 import { useTheme } from '../context/ThemeContext';
+import AdminInvites from '../components/AdminInvites';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -307,6 +308,13 @@ const Dashboard = () => {
                                 >
                                     View All Registers
                                 </a>
+                            </div>
+                        )}
+
+                        {/* Admin Invites Section (Admin Only) */}
+                        {user.role === 'ADMIN' && (
+                            <div className="mt-8">
+                                <AdminInvites />
                             </div>
                         )}
                     </div>

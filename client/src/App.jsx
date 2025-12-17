@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Registers from './pages/Registers';
 import Documents from './pages/Documents';
+import Register from './pages/Register';
 import AdminAuditLogs from './pages/AdminAuditLogs';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ThemeProvider } from './context/ThemeContext';
@@ -16,6 +17,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />

@@ -19,6 +19,24 @@ model User {
   folders   Folder[] 
   registers RegisterLink[]
   auditLogs AuditLog[]
+  invitesCreated UserInvite[] @relation("InvitedBy")
+}
+
+model UserInvite {
+  id          String    @id @default(uuid())
+  email       String
+  name        String?
+  role        String    @default("EMPLOYEE")
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  invitedById Int
+  invitedBy   User      @relation("InvitedBy", fields: [invitedById], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@index([email])
+  @@index([tokenHash])
+  @@index([expiresAt])
 }
 
 model Folder {
