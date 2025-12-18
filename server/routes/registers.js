@@ -51,6 +51,54 @@ router.post('/', async (req, res) => {
     }
 });
 
+// PUT: Update register link (rename/edit)
+router.put('/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, url } = req.body;
+    const userId = 1; // Default admin for now (should be from req.user in production)
+
+    try {
+        // Validate input
+        if (!name || !url) {
+            return res.status(400).json({ error: 'Name and URL are required' });
+        }
+
+        // Get old data for audit log
+        const oldLink = await prisma.registerLink.findUnique({
+            where: { id: parseInt(id) }
+        });
+
+        if (!oldLink) {
+            return res.status(404).json({ error: 'Register link not found' });
+        }
+
+        // Update the register link
+        const updatedLink = await prisma.registerLink.update({
+            where: { id: parseInt(id) },
+            data: { name, url }
+        });
+
+        // Audit Log
+        await logAudit({
+            userId,
+            action: 'REGISTER_UPDATE',
+            entityType: 'REGISTER',
+            entityId: parseInt(id),
+            metadata: {
+                oldName: oldLink.name,
+                newName: name,
+                oldUrl: oldLink.url,
+                newUrl: url
+            }
+        });
+
+        res.json(updatedLink);
+    } catch (error) {
+        console.error("Error updating link:", error);
+        res.status(500).json({ error: 'Failed to update link', details: error.message });
+    }
+});
+
 // DELETE: Remove a link
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;

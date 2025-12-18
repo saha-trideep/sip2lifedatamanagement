@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Trash2, ExternalLink, FileSpreadsheet, ArrowLeft, Loader } from 'lucide-react';
+import { Plus, Trash2, ExternalLink, FileSpreadsheet, ArrowLeft, Loader, Edit } from 'lucide-react';
 import { API_URL } from '../config';
 
 const Registers = () => {
     const [registers, setRegisters] = useState([]);
     const [viewRegister, setViewRegister] = useState(null); // If set, we are viewing this register
     const [showForm, setShowForm] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingRegister, setEditingRegister] = useState(null);
     const [loading, setLoading] = useState(false);
 
     // Form State
@@ -56,6 +58,34 @@ const Registers = () => {
             }
         } catch (error) {
             alert("Error deleting");
+        }
+    };
+
+    const handleEdit = (register, e) => {
+        e.stopPropagation();
+        setEditingRegister({ ...register });
+        setShowEditModal(true);
+    };
+
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const res = await axios.put(`${API_URL}/api/registers/${editingRegister.id}`, {
+                name: editingRegister.name,
+                url: editingRegister.url
+            });
+
+            // Update local state
+            setRegisters(registers.map(r => r.id === editingRegister.id ? res.data : r));
+            setShowEditModal(false);
+            setEditingRegister(null);
+            alert(`✅ Register "${res.data.name}" updated successfully!`);
+        } catch (error) {
+            console.error(error);
+            alert("Error updating register: " + (error.response?.data?.error || error.message));
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -156,12 +186,22 @@ const Registers = () => {
                             <div className="p-3 bg-green-50 text-green-600 rounded-lg">
                                 <FileSpreadsheet size={24} />
                             </div>
-                            <button
-                                onClick={(e) => handleDelete(reg.id, e)}
-                                className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition"
-                            >
-                                <Trash2 size={18} />
-                            </button>
+                            <div className="flex gap-1">
+                                <button
+                                    onClick={(e) => handleEdit(reg, e)}
+                                    className="text-gray-400 hover:text-blue-500 p-1 rounded-full hover:bg-blue-50 transition"
+                                    title="Edit"
+                                >
+                                    <Edit size={18} />
+                                </button>
+                                <button
+                                    onClick={(e) => handleDelete(reg.id, e)}
+                                    className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition"
+                                    title="Delete"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                            </div>
                         </div>
                         <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600">{reg.name}</h3>
                         <p className="text-gray-500 text-sm flex items-center gap-1">
@@ -178,6 +218,67 @@ const Registers = () => {
                     </div>
                 )}
             </div>
+
+            {/* Edit Modal */}
+            {showEditModal && editingRegister && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+                        <h2 className="text-2xl font-bold mb-6 text-gray-800">Edit Register</h2>
+                        <form onSubmit={handleUpdate} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Display Name
+                                </label>
+                                <input
+                                    type="text"
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    value={editingRegister.name}
+                                    onChange={(e) => setEditingRegister({ ...editingRegister, name: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Zoho Publish URL
+                                </label>
+                                <input
+                                    type="url"
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    value={editingRegister.url}
+                                    onChange={(e) => setEditingRegister({ ...editingRegister, url: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <Loader className="animate-spin" size={18} />
+                                            <span>Updating...</span>
+                                        </>
+                                    ) : (
+                                        <span>Save Changes</span>
+                                    )}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowEditModal(false);
+                                        setEditingRegister(null);
+                                    }}
+                                    className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 font-semibold"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
