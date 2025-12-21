@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
     ArrowLeft, Download, Search, Filter, Loader,
-    FileText, FileSpreadsheet, Info
+    FileText, FileSpreadsheet, Info, ChevronRight, User
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { API_URL } from '../../config';
@@ -56,192 +56,218 @@ const Reg74Register = () => {
         }
     };
 
-    const exportExcel = () => {
-        const data = events.map(e => ({
-            'Date/Time': format(new Date(e.dateTime), 'dd/MM/yyyy HH:mm'),
-            'Type': e.type,
-            'Dip (cm)': e.dipCm || e.finalDipCm || '',
-            'Temp (C)': e.temperatureC || '',
-            'BL': e.volumeBl || e.qtyBl || e.finalVolumeBl || '',
-            'Strength': e.strengthVv || e.avgStrengthVv || e.finalStrengthVv || '',
-            'AL': e.volumeAl || e.qtyAl || e.finalQtyAl || '',
-            'RLT Dip': e.rltDipCm || '',
-            'Source/Dest': e.sourceVat || e.destination || '',
-            'Remarks': e.remarks || ''
-        }));
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Reg-74");
-        XLSX.writeFile(wb, `Reg74_${vat?.vatCode}_${filters.startDate}.xlsx`);
-    };
-
     const exportPDF = () => {
-        const doc = jsPDF({ orientation: 'landscape' });
-        doc.setFontSize(16);
-        doc.text(`EXCISE REGISTER REG-74: BLENDING (${vat?.vatCode})`, 14, 15);
+        const doc = jsPDF({ orientation: 'landscape', format: 'a3' });
+        doc.setFontSize(18);
+        doc.text(`EXCISE REGISTER REG-74: SPIRIT STORAGE & BLENDING (${vat?.vatCode})`, 14, 20);
         doc.setFontSize(10);
-        doc.text(`Period: ${filters.startDate} to ${filters.endDate}`, 14, 22);
+        doc.text(`Generated on: ${format(new Date(), 'dd/MMM/yyyy HH:mm')} | Period: ${filters.startDate} to ${filters.endDate}`, 14, 28);
 
-        const tableColumn = ["Date/Time", "Event", "Dip", "Temp", "Strength", "Volume BL", "Volume AL", "Source/Dest", "Remarks"];
-        const tableRows = events.map(e => [
-            format(new Date(e.dateTime), 'dd/MM HH:mm'),
-            e.type,
-            (e.dipCm || e.finalDipCm || '').toString(),
-            (e.temperatureC || '').toString(),
-            (e.strengthVv || e.avgStrengthVv || e.finalStrengthVv || '').toString(),
-            (e.volumeBl || e.qtyBl || e.finalVolumeBl || '').toFixed(2),
-            (e.volumeAl || e.qtyAl || e.finalQtyAl || '').toFixed(2),
-            e.sourceVat || e.destination || '-',
-            e.remarks || ''
-        ]);
+        const tableColumn = [
+            "Date", "Op", "Dip", "Temp", "Str", "Open BL", "Open AL",
+            "Src", "MFM-I BL", "MFM-I Str", "MFM-I AL",
+            "Dest", "Qty BL", "Str",
+            "Inc BL", "Inc AL",
+            "Loss BL", "Loss AL",
+            "RLT BL", "Str", "RLT AL", "MFM-II BL", "MFM-II Str", "MFM-II AL",
+            "Final Dip", "Final BL", "Final Str", "Final AL"
+        ];
+
+        let runningAl = 0; // Simplified for report
+
+        const tableRows = events.map(e => {
+            const open = e.openingData || {};
+            const rec = e.receiptData || {};
+            const issue = e.issueData || {};
+            const adj = e.adjustmentData || {};
+            const prod = e.productionData || {};
+            const close = e.closingData || {};
+
+            return [
+                format(new Date(e.eventDateTime), 'dd/MM HH:mm'),
+                e.eventType,
+                open.dipCm || '', open.temp || '', open.strength || '', open.volumeBl || '', open.volumeAl || '',
+                rec.source || '', rec.qtyBl || '', rec.strength || '', (rec.qtyBl * (rec.strength / 100))?.toFixed(2) || '',
+                issue.dest || '', issue.qtyBl || '', issue.strength || '',
+                adj.type === 'INCREASE' ? adj.qtyBl : '', adj.type === 'INCREASE' ? adj.qtyAl : '',
+                adj.type === 'WASTAGE' ? adj.qtyBl : '', adj.type === 'WASTAGE' ? adj.qtyAl : '',
+                prod.rltBl || '', prod.strength || '', prod.rltAl || '', prod.mfmBl || '', prod.mfmStrength || '', prod.mfmAl || '',
+                close.finalDipCm || '', close.finalBl || '', close.finalStrength || '', close.finalAl || ''
+            ];
+        });
 
         doc.autoTable({
             head: [tableColumn],
             body: tableRows,
-            startY: 25,
+            startY: 35,
             theme: 'grid',
-            styles: { fontSize: 8 }
+            styles: { fontSize: 6, cellPadding: 1 },
+            headStyles: { fillColor: [15, 23, 42], textColor: 255 }
         });
-        doc.save(`Reg74_${vat?.vatCode}.pdf`);
+
+        doc.save(`Reg74_${vat?.vatCode}_${format(new Date(), 'yyyyMMdd')}.pdf`);
     };
 
     return (
-        <div className="p-8 min-h-screen bg-gray-50">
+        <div className="p-8 min-h-screen bg-[#FDFDFF]">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/registers/reg74')} className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition text-gray-600">
+            <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                <div className="flex items-center gap-6">
+                    <button onClick={() => navigate('/registers/reg74')} className="p-4 bg-white rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition text-gray-500 hover:text-blue-600">
                         <ArrowLeft size={20} />
                     </button>
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800">Blending Register – {vat?.vatCode || '...'}</h1>
-                        <p className="text-gray-500">System-generated WB Excise Reg-74</p>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-black bg-gray-900 text-white px-2 py-0.5 rounded-full uppercase tracking-widest">Register 74</span>
+                            <h1 className="text-3xl font-black text-gray-900 tracking-tight">{vat?.vatCode} Operational Ledger</h1>
+                        </div>
+                        <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.2em]">Live system-generated WB excise compliance view</p>
                     </div>
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={exportExcel} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                        <FileSpreadsheet size={18} /> Excel
+                    <button onClick={exportPDF} className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg active:scale-95">
+                        <Download size={16} /> Export Statutory PDF
                     </button>
-                    <button onClick={exportPDF} className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                        <FileText size={18} /> PDF
+                    <button onClick={fetchEvents} className="p-3 bg-white border border-gray-100 rounded-2xl hover:border-blue-500 hover:text-blue-600 transition-all flex justify-center shadow-sm">
+                        <Search size={20} />
                     </button>
                 </div>
             </div>
 
-            {/* Filters */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-8 flex flex-wrap gap-4 items-end">
-                <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Start Date</label>
-                    <input type="date" value={filters.startDate} onChange={e => setFilters({ ...filters, startDate: e.target.value })} className="p-2 border rounded-lg text-sm" />
+            {/* Filter Bar */}
+            <div className="max-w-[1600px] mx-auto bg-white p-4 rounded-3xl shadow-sm border border-gray-100 mb-8 flex flex-wrap gap-6 items-end">
+                <div className="flex-1 min-w-[200px]">
+                    <label className="block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-widest">Date Range Selection</label>
+                    <div className="flex items-center gap-3">
+                        <input type="date" value={filters.startDate} onChange={e => setFilters({ ...filters, startDate: e.target.value })} className="flex-1 p-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold" />
+                        <ChevronRight size={14} className="text-gray-300" />
+                        <input type="date" value={filters.endDate} onChange={e => setFilters({ ...filters, endDate: e.target.value })} className="flex-1 p-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold" />
+                    </div>
                 </div>
                 <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">End Date</label>
-                    <input type="date" value={filters.endDate} onChange={e => setFilters({ ...filters, endDate: e.target.value })} className="p-2 border rounded-lg text-sm" />
+                    <button onClick={fetchEvents} className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-md">
+                        Record Filter
+                    </button>
                 </div>
-                <button onClick={fetchEvents} className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 transition">
-                    Apply Filters
-                </button>
             </div>
 
-            {/* Register Table */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            {/* Statutory Table */}
+            <div className="max-w-[1600px] mx-auto bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse min-w-[1200px]">
+                    <table className="w-full text-left border-collapse min-w-[2200px]">
                         <thead>
-                            <tr className="bg-gray-50 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                <th className="p-3 border-r">Date / Time</th>
-                                <th className="p-3 border-r">Operation</th>
-                                <th className="p-3 text-center border-b bg-blue-50/50" colSpan="5">Opening / Snapshot (Col 1-7)</th>
-                                <th className="p-3 text-center border-b bg-green-50/50" colSpan="3">Receipt (Col 8-12)</th>
-                                <th className="p-3 text-center border-b bg-orange-50/50" colSpan="3">Issue (Col 22-30)</th>
-                                <th className="p-3 text-right">Remarks</th>
+                            <tr className="bg-gray-900 text-white text-[9px] font-black uppercase tracking-[0.1em]">
+                                <th className="p-4 border-r border-gray-800" rowSpan="2">Time / User</th>
+                                <th className="p-4 border-r border-gray-800" rowSpan="2">Operation</th>
+                                <th className="p-2 text-center border-r border-gray-800 bg-blue-600/20" colSpan="7">Opening Balance (Cols 1-7)</th>
+                                <th className="p-2 text-center border-r border-gray-800 bg-green-600/20" colSpan="4">Spirit Receipt (Cols 8-11)</th>
+                                <th className="p-2 text-center border-r border-gray-800 bg-indigo-600/20" colSpan="4">Issue to VAT (Cols 12-15)</th>
+                                <th className="p-2 text-center border-r border-gray-800 bg-orange-600/20" colSpan="4">Increase (Cols 16-19)</th>
+                                <th className="p-2 text-center border-r border-gray-800 bg-red-600/20" colSpan="3">Wastage (Cols 22-24)</th>
+                                <th className="p-2 text-center border-r border-gray-800 bg-purple-600/20" colSpan="9">Production Issue (Cols 25-33)</th>
+                                <th className="p-2 text-center bg-gray-600/20" colSpan="4">Closing Balance (Cols 34-37)</th>
                             </tr>
-                            <tr className="bg-gray-50 border-b border-gray-200 text-[9px] text-gray-400 uppercase">
-                                <th className="p-2 border-r">Event</th>
-                                <th className="p-2 border-r">Type</th>
-                                {/* Opening */}
-                                <th className="p-2 text-center border-r">Dip</th>
-                                <th className="p-2 text-center border-r">Temp</th>
-                                <th className="p-2 text-center border-r">Str</th>
-                                <th className="p-2 text-center border-r">BL</th>
-                                <th className="p-2 text-center border-r">AL</th>
-                                {/* Receipt */}
-                                <th className="p-2 text-center border-r">Src</th>
-                                <th className="p-2 text-center border-r">BL</th>
-                                <th className="p-2 text-center border-r">AL</th>
-                                {/* Issue */}
-                                <th className="p-2 text-center border-r">Dest</th>
-                                <th className="p-2 text-center border-r">BL</th>
-                                <th className="p-2 text-center border-r">AL</th>
-
-                                <th className="p-3 text-right">Notes</th>
+                            <tr className="bg-gray-800 text-gray-400 text-[8px] font-black uppercase tracking-widest">
+                                {/* Opening 1-7 */}
+                                <th className="p-2 border-r border-gray-700">Dip</th><th className="p-2 border-r border-gray-700">Temp</th>
+                                <th className="p-2 border-r border-gray-700">Ind</th><th className="p-2 border-r border-gray-700">Str</th>
+                                <th className="p-2 border-r border-gray-700">BL</th><th className="p-2 border-r border-gray-700">AL</th><th className="p-2 border-r border-gray-700">RLT</th>
+                                {/* Receipt 8-11 */}
+                                <th className="p-2 border-r border-gray-700">Src</th><th className="p-2 border-r border-gray-700">BL</th>
+                                <th className="p-2 border-r border-gray-700">Str</th><th className="p-2 border-r border-gray-700">AL</th>
+                                {/* Issue 12-15 */}
+                                <th className="p-2 border-r border-gray-700">Dest</th><th className="p-2 border-r border-gray-700">Cask</th>
+                                <th className="p-2 border-r border-gray-700">BL</th><th className="p-2 border-r border-gray-700">Str</th>
+                                {/* Inc 16-19 */}
+                                <th className="p-2 border-r border-gray-700">Inc</th><th className="p-2 border-r border-gray-700">Audit</th>
+                                <th className="p-2 border-r border-gray-700">RLT Dip</th><th className="p-2 border-r border-gray-700">RLT BL</th>
+                                {/* Loss 22-24 */}
+                                <th className="p-2 border-r border-gray-700">Op</th><th className="p-2 border-r border-gray-700">Audit</th><th className="p-2 border-r border-gray-700">Dest</th>
+                                {/* Prod 25-33 */}
+                                <th className="p-2 border-r border-gray-700">RLT BL</th><th className="p-2 border-r border-gray-700">Str</th><th className="p-2 border-r border-gray-700">AL</th>
+                                <th className="p-2 border-r border-gray-700">Vats</th><th className="p-2 border-r border-gray-700">MFM BL</th><th className="p-2 border-r border-gray-700">Dens</th>
+                                <th className="p-2 border-r border-gray-700">Str</th><th className="p-2 border-r border-gray-700">AL</th><th className="p-2 border-r border-gray-700">Dead</th>
+                                {/* Closing 34-37 */}
+                                <th className="p-2 border-r border-gray-700">Dip</th><th className="p-2 border-r border-gray-700">BL</th>
+                                <th className="p-2 border-r border-gray-700">Str</th><th className="p-2">AL</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {loading ? (
-                                <tr><td colSpan="14" className="p-10 text-center text-gray-400">Loading register rows...</td></tr>
+                                <tr><td colSpan="41" className="p-20 text-center font-black text-gray-300 uppercase text-xs tracking-[0.5em]">Synchronizing Statutory Data...</td></tr>
                             ) : events.length === 0 ? (
-                                <tr><td colSpan="14" className="p-10 text-center text-gray-500 italic">No events recorded for this period.</td></tr>
+                                <tr><td colSpan="41" className="p-20 text-center font-bold text-gray-400">No events found for the selected period.</td></tr>
                             ) : (
-                                events.map((e, idx) => (
-                                    <tr key={idx} className="hover:bg-blue-50/20 text-xs transition">
-                                        <td className="p-2 border-r font-medium">{format(new Date(e.dateTime), 'dd/MM HH:mm')}</td>
-                                        <td className="p-2 border-r">
-                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${e.type === 'OPENING' ? 'bg-blue-100 text-blue-700' :
-                                                    e.type === 'RECEIPT' ? 'bg-green-100 text-green-700' :
-                                                        e.type === 'ISSUE' ? 'bg-orange-100 text-orange-700' :
-                                                            e.type === 'QC' ? 'bg-purple-100 text-purple-700' :
-                                                                'bg-gray-100 text-gray-700'
-                                                }`}>
-                                                {e.type}
-                                            </span>
-                                        </td>
+                                events.map((e, idx) => {
+                                    const op = e.openingData || {};
+                                    const rec = e.receiptData || {};
+                                    const iss = e.issueData || {};
+                                    const adj = e.adjustmentData || {};
+                                    const prd = e.productionData || {};
+                                    const cls = e.closingData || {};
 
-                                        {/* Opening Data */}
-                                        <td className="p-2 text-center border-r text-gray-500">{e.type === 'OPENING' || e.type === 'CLOSING' ? (e.dipCm || e.finalDipCm || '-') : ''}</td>
-                                        <td className="p-2 text-center border-r text-gray-500">{e.type === 'OPENING' ? (e.temperatureC || '-') : ''}</td>
-                                        <td className="p-2 text-center border-r text-gray-500">{e.type === 'OPENING' || e.type === 'CLOSING' ? (e.strengthVv || e.finalStrengthVv || '-') : ''}</td>
-                                        <td className="p-2 text-center border-r font-mono">{e.type === 'OPENING' || e.type === 'CLOSING' ? (e.volumeBl || e.finalVolumeBl || '-').toLocaleString() : ''}</td>
-                                        <td className="p-2 text-center border-r font-mono">{e.type === 'OPENING' || e.type === 'CLOSING' ? (e.volumeAl || e.finalQtyAl || '-').toLocaleString() : ''}</td>
+                                    return (
+                                        <tr key={idx} className="hover:bg-blue-50/30 transition-colors text-[9px] font-bold text-gray-600">
+                                            <td className="p-3 border-r border-gray-100 whitespace-nowrap bg-gray-50/50">
+                                                <div className="text-gray-900">{format(new Date(e.eventDateTime), 'dd MMM HH:mm')}</div>
+                                                <div className="text-[7px] text-blue-500 uppercase flex items-center gap-1 mt-0.5"><User size={8} /> {e.user?.name || 'System'}</div>
+                                            </td>
+                                            <td className="p-3 border-r border-gray-100 font-black text-gray-900 uppercase tracking-tighter">{e.eventType.replace('_', ' ')}</td>
 
-                                        {/* Receipt Data */}
-                                        <td className="p-2 text-center border-r text-gray-500">{e.type === 'RECEIPT' ? e.sourceVat : ''}</td>
-                                        <td className="p-2 text-center border-r font-mono text-green-700">{e.type === 'RECEIPT' ? e.qtyBl.toLocaleString() : ''}</td>
-                                        <td className="p-2 text-center border-r font-mono text-green-700">{e.type === 'RECEIPT' ? e.qtyAl.toLocaleString() : ''}</td>
+                                            {/* Cols 1-7 */}
+                                            <td className="p-2 border-r border-gray-100 text-center">{op.dipCm || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center">{op.temp || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center">{op.alcInd || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center">{op.strength || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center font-black">{op.volumeBl?.toLocaleString() || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center font-black">{op.volumeAl?.toLocaleString() || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center text-gray-400">{op.rltDipCm || '-'}</td>
 
-                                        {/* Issue Data */}
-                                        <td className="p-2 text-center border-r text-gray-500">{e.type === 'ISSUE' ? e.destination : ''}</td>
-                                        <td className="p-2 text-center border-r font-mono text-orange-700">{e.type === 'ISSUE' ? e.qtyBl.toLocaleString() : ''}</td>
-                                        <td className="p-2 text-center border-r font-mono text-orange-700">{e.type === 'ISSUE' ? e.qtyAl.toLocaleString() : ''}</td>
+                                            {/* Cols 8-11 */}
+                                            <td className="p-2 border-r border-gray-100 text-center">{rec.source || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center font-black text-green-600">{rec.qtyBl?.toLocaleString() || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center">{rec.strength || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center font-black text-green-600">{(rec.qtyBl * (rec.strength / 100))?.toFixed(2) || '-'}</td>
 
-                                        <td className="p-2 text-right text-gray-400 italic text-[10px]">{e.remarks || '-'}</td>
-                                    </tr>
-                                ))
+                                            {/* Cols 12-15 */}
+                                            <td className="p-2 border-r border-gray-100 text-center">{iss.dest || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center">{iss.caskNo || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center font-black text-indigo-600">{iss.qtyBl?.toLocaleString() || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center">{iss.strength || '-'}</td>
+
+                                            {/* Cols 16-19 */}
+                                            <td className="p-2 border-r border-gray-100 text-center font-black text-orange-600">{adj.type === 'INCREASE' ? adj.qtyBl?.toLocaleString() : '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center">{adj.reason === 'STOCK_AUDIT' && adj.type === 'INCREASE' ? 'YES' : '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center text-gray-400">{adj.rltDip || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center text-gray-400">{adj.rltBl || '-'}</td>
+
+                                            {/* Cols 22-24 */}
+                                            <td className="p-2 border-r border-gray-100 text-center font-black text-red-600">{adj.type === 'WASTAGE' ? adj.qtyBl?.toLocaleString() : '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center">{adj.reason === 'STOCK_AUDIT' && adj.type === 'WASTAGE' ? 'YES' : '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center">{adj.type === 'WASTAGE' ? (adj.dest || 'LOSS') : '-'}</td>
+
+                                            {/* Cols 25-33 */}
+                                            <td className="p-2 border-r border-gray-100 text-center">{prd.rltBl?.toLocaleString() || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center">{prd.strength || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center">{prd.rltAl?.toLocaleString() || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center">{prd.vatCount || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center font-black text-purple-600">{prd.mfmBl?.toLocaleString() || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center text-gray-400">{prd.density || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center">{prd.mfmStrength || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center font-black text-purple-600">{prd.mfmAl?.toLocaleString() || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center text-red-400">{prd.deadStockAl || '-'}</td>
+
+                                            {/* Cols 34-37 */}
+                                            <td className="p-2 border-r border-gray-100 text-center">{cls.finalDipCm || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center font-black">{cls.finalBl?.toLocaleString() || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center">{cls.finalStrength || '-'}</td>
+                                            <td className="p-2 text-center font-black">{cls.finalAl?.toLocaleString() || '-'}</td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>
-                </div>
-            </div>
-
-            {/* Info Panel */}
-            <div className="mt-8 bg-blue-900 rounded-2xl p-6 text-white shadow-xl">
-                <div className="flex items-center gap-2 mb-4">
-                    <Info className="text-blue-300" />
-                    <h3 className="font-bold text-lg">Reg-74 Compliance Guide</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-blue-100">
-                    <div className="space-y-2">
-                        <p className="font-bold text-white uppercase text-xs">Event Driven</p>
-                        <p>This register is auto-generated from physical events. No manual row editing is allowed to prevent audit mismatches.</p>
-                    </div>
-                    <div className="space-y-2">
-                        <p className="font-bold text-white uppercase text-xs">QC Clearance</p>
-                        <p>All Issues to production (Col 22-30) require a prior 'QC PASS' event at the same strength.</p>
-                    </div>
-                    <div className="space-y-2">
-                        <p className="font-bold text-white uppercase text-xs">RLT Monitoring</p>
-                        <p>Remote Level Transmitter readings are captured in opening/closing to ensure RLT-Physical sync.</p>
-                    </div>
                 </div>
             </div>
         </div>

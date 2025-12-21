@@ -21,126 +21,42 @@ model User {
   auditLogs AuditLog[]
   invitesCreated UserInvite[] @relation("InvitedBy")
   reg76Entries   Reg76Entry[]
-  reg74Openings  Reg74OpeningSnapshot[]
-  reg74Receipts  Reg74ReceiptMfm1[]
-  reg74Adjustments Reg74Adjustment[]
-  reg74QCClearances Reg74QCClearance[]
-  reg74Issues    Reg74IssueMfm2[]
-  reg74Closings  Reg74ClosingSnapshot[]
+  reg74Events    Reg74Event[]
 }
 
-// ... (other models)
-
-model BlendingVat {
-  id              Int      @id @default(autoincrement())
-  vatCode         String   @unique // e.g., BRT-11
-  capacityBl      Float
-  status          String   @default("IDLE") // IDLE, FILLING, BLENDING, READY, EMPTYING
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  openings        Reg74OpeningSnapshot[]
-  receipts        Reg74ReceiptMfm1[]
-  adjustments     Reg74Adjustment[]
-  qcClearances    Reg74QCClearance[]
-  issues          Reg74IssueMfm2[]
-  closings        Reg74ClosingSnapshot[]
+model VatMaster {
+  id          Int      @id @default(autoincrement())
+  vatCode     String   @unique // SST-5 to SST-10, BRT-11 to BRT-17
+  vatType     String   // SST, BRT
+  capacityBl  Float?
+  status      String   @default("IDLE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  events      Reg74Event[]
 }
 
-model Reg74OpeningSnapshot {
-  id                    Int      @id @default(autoincrement())
-  dateTime              DateTime
-  vatId                 Int
-  vat                   BlendingVat @relation(fields: [vatId], references: [id])
-  dipCm                 Float
-  temperatureC          Float
-  alcoholmeterIndication Float
-  strengthVv            Float
-  volumeBl              Float
-  volumeAl              Float
-  rltDipCm              Float
-  rltVolumeBl           Float
-  createdBy             Int
-  user                  User     @relation(fields: [createdBy], references: [id])
-  createdAt             DateTime @default(now())
-}
+model Reg74Event {
+  id               Int      @id @default(autoincrement())
+  vatId            Int
+  vat              VatMaster @relation(fields: [vatId], references: [id])
+  eventDateTime    DateTime
+  eventType        String   // UNLOADING, INTERNAL_TRANSFER, WATER_ADDITION, BLENDING, PRODUCTION, ADJUSTMENT, OPENING, CLOSING
+  
+  // Contextual Data Blocks (populated based on eventType)
+  openingData      Json?    // Cols 1-7: dipCm, temp, alcInd, strength, volumeBl, volumeAl
+  receiptData      Json?    // Cols 8-11: source, qtyBl, strength, qtyAl
+  issueData        Json?    // Cols 12-15: dest, caskNo, qtyBl, strength
+  adjustmentData   Json?    // Cols 16-19 / 22-24: type(INC/WAST), reason, qtyBl, qtyAl, rltDip, rltBl
+  productionData   Json?    // Cols 25-33: rltBl, strength, rltAl, vatCount, mfmBl, density, mfmStrength, mfmAl, deadStockAl
+  closingData      Json?    // Cols 34-37: finalDipCm, finalBl, finalStrength, finalAl
+  
+  remarks          String?
+  createdBy        Int
+  user             User     @relation(fields: [createdBy], references: [id])
+  createdAt        DateTime @default(now())
 
-model Reg74ReceiptMfm1 {
-  id                    Int      @id @default(autoincrement())
-  dateTime              DateTime
-  vatId                 Int
-  vat                   BlendingVat @relation(fields: [vatId], references: [id])
-  sourceVat             String   // SST-5 ... SST-10
-  mfmTag                String   @default("INPUT")
-  qtyBl                 Float
-  avgStrengthVv         Float
-  qtyAl                 Float
-  avgDensity            Float
-  linkedReg76Id         Int?
-  createdBy             Int
-  user                  User     @relation(fields: [createdBy], references: [id])
-  createdAt             DateTime @default(now())
-}
-
-model Reg74Adjustment {
-  id                    Int      @id @default(autoincrement())
-  dateTime              DateTime
-  vatId                 Int
-  vat                   BlendingVat @relation(fields: [vatId], references: [id])
-  adjustmentType        String   // INCREASE / WASTAGE
-  reason                String   // OPERATIONAL / STOCK_AUDIT
-  qtyBl                 Float
-  qtyAl                 Float
-  rltDipCm              Float?
-  rltVolumeBl           Float?
-  createdBy             Int
-  user                  User     @relation(fields: [createdBy], references: [id])
-  createdAt             DateTime @default(now())
-}
-
-model Reg74QCClearance {
-  id                    Int      @id @default(autoincrement())
-  qcDateTime            DateTime
-  vatId                 Int
-  vat                   BlendingVat @relation(fields: [vatId], references: [id])
-  finalStrengthVv       Float
-  approvedBy            String
-  remarks               String?
-  createdBy             Int
-  user                  User     @relation(fields: [createdBy], references: [id])
-  createdAt             DateTime @default(now())
-}
-
-model Reg74IssueMfm2 {
-  id                    Int      @id @default(autoincrement())
-  dateTime              DateTime
-  vatId                 Int
-  vat                   BlendingVat @relation(fields: [vatId], references: [id])
-  destination           String   // PRODUCTION / VAT / CASK
-  mfmTag                String   @default("OUTPUT")
-  qtyBl                 Float
-  avgDensity            Float
-  strengthVv            Float
-  qtyAl                 Float
-  deadStockAl           Float
-  createdBy             Int
-  user                  User     @relation(fields: [createdBy], references: [id])
-  createdAt             DateTime @default(now())
-}
-
-model Reg74ClosingSnapshot {
-  id                    Int      @id @default(autoincrement())
-  dateTime              DateTime
-  vatId                 Int
-  vat                   BlendingVat @relation(fields: [vatId], references: [id])
-  finalDipCm            Float
-  finalVolumeBl         Float
-  finalStrengthVv       Float
-  finalQtyAl            Float
-  remarks               String?
-  createdBy             Int
-  user                  User     @relation(fields: [createdBy], references: [id])
-  createdAt             DateTime @default(now())
+  @@index([vatId])
+  @@index([eventDateTime])
 }
 
 model UserInvite {
