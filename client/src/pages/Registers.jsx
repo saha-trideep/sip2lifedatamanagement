@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useTheme } from '../context/ThemeContext';
 import {
     Plus, Trash2, ExternalLink, FileSpreadsheet, ArrowLeft, Loader, Edit,
-    Database, FileText, LayoutDashboard, ChevronRight, Calculator
+    Database, FileText, LayoutDashboard, ChevronRight, Calculator, Moon, Sun
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../config';
 
 const Registers = () => {
     const navigate = useNavigate();
+    const { isDark, toggleTheme } = useTheme();
     const [registers, setRegisters] = useState([]);
     const [viewRegister, setViewRegister] = useState(null);
     const [showForm, setShowForm] = useState(false);
@@ -64,18 +66,20 @@ const Registers = () => {
     // View Mode (Iframe for Zoho)
     if (viewRegister) {
         return (
-            <div className="flex flex-col h-screen bg-gray-100">
-                <div className="bg-white p-4 shadow-sm flex items-center justify-between">
-                    <button onClick={() => setViewRegister(null)} className="flex items-center text-gray-600 hover:text-blue-600">
+            <div className={`flex flex-col h-screen ${isDark ? 'bg-gray-950' : 'bg-gray-100'}`}>
+                <div className={`p-4 shadow-sm flex items-center justify-between ${isDark ? 'bg-gray-900 border-b border-gray-800' : 'bg-white'}`}>
+                    <button onClick={() => setViewRegister(null)} className={`flex items-center ${isDark ? 'text-gray-300 hover:text-indigo-400' : 'text-gray-600 hover:text-blue-600'}`}>
                         <ArrowLeft className="mr-2" /> Back to Registers
                     </button>
-                    <h1 className="font-bold text-lg text-gray-800">{viewRegister.name} (Zoho Reference)</h1>
-                    <div className="w-24"></div>
+                    <h1 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-gray-800'}`}>{viewRegister.name} (Zoho Reference)</h1>
+                    <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                        {isDark ? <Sun size={20} className="text-yellow-400" /> : <Moon size={20} className="text-gray-600" />}
+                    </button>
                 </div>
                 <div className="flex-1 p-4">
                     <iframe
                         src={viewRegister.url}
-                        className="w-full h-full border rounded shadow-lg bg-white"
+                        className={`w-full h-full border rounded shadow-lg ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}
                         title={viewRegister.name}
                     ></iframe>
                 </div>
@@ -84,107 +88,110 @@ const Registers = () => {
     }
 
     return (
-        <div className="p-8 min-h-screen bg-gray-50">
+        <div className={`p-8 min-h-screen transition-colors duration-300 ${isDark ? 'bg-gray-950 text-white' : 'bg-gray-50'}`}>
             {/* Header */}
-            <div className="flex justify-between items-center mb-8">
+            <div className="max-w-7xl mx-auto flex justify-between items-center mb-8">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/dashboard')} className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition text-gray-600">
+                    <button onClick={() => navigate('/dashboard')} className={`p-2 rounded-full transition ${isDark ? 'bg-gray-800 hover:bg-gray-700 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-600'}`}>
                         <ArrowLeft size={20} />
                     </button>
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800">Register Engine</h1>
-                        <p className="text-gray-500">Excise-compliant automated registers</p>
+                        <h1 className={`text-4xl font-black ${isDark ? 'text-white' : 'text-gray-800'}`}>Register Engine</h1>
+                        <p className={`text-sm font-bold ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Excise-compliant automated registers</p>
                     </div>
                 </div>
+                <button onClick={toggleTheme} className={`p-4 rounded-2xl shadow-lg transition-all ${isDark ? 'bg-gray-800 text-yellow-400' : 'bg-white text-gray-600'}`}>
+                    {isDark ? <Sun size={24} /> : <Moon size={24} />}
+                </button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Main Excise Registers */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-blue-50/50">
-                            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                                <Database className="text-blue-600" size={24} />
+                    <div className={`rounded-[2.5rem] shadow-xl border overflow-hidden transition-all ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-100'}`}>
+                        <div className={`p-8 border-b flex justify-between items-center ${isDark ? 'bg-gray-800/50 border-gray-800' : 'bg-blue-50/50 border-gray-100'}`}>
+                            <h2 className="text-xl font-black flex items-center gap-3">
+                                <Database className={isDark ? 'text-indigo-400' : 'text-blue-600'} size={28} />
                                 Active Excise Registers
                             </h2>
-                            <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full uppercase tracking-wider">
+                            <span className={`px-4 py-1 text-[10px] font-black rounded-full uppercase tracking-widest ${isDark ? 'bg-indigo-900/40 text-indigo-300' : 'bg-blue-100 text-blue-700'}`}>
                                 System Generated
                             </span>
                         </div>
 
-                        <div className="divide-y divide-gray-100">
+                        <div className={`divide-y ${isDark ? 'divide-gray-800' : 'divide-gray-100'}`}>
                             {/* Reg 76 */}
                             <div
                                 onClick={() => navigate('/registers/reg76')}
-                                className="p-6 hover:bg-gray-50 transition cursor-pointer group flex items-center justify-between"
+                                className={`p-8 transition cursor-pointer group flex items-center justify-between ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}
                             >
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-blue-100 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                        <FileText size={24} />
+                                <div className="flex items-center gap-6">
+                                    <div className={`p-4 rounded-2xl transition-all ${isDark ? 'bg-gray-800 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white'}`}>
+                                        <FileText size={28} />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-gray-800 group-hover:text-blue-600">Reg 76 – Spirit Receipt</h3>
-                                        <p className="text-sm text-gray-500">Detailed record of daily spirit receipts from distilleries</p>
+                                        <h3 className={`text-xl font-black ${isDark ? 'text-white' : 'text-gray-800'}`}>Reg 76 – Spirit Receipt</h3>
+                                        <p className="text-sm text-gray-500 font-medium">Detailed record of daily spirit receipts from distilleries</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">Live</span>
-                                    <ChevronRight className="text-gray-300 group-hover:text-blue-600" />
+                                <div className="flex items-center gap-4">
+                                    <span className="text-[10px] font-black text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full uppercase tracking-widest">Live</span>
+                                    <ChevronRight className="text-gray-300 group-hover:translate-x-1 transition-transform" />
                                 </div>
                             </div>
 
                             {/* Reg 74 */}
                             <div
                                 onClick={() => navigate('/registers/reg74')}
-                                className="p-6 hover:bg-gray-50 transition cursor-pointer group flex items-center justify-between"
+                                className={`p-8 transition cursor-pointer group flex items-center justify-between ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}
                             >
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                                        <Calculator size={24} />
+                                <div className="flex items-center gap-6">
+                                    <div className={`p-4 rounded-2xl transition-all ${isDark ? 'bg-gray-800 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white' : 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white'}`}>
+                                        <Calculator size={28} />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-gray-800 group-hover:text-indigo-600">Reg 74 – Blending</h3>
-                                        <p className="text-sm text-gray-500">Blending operations, spirit transfers and vat balance</p>
+                                        <h3 className={`text-xl font-black ${isDark ? 'text-white' : 'text-gray-800'}`}>Reg 74 – Blending</h3>
+                                        <p className="text-sm text-gray-500 font-medium">Blending operations, spirit transfers and vat balance</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">Live</span>
-                                    <ChevronRight className="text-gray-300 group-hover:text-indigo-600" />
+                                <div className="flex items-center gap-4">
+                                    <span className="text-[10px] font-black text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full uppercase tracking-widest">Live</span>
+                                    <ChevronRight className="text-gray-300 group-hover:translate-x-1 transition-transform" />
                                 </div>
                             </div>
 
                             {/* Reg A */}
                             <div
                                 onClick={() => navigate('/registers/reg-a')}
-                                className="p-6 hover:bg-gray-50 transition cursor-pointer group flex items-center justify-between"
+                                className={`p-8 transition cursor-pointer group flex items-center justify-between ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}
                             >
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-orange-100 text-orange-600 rounded-xl group-hover:bg-orange-600 group-hover:text-white transition-colors">
-                                        <LayoutDashboard size={24} />
+                                <div className="flex items-center gap-6">
+                                    <div className={`p-4 rounded-2xl transition-all ${isDark ? 'bg-gray-800 text-orange-400 group-hover:bg-orange-600 group-hover:text-white' : 'bg-orange-50 text-orange-600 group-hover:bg-orange-600 group-hover:text-white'}`}>
+                                        <LayoutDashboard size={28} />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-gray-800 group-hover:text-orange-600">Reg A – Production</h3>
-                                        <p className="text-sm text-gray-500">Bottling operations, finished goods and variance control</p>
+                                        <h3 className={`text-xl font-black ${isDark ? 'text-white' : 'text-gray-800'}`}>Reg A – Production</h3>
+                                        <p className="text-sm text-gray-500 font-medium">Bottling operations, finished goods and variance control</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded">Live</span>
-                                    <ChevronRight className="text-gray-300 group-hover:text-orange-600" />
+                                <div className="flex items-center gap-4">
+                                    <span className="text-[10px] font-black text-orange-600 bg-orange-50 dark:bg-orange-900/20 px-3 py-1 rounded-full uppercase tracking-widest">Live</span>
+                                    <ChevronRight className="text-gray-300 group-hover:translate-x-1 transition-transform" />
                                 </div>
                             </div>
 
                             {/* Reg 78 - Future */}
-                            <div className="p-6 opacity-60 cursor-not-allowed flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-gray-100 text-gray-400 rounded-xl">
-                                        <FileSpreadsheet size={24} />
+                            <div className={`p-8 opacity-40 flex items-center justify-between ${isDark ? 'bg-gray-900/50' : 'bg-gray-50/50'}`}>
+                                <div className="flex items-center gap-6">
+                                    <div className={`p-4 rounded-2xl ${isDark ? 'bg-gray-800 text-gray-600' : 'bg-gray-100 text-gray-400'}`}>
+                                        <FileSpreadsheet size={28} />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-gray-800">Reg 78 – Consolidated</h3>
-                                        <p className="text-sm text-gray-500">Consolidated monthly spirit and production summary (Coming Soon)</p>
+                                        <h3 className={`text-xl font-black ${isDark ? 'text-gray-600' : 'text-gray-800'}`}>Reg 78 – Consolidated</h3>
+                                        <p className="text-sm text-gray-500 font-medium tracking-tight">Consolidated monthly summary (Coming Soon)</p>
                                     </div>
                                 </div>
-                                <span className="text-[10px] font-bold text-gray-400 border border-gray-200 px-2 py-1 rounded">PLANNED</span>
+                                <span className={`text-[10px] font-black border px-3 py-1 rounded-full uppercase tracking-widest ${isDark ? 'border-gray-800 text-gray-600' : 'border-gray-200 text-gray-400'}`}>PLANNED</span>
                             </div>
                         </div>
                     </div>
@@ -192,27 +199,27 @@ const Registers = () => {
 
                 {/* Zoho Reference Links */}
                 <div className="space-y-6">
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                            <h2 className="text-lg font-bold text-gray-700 flex items-center gap-2">
-                                <ExternalLink size={20} />
-                                Reference Links (Zoho)
+                    <div className={`rounded-[2.5rem] shadow-xl border overflow-hidden transition-all ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-100'}`}>
+                        <div className={`p-8 border-b flex justify-between items-center ${isDark ? 'bg-gray-800/80 border-gray-800' : 'bg-gray-50 border-gray-100'}`}>
+                            <h2 className="text-lg font-black flex items-center gap-3 tracking-tight">
+                                <ExternalLink size={20} className="text-blue-500" />
+                                Reference Links
                             </h2>
                             <button
                                 onClick={() => setShowForm(!showForm)}
-                                className="p-1 hover:bg-blue-50 text-blue-600 rounded transition"
+                                className={`p-2 rounded-xl transition ${isDark ? 'bg-gray-800 text-indigo-400 hover:bg-indigo-600 hover:text-white' : 'bg-white border border-gray-200 text-blue-600 hover:bg-blue-50'}`}
                             >
                                 <Plus size={20} />
                             </button>
                         </div>
 
                         {showForm && (
-                            <div className="p-6 bg-blue-50/50 border-b border-gray-100">
-                                <form onSubmit={handleAdd} className="space-y-3">
+                            <div className={`p-8 border-b ${isDark ? 'bg-gray-800/20 border-gray-800' : 'bg-blue-50/30 border-gray-100'}`}>
+                                <form onSubmit={handleAdd} className="space-y-4">
                                     <input
                                         type="text"
                                         placeholder="Name"
-                                        className="w-full p-2 text-sm border rounded"
+                                        className={`w-full p-4 text-sm rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-white'}`}
                                         value={newName}
                                         onChange={e => setNewName(e.target.value)}
                                         required
@@ -220,7 +227,7 @@ const Registers = () => {
                                     <input
                                         type="url"
                                         placeholder="URL"
-                                        className="w-full p-2 text-sm border rounded"
+                                        className={`w-full p-4 text-sm rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-white'}`}
                                         value={newUrl}
                                         onChange={e => setNewUrl(e.target.value)}
                                         required
@@ -228,37 +235,37 @@ const Registers = () => {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full bg-blue-600 text-white py-2 rounded text-sm font-bold hover:bg-blue-700 disabled:bg-blue-300"
+                                        className="w-full bg-indigo-600 text-white py-4 rounded-xl text-sm font-black uppercase tracking-widest hover:bg-indigo-700 disabled:bg-gray-400 transition-all shadow-lg"
                                     >
-                                        {loading ? 'Saving...' : 'Add Link'}
+                                        {loading ? 'Saving...' : 'Add Reference'}
                                     </button>
                                 </form>
                             </div>
                         )}
 
-                        <div className="max-h-[500px] overflow-y-auto">
+                        <div className="max-h-[600px] overflow-y-auto">
                             {registers.length > 0 ? (
-                                <div className="divide-y divide-gray-100">
+                                <div className={`divide-y ${isDark ? 'divide-gray-800' : 'divide-gray-100'}`}>
                                     {registers.map(reg => (
-                                        <div key={reg.id} className="p-4 hover:bg-gray-50 flex items-center justify-between group">
+                                        <div key={reg.id} className={`p-6 transition flex items-center justify-between group ${isDark ? 'hover:bg-gray-800/40' : 'hover:bg-gray-50'}`}>
                                             <div
                                                 className="flex-1 cursor-pointer"
                                                 onClick={() => setViewRegister(reg)}
                                             >
-                                                <h4 className="text-sm font-bold text-gray-800 group-hover:text-blue-600">{reg.name}</h4>
-                                                <p className="text-[10px] text-gray-400 truncate w-48">{reg.url}</p>
+                                                <h4 className={`text-sm font-black transition-colors ${isDark ? 'text-gray-200 group-hover:text-indigo-400' : 'text-gray-800 group-hover:text-blue-600'}`}>{reg.name}</h4>
+                                                <p className="text-[10px] text-gray-400 font-bold truncate w-48 mt-1">{reg.url}</p>
                                             </div>
                                             <button
                                                 onClick={(e) => handleDelete(reg.id, e)}
-                                                className="p-2 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+                                                className="p-3 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                                             >
-                                                <Trash2 size={16} />
+                                                <Trash2 size={18} />
                                             </button>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
-                                <div className="p-8 text-center text-gray-400 text-sm">
+                                <div className="p-16 text-center text-gray-400 font-bold italic">
                                     No reference links found.
                                 </div>
                             )}

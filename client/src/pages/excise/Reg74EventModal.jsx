@@ -3,8 +3,10 @@ import axios from 'axios';
 import { X, Save, Clock, Info, Shield, Droplets, Truck, RefreshCw, Archive, Settings } from 'lucide-react';
 import { API_URL } from '../../config';
 import { format } from 'date-fns';
+import { useTheme } from '../../context/ThemeContext';
 
 const Reg74EventModal = ({ vat, type, onClose, initialData = null }) => {
+    const { isDark } = useTheme();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         eventDateTime: initialData ? format(new Date(initialData.eventDateTime), "yyyy-MM-dd'T'HH:mm") : format(new Date(), "yyyy-MM-dd'T'HH:mm"),
@@ -88,15 +90,15 @@ const Reg74EventModal = ({ vat, type, onClose, initialData = null }) => {
         }
     };
 
-    const inputClass = "w-full p-2 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all";
-    const labelClass = "block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider";
+    const inputClass = `w-full p-3 border rounded-xl font-bold transition-all ${isDark ? 'bg-gray-800 border-gray-700 text-white focus:ring-2 focus:ring-indigo-500' : 'bg-gray-50 border-gray-100 focus:bg-white focus:ring-2 focus:ring-blue-500'}`;
+    const labelClass = `block text-[10px] font-black mb-1 uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-gray-500'}`;
 
     const renderFields = () => {
         switch (type) {
             case 'OPENING':
                 return (
                     <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
-                        <div className="col-span-2 p-3 bg-blue-50 rounded-xl mb-2 flex items-center gap-2 text-blue-700 font-bold text-xs uppercase">
+                        <div className={`col-span-2 p-3 rounded-xl mb-2 flex items-center gap-2 font-black text-[10px] uppercase tracking-widest ${isDark ? 'bg-indigo-900/20 text-indigo-400' : 'bg-blue-50 text-blue-700'}`}>
                             <Shield size={14} /> Opening Balance (Cols 1-7)
                         </div>
                         <div>
@@ -122,7 +124,7 @@ const Reg74EventModal = ({ vat, type, onClose, initialData = null }) => {
             case 'RECEIPT':
                 return (
                     <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
-                        <div className="col-span-2 p-3 bg-green-50 rounded-xl mb-2 flex items-center gap-2 text-green-700 font-bold text-xs uppercase">
+                        <div className={`col-span-2 p-3 rounded-xl mb-2 flex items-center gap-2 font-black text-[10px] uppercase tracking-widest ${isDark ? 'bg-green-900/20 text-green-400' : 'bg-green-50 text-green-700'}`}>
                             <Truck size={14} /> Spirit Receipt (Cols 8-11)
                         </div>
                         <div className="col-span-2">
@@ -143,7 +145,7 @@ const Reg74EventModal = ({ vat, type, onClose, initialData = null }) => {
             case 'INTERNAL_TRANSFER':
                 return (
                     <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
-                        <div className="col-span-2 p-3 bg-indigo-50 rounded-xl mb-2 flex items-center gap-2 text-indigo-700 font-bold text-xs uppercase">
+                        <div className={`col-span-2 p-3 rounded-xl mb-2 flex items-center gap-2 font-black text-[10px] uppercase tracking-widest ${isDark ? 'bg-indigo-900/20 text-indigo-400' : 'bg-indigo-50 text-indigo-700'}`}>
                             <RefreshCw size={14} /> Internal Issue (Cols 12-15)
                         </div>
                         <div className="col-span-2">
@@ -161,67 +163,10 @@ const Reg74EventModal = ({ vat, type, onClose, initialData = null }) => {
                     </div>
                 );
 
-            case 'WATER_ADDITION':
-            case 'BLENDING':
-                return (
-                    <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
-                        <div className="col-span-2 p-3 bg-indigo-50 rounded-xl mb-2 flex items-center gap-2 text-indigo-700 font-bold text-xs uppercase">
-                            <RefreshCw size={14} /> {type} (Cols 16-19)
-                        </div>
-                        <div className="col-span-2">
-                            <label className={labelClass}>Associate with Batch</label>
-                            <div className="flex gap-2">
-                                <select
-                                    className={inputClass}
-                                    value={formData.batchId || ''}
-                                    onChange={e => handleChange('root', 'batchId', e.target.value)}
-                                >
-                                    <option value="">Select Existing Batch</option>
-                                    {batches.map(b => (
-                                        <option key={b.id} value={b.id}>{b.baseBatchNo} - {b.brand?.name}</option>
-                                    ))}
-                                </select>
-                                <button type="button" onClick={() => setShowBatchForm(!showBatchForm)} className="px-3 bg-blue-100 text-blue-600 rounded-lg text-xs font-bold">NEW</button>
-                            </div>
-                        </div>
-
-                        {showBatchForm && (
-                            <div className="col-span-2 p-4 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-3">
-                                <div className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Create Mother Batch</div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className={labelClass}>Base Batch No</label>
-                                        <input type="text" placeholder="e.g. 10AJD01" className={inputClass} value={newBatch.baseBatchNo} onChange={e => setNewBatch({ ...newBatch, baseBatchNo: e.target.value })} />
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Brand</label>
-                                        <select className={inputClass} value={newBatch.brandId} onChange={e => setNewBatch({ ...newBatch, brandId: e.target.value })}>
-                                            <option value="">Select Brand</option>
-                                            {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                        </select>
-                                    </div>
-                                    <div className="col-span-2">
-                                        <button type="button" onClick={handleCreateBatch} className="w-full py-2 bg-blue-600 text-white rounded-lg font-bold text-[10px] uppercase">Initialize Mother Batch</button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        <div>
-                            <label className={labelClass}>Water/Ing. Qty BL</label>
-                            <input type="number" step="0.01" value={formData.adjustmentData.qtyBl || ''} onChange={e => handleChange('adjustmentData', 'qtyBl', parseFloat(e.target.value))} className={inputClass} required />
-                        </div>
-                        <div>
-                            <label className={labelClass}>Resultant Strength % v/v</label>
-                            <input type="number" step="0.1" value={formData.adjustmentData.strength || ''} onChange={e => handleChange('adjustmentData', 'strength', parseFloat(e.target.value))} className={inputClass} required />
-                        </div>
-                    </div>
-                );
-
             case 'ADJUSTMENT':
                 return (
                     <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
-                        <div className="col-span-2 p-3 bg-orange-50 rounded-xl mb-2 flex items-center gap-2 text-orange-700 font-bold text-xs uppercase">
+                        <div className={`col-span-2 p-3 rounded-xl mb-2 flex items-center gap-2 font-black text-[10px] uppercase tracking-widest ${isDark ? 'bg-orange-900/20 text-orange-400' : 'bg-orange-50 text-orange-700'}`}>
                             <Settings size={14} /> Adjustment/Increase (Cols 16-19)
                         </div>
                         <div>
@@ -252,7 +197,7 @@ const Reg74EventModal = ({ vat, type, onClose, initialData = null }) => {
             case 'PRODUCTION':
                 return (
                     <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
-                        <div className="col-span-2 p-3 bg-purple-50 rounded-xl mb-2 flex items-center gap-2 text-purple-700 font-bold text-xs uppercase">
+                        <div className={`col-span-2 p-3 rounded-xl mb-2 flex items-center gap-2 font-black text-[10px] uppercase tracking-widest ${isDark ? 'bg-purple-900/20 text-purple-400' : 'bg-purple-50 text-purple-700'}`}>
                             <Droplets size={14} /> Production Issue (Cols 25-33)
                         </div>
                         <div className="col-span-2">
@@ -291,7 +236,7 @@ const Reg74EventModal = ({ vat, type, onClose, initialData = null }) => {
             case 'CLOSING':
                 return (
                     <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
-                        <div className="col-span-2 p-3 bg-gray-100 rounded-xl mb-2 flex items-center gap-2 text-gray-700 font-bold text-xs uppercase">
+                        <div className={`col-span-2 p-3 rounded-xl mb-2 flex items-center gap-2 font-black text-[10px] uppercase tracking-widest ${isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-700'}`}>
                             <Archive size={14} /> Closing Snapshot (Cols 34-37)
                         </div>
                         <div>
@@ -314,31 +259,31 @@ const Reg74EventModal = ({ vat, type, onClose, initialData = null }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-xl overflow-hidden border border-white/20">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+        <div className="fixed inset-0 bg-gray-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+            <div className={`rounded-[3rem] shadow-2xl w-full max-w-xl overflow-hidden border transition-all ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-white'}`}>
+                <div className={`p-8 border-b flex justify-between items-center ${isDark ? 'bg-gray-800/50 border-gray-800' : 'bg-gray-50/50 border-gray-100'}`}>
                     <div>
-                        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <h2 className={`text-2xl font-black flex items-center gap-3 tracking-tighter ${isDark ? 'text-white' : 'text-gray-800'}`}>
                             {type.replace('_', ' ')}
-                            <span className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-full">{vat?.vatCode}</span>
+                            <span className={`text-[10px] px-3 py-1 rounded-full font-black ${isDark ? 'bg-indigo-600 text-white' : 'bg-blue-600 text-white'}`}>{vat?.vatCode}</span>
                         </h2>
-                        <p className="text-xs text-gray-400 font-medium">Capture operational event for Reg-74</p>
+                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">Reg-74 Statutory Incident</p>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-white hover:shadow-sm rounded-full transition-all">
-                        <X size={20} className="text-gray-400" />
+                    <button onClick={onClose} className={`p-2 rounded-full transition-all ${isDark ? 'hover:bg-gray-800 text-gray-500' : 'hover:bg-white hover:shadow-sm text-gray-400'}`}>
+                        <X size={24} />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                    <div className="bg-blue-50/30 p-4 rounded-2xl border border-blue-100/50">
+                <form onSubmit={handleSubmit} className="p-10 space-y-8 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                    <div className={`p-6 rounded-3xl border ${isDark ? 'bg-indigo-900/10 border-indigo-900/30' : 'bg-blue-50/30 border-blue-100/50'}`}>
                         <label className={labelClass}>Event Date & Time</label>
                         <div className="relative">
-                            <Clock className="absolute left-3 top-2.5 text-blue-400" size={16} />
+                            <Clock className={`absolute left-4 top-3.5 ${isDark ? 'text-indigo-400' : 'text-blue-400'}`} size={18} />
                             <input
                                 type="datetime-local"
                                 value={formData.eventDateTime}
                                 onChange={e => handleChange('root', 'eventDateTime', e.target.value)}
-                                className={`${inputClass} pl-10 border-blue-100 shadow-sm`}
+                                className={`${inputClass} pl-12 shadow-sm`}
                                 required
                             />
                         </div>
@@ -347,30 +292,30 @@ const Reg74EventModal = ({ vat, type, onClose, initialData = null }) => {
                     {renderFields()}
 
                     <div className="space-y-2">
-                        <label className={labelClass}>Remarks / Nature of Operation</label>
+                        <label className={labelClass}>Remarks / Operational Notes</label>
                         <textarea
                             value={formData.remarks}
                             onChange={e => handleChange('root', 'remarks', e.target.value)}
-                            className={`${inputClass} h-24 pt-3`}
-                            placeholder="Enter any additional context or batch numbers..."
+                            className={`${inputClass} h-32 pt-4 px-4`}
+                            placeholder="Provide regulatory context for this entry..."
                         ></textarea>
                     </div>
 
-                    <div className="flex gap-4 pt-4 sticky bottom-0 bg-white">
+                    <div className={`flex gap-4 pt-6 sticky bottom-0 transition-colors ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 py-4 px-6 border border-gray-200 text-gray-500 rounded-2xl font-bold hover:bg-gray-50 transition-all text-sm"
+                            className={`flex-1 py-5 px-6 border rounded-[1.5rem] font-black uppercase text-[10px] tracking-widest transition-all ${isDark ? 'border-gray-800 text-gray-500 hover:bg-gray-800' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="flex-[2] py-4 px-6 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 hover:shadow-lg disabled:bg-blue-300 transition-all text-sm flex items-center justify-center gap-2"
+                            className={`flex-[2] py-5 px-6 rounded-[1.5rem] font-black uppercase text-[10px] tracking-widest transition-all flex items-center justify-center gap-3 shadow-xl ${isDark ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-900/20' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/20'}`}
                         >
                             {loading ? <RefreshCw className="animate-spin" size={20} /> : <Save size={20} />}
-                            {initialData ? 'Update Event' : 'Record Event'}
+                            {initialData ? 'Update Record' : 'Commit Entry'}
                         </button>
                     </div>
                 </form>
