@@ -9,6 +9,8 @@ import Register from './pages/Register';
 import AdminAuditLogs from './pages/AdminAuditLogs';
 import Reg76List from './pages/excise/Reg76List';
 import Reg76Form from './pages/excise/Reg76Form';
+import Reg74Dashboard from './pages/excise/Reg74Dashboard';
+import Reg74Register from './pages/excise/Reg74Register';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -43,6 +45,16 @@ function App() {
           <Route path="/registers/reg76/edit/:id" element={
             <ProtectedRoute>
               <Reg76Form />
+            </ProtectedRoute>
+          } />
+          <Route path="/registers/reg74" element={
+            <ProtectedRoute>
+              <Reg74Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/registers/reg74/register/:vatId" element={
+            <ProtectedRoute>
+              <Reg74Register />
             </ProtectedRoute>
           } />
           <Route path="/documents" element={
