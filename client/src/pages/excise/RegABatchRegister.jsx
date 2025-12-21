@@ -2,44 +2,42 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { format } from 'date-fns';
 import {
-    Package,
-    Edit,
-    Trash2,
-    Plus,
-    Search,
-    Filter,
-    ChevronRight,
-    AlertCircle,
-    CheckCircle2,
-    Clock,
-    FlaskConical,
-    RefreshCw
+    Package, Edit, Trash2, Plus, Search, Filter, ChevronRight,
+    AlertCircle, CheckCircle2, Clock, FlaskConical, RefreshCw, Eye, BookOpen, Save, Calculator
 } from 'lucide-react';
 import { API_URL } from '../../config';
 
 const RegABatchRegister = () => {
     const [batches, setBatches] = useState([]);
     const [brands, setBrands] = useState([]);
+    const [regAEntries, setRegAEntries] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [editingBatch, setEditingBatch] = useState(null);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showRegAModal, setShowRegAModal] = useState(false);
+    const [currentEntry, setCurrentEntry] = useState(null);
+    const [viewMode, setViewMode] = useState('LIST'); // LIST or STATUTORY
 
     const fetchData = async () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const [batchRes, brandRes] = await Promise.all([
+            const [batchRes, brandRes, regARes] = await Promise.all([
                 axios.get(`${API_URL}/api/reg74/batches`, {
                     headers: { Authorization: `Bearer ${token}` }
                 }),
                 axios.get(`${API_URL}/api/reg74/brands`, {
                     headers: { Authorization: `Bearer ${token}` }
+                }),
+                axios.get(`${API_URL}/api/rega/entries`, {
+                    headers: { Authorization: `Bearer ${token}` }
                 })
             ]);
             setBatches(batchRes.data);
             setBrands(brandRes.data);
+            setRegAEntries(regARes.data);
         } catch (error) {
             console.error("Failed to fetch data", error);
         } finally {
@@ -47,29 +45,63 @@ const RegABatchRegister = () => {
         }
     };
 
-    const handleUpdateBatch = async (e) => {
-        e.preventDefault();
-        try {
-            const token = localStorage.getItem('token');
-            await axios.put(`${API_URL}/api/reg74/batches/${editingBatch.id}`, editingBatch, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setShowEditModal(false);
-            fetchData();
-        } catch (error) {
-            console.error("Update failed", error);
-        }
-    };
-
     useEffect(() => {
         fetchData();
     }, []);
 
-    const filteredBatches = batches.filter(b => {
-        const matchesSearch = b.baseBatchNo.toLowerCase().includes(search.toLowerCase()) ||
-            b.brand?.name.toLowerCase().includes(search.toLowerCase());
-        const matchesStatus = statusFilter === 'ALL' || b.status === statusFilter;
-        return matchesSearch && matchesStatus;
+    const handleSync = async (batchId) => {
+        try {
+            const token = localStorage.getItem('token');
+            await axios.get(`${API_URL}/api/rega/sync/${batchId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchData();
+        } catch (error) {
+            console.error("Sync failed", error);
+        }
+    };
+
+    const handleUpdateRegA = async (e) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('token');
+            // Calculate BL and AL from bottling counts before saving
+            const b750 = parseInt(currentEntry.bottling750 || 0);
+            const b600 = parseInt(currentEntry.bottling600 || 0);
+            const b500 = parseInt(currentEntry.bottling500 || 0);
+            const b375 = parseInt(currentEntry.bottling375 || 0);
+            const b300 = parseInt(currentEntry.bottling300 || 0);
+            const b180 = parseInt(currentEntry.bottling180 || 0);
+
+            const bl = (b750 * 0.75) + (b600 * 0.60) + (b500 * 0.50) + (b375 * 0.375) + (b300 * 0.30) + (b180 * 0.180);
+            const al = bl * (parseFloat(currentEntry.avgStrength || 0) / 100);
+
+            const mfmAl = parseFloat(currentEntry.mfmTotalAl || 0);
+            const wastage = mfmAl - al;
+            const allowWastage = mfmAl * 0.01; // Example 1% bottling loss allowed
+
+            await axios.post(`${API_URL}/api/rega/entry`, {
+                ...currentEntry,
+                spiritBottledBl: bl,
+                spiritBottledAl: al,
+                productionWastage: wastage > 0 ? wastage : 0,
+                productionIncrease: wastage < 0 ? Math.abs(wastage) : 0,
+                allowableWastage: allowWastage,
+                chargeableWastage: (wastage > allowWastage) ? (wastage - allowWastage) : 0
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setShowRegAModal(false);
+            fetchData();
+        } catch (error) {
+            console.error("Save failed", error);
+        }
+    };
+
+    const filteredEntries = regAEntries.filter(e => {
+        const matchesSearch = e.batch?.baseBatchNo.toLowerCase().includes(search.toLowerCase()) ||
+            e.batch?.brand?.name.toLowerCase().includes(search.toLowerCase());
+        return matchesSearch;
     });
 
     const getStatusStyle = (status) => {
@@ -82,51 +114,57 @@ const RegABatchRegister = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50/50 p-6 md:p-10">
+        <div className="min-h-screen bg-[#F8FAFC] p-6 md:p-10">
             {/* Header */}
-            <div className="max-w-7xl mx-auto mb-10 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="max-w-7xl mx-auto mb-10 flex flex-col md:flex-row justify-between items-center gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tight flex items-center gap-4 justify-center md:justify-start">
+                    <h1 className="text-4xl font-black text-gray-900 tracking-tight flex items-center gap-4">
                         <div className="p-3 bg-indigo-600 rounded-2xl shadow-indigo-200 shadow-lg">
-                            <FlaskConical className="text-white" size={32} />
+                            <BookOpen className="text-white" size={32} />
                         </div>
-                        Reg-A Batch Register
+                        Reg-A Statutory Register
                     </h1>
-                    <p className="mt-2 text-gray-500 font-medium text-lg">Manage production batches and blending operations</p>
+                    <p className="mt-2 text-gray-500 font-medium text-lg uppercase tracking-tight text-[10px]">Blending & Bottling Control Register (Reg-A)</p>
                 </div>
 
                 <div className="flex gap-4">
-                    <button className="px-6 py-4 bg-white border border-gray-200 text-gray-700 rounded-3xl font-bold hover:bg-gray-50 hover:shadow-xl transition-all flex items-center gap-3">
-                        <Filter size={20} /> Advanced Filters
+                    <button
+                        onClick={() => setViewMode(viewMode === 'LIST' ? 'STATUTORY' : 'LIST')}
+                        className={`px-6 py-4 rounded-3xl font-bold flex items-center gap-3 transition-all ${viewMode === 'STATUTORY' ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-200 text-gray-700'}`}
+                    >
+                        {viewMode === 'LIST' ? <BookOpen size={20} /> : <Package size={20} />}
+                        {viewMode === 'LIST' ? 'Statutory View' : 'Batch Dashboard'}
                     </button>
-                    <button className="px-8 py-4 bg-indigo-600 text-white rounded-3xl font-bold hover:bg-indigo-700 hover:shadow-indigo-400 shadow-xl transition-all flex items-center gap-3">
-                        <Plus size={24} /> New Production Batch
+                    <button className="px-8 py-4 bg-gray-900 text-white rounded-3xl font-bold hover:bg-black shadow-xl transition-all flex items-center gap-3">
+                        <Plus size={24} /> New Batch
                     </button>
                 </div>
             </div>
 
-            {/* Stats */}
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-                {[
-                    { label: 'Active Batches', val: batches.filter(b => b.status !== 'CLOSED').length, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
-                    { label: 'Completed (MTD)', val: batches.filter(b => b.status === 'CLOSED').length, icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50' },
-                    { label: 'Total Volume (AL)', val: batches.reduce((acc, b) => acc + (b.totalVolumeAl || 0), 0).toFixed(0), icon: Package, color: 'text-blue-600', bg: 'bg-blue-50' },
-                    { label: 'Exceptions', val: 0, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' },
-                ].map((stat, i) => (
-                    <div key={i} className={`${stat.bg} p-6 rounded-[2.5rem] border border-white shadow-sm flex items-center gap-5`}>
-                        <div className={`p-4 rounded-3xl bg-white shadow-sm ${stat.color}`}>
-                            <stat.icon size={28} />
+            {viewMode === 'LIST' ? (
+                /* Dashboard View */
+                <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                    {[
+                        { label: 'Active Batches', val: batches.filter(b => b.status !== 'CLOSED').length, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
+                        { label: 'Completed (MTD)', val: batches.filter(b => b.status === 'CLOSED').length, icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50' },
+                        { label: 'Total Volume (AL)', val: batches.reduce((acc, b) => acc + (b.totalVolumeAl || 0), 0).toFixed(0), icon: Package, color: 'text-blue-600', bg: 'bg-blue-50' },
+                        { label: 'Exceptions', val: 0, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' },
+                    ].map((stat, i) => (
+                        <div key={i} className={`${stat.bg} p-6 rounded-[2.5rem] border border-white shadow-sm flex items-center gap-5`}>
+                            <div className={`p-4 rounded-3xl bg-white shadow-sm ${stat.color}`}>
+                                <stat.icon size={28} />
+                            </div>
+                            <div>
+                                <div className="text-xs font-black text-gray-400 uppercase tracking-widest">{stat.label}</div>
+                                <div className="text-3xl font-black text-gray-900">{stat.val}</div>
+                            </div>
                         </div>
-                        <div>
-                            <div className="text-xs font-black text-gray-400 uppercase tracking-widest">{stat.label}</div>
-                            <div className="text-3xl font-black text-gray-900">{stat.val}</div>
-                        </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            ) : null}
 
-            {/* Table Area */}
-            <div className="max-w-7xl mx-auto bg-white rounded-[3rem] shadow-2xl border border-gray-100 overflow-hidden">
+            {/* Main Content Area */}
+            <div className={`mx-auto bg-white rounded-[3rem] shadow-2xl border border-gray-100 overflow-hidden ${viewMode === 'STATUTORY' ? 'max-w-none' : 'max-w-7xl'}`}>
                 <div className="p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-6 bg-gray-50/30">
                     <div className="relative w-full md:w-96">
                         <Search className="absolute left-4 top-4 text-gray-400" size={20} />
@@ -138,91 +176,106 @@ const RegABatchRegister = () => {
                             onChange={e => setSearch(e.target.value)}
                         />
                     </div>
-                    <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
-                        {['ALL', 'OPEN', 'IN_PRODUCTION', 'CLOSED'].map(s => (
-                            <button
-                                key={s}
-                                onClick={() => setStatusFilter(s)}
-                                className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${statusFilter === s ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-600'}`}
-                            >
-                                {s.replace('_', ' ')}
-                            </button>
-                        ))}
-                    </div>
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                    <table className="w-full text-left table-fixed min-w-[3000px]">
                         <thead>
-                            <tr className="bg-gray-50/50 text-gray-400 font-black text-[10px] uppercase tracking-[0.2em] border-b border-gray-50">
-                                <th className="px-8 py-5">Batch / Mother ID</th>
-                                <th className="px-8 py-5">Brand & Recipe</th>
-                                <th className="px-8 py-5">Start Date</th>
-                                <th className="px-8 py-5 text-right">Target (BL)</th>
-                                <th className="px-8 py-5 text-right">Target (AL)</th>
-                                <th className="px-8 py-5 text-center">Status</th>
-                                <th className="px-8 py-5 text-right">Actions</th>
+                            <tr className="bg-gray-900 text-white font-black text-[9px] uppercase tracking-widest text-center">
+                                {/* Groups */}
+                                <th colSpan="4" className="p-3 border-r border-gray-700">Basic Information (1-4)</th>
+                                <th colSpan="4" className="p-3 border-r border-gray-700 bg-blue-900">Receipt Volume (5-8)</th>
+                                <th colSpan="4" className="p-3 border-r border-gray-700 bg-purple-900">Total Blend (9-12)</th>
+                                <th colSpan="4" className="p-3 border-r border-gray-700">Batch Info (13-16)</th>
+                                <th colSpan="5" className="p-3 border-r border-gray-700 bg-indigo-900">MFM Transfer (17-21)</th>
+                                <th colSpan="6" className="p-3 border-r border-gray-700 bg-green-900">Bottling (22-27)</th>
+                                <th colSpan="3" className="p-3 border-r border-gray-700">Finished Goods (28-30)</th>
+                                <th colSpan="4" className="p-3 border-r border-gray-700 bg-red-900">Wastages (31-34)</th>
+                                <th className="p-3">Actions</th>
+                            </tr>
+                            <tr className="bg-gray-100 text-gray-500 font-bold text-[8px] uppercase text-center border-b border-gray-200">
+                                {/* 1-4 */}
+                                <th className="p-2 border-r border-gray-200 w-32">Base Batch</th><th className="p-2 border-r border-gray-200 w-32">Start Date</th><th className="p-2 border-r border-gray-200 w-40">Brand</th><th className="p-2 border-r border-gray-200 w-24">VAT</th>
+                                {/* 5-8 */}
+                                <th className="p-2 border-r border-gray-200 w-24">From VAT</th><th className="p-2 border-r border-gray-200 w-20">STR</th><th className="p-2 border-r border-gray-200 w-24">BL</th><th className="p-2 border-r border-gray-200 w-24 border-gray-300">AL</th>
+                                {/* 9-12 */}
+                                <th className="p-2 border-r border-gray-200 w-24">To VAT</th><th className="p-2 border-r border-gray-200 w-20">STR</th><th className="p-2 border-r border-gray-200 w-24">BL</th><th className="p-2 border-r border-gray-200 w-24 border-gray-300">AL</th>
+                                {/* 13-16 */}
+                                <th className="p-2 border-r border-gray-200 w-40">Batch No/Date</th><th className="p-2 border-r border-gray-200 w-32">Prod Date</th><th className="p-2 border-r border-gray-200 w-24">Tot BL</th><th className="p-2 border-r border-gray-200 w-24">Tot AL</th>
+                                {/* 17-21 */}
+                                <th className="p-2 border-r border-gray-200 w-24">Density</th><th className="p-2 border-r border-gray-200 w-20">Temp</th><th className="p-2 border-r border-gray-200 w-20">STR</th><th className="p-2 border-r border-gray-200 w-24">MFM BL</th><th className="p-2 border-r border-gray-200 w-24">MFM AL</th>
+                                {/* 22-27 */}
+                                <th className="p-2 border-r border-gray-200 w-20">750</th><th className="p-2 border-r border-gray-200 w-20">600</th><th className="p-2 border-r border-gray-200 w-20">500</th><th className="p-2 border-r border-gray-200 w-20">375</th><th className="p-2 border-r border-gray-200 w-20">300</th><th className="p-2 border-r border-gray-200 w-20">180</th>
+                                {/* 28-30 */}
+                                <th className="p-2 border-r border-gray-200 w-24">Bottled BL</th><th className="p-2 border-r border-gray-200 w-20">Avg STR</th><th className="p-2 border-r border-gray-200 w-24">Bottled AL</th>
+                                {/* 31-34 */}
+                                <th className="p-2 border-r border-gray-200 w-24">Inc AL</th><th className="p-2 border-r border-gray-200 w-24">Wast AL</th><th className="p-2 border-r border-gray-200 w-24">Allow (1%)</th><th className="p-2 border-r border-gray-200 w-24">Chargeable</th>
+                                <th className="p-2">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan="7" className="px-8 py-20 text-center">
-                                        <RefreshCw className="animate-spin mx-auto text-indigo-400 mb-4" size={40} />
-                                        <p className="text-gray-400 font-bold">Synchronizing Batch Registry...</p>
-                                    </td>
-                                </tr>
-                            ) : filteredBatches.length === 0 ? (
-                                <tr>
-                                    <td colSpan="7" className="px-8 py-20 text-center">
-                                        <AlertCircle className="mx-auto text-gray-200 mb-4" size={60} />
-                                        <p className="text-gray-400 font-bold text-xl">No batches found matching criteria</p>
-                                    </td>
-                                </tr>
-                            ) : filteredBatches.map(batch => (
-                                <tr key={batch.id} className="hover:bg-indigo-50/30 transition-all group">
-                                    <td className="px-8 py-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl group-hover:scale-110 transition-all">
-                                                <Package size={20} />
-                                            </div>
-                                            <div>
-                                                <div className="font-black text-gray-900 text-lg">{batch.baseBatchNo}</div>
-                                                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">ID: #B-{batch.id.toString().padStart(4, '0')}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-8 py-6">
-                                        <div className="font-bold text-gray-800">{batch.brand?.name}</div>
-                                        <div className="text-xs text-indigo-400 font-bold bg-indigo-50 px-2 py-0.5 rounded-full inline-block mt-1">{batch.brand?.category}</div>
-                                    </td>
-                                    <td className="px-8 py-6 font-medium text-gray-500 italic">
-                                        {format(new Date(batch.startDate), 'do MMM, yyyy')}
-                                    </td>
-                                    <td className="px-8 py-6 text-right font-black text-gray-800">
-                                        {(batch.totalVolumeBl || 0).toLocaleString()} <span className="text-[10px] text-gray-400">BL</span>
-                                    </td>
-                                    <td className="px-8 py-6 text-right font-black text-indigo-600">
-                                        {(batch.totalVolumeAl || 0).toLocaleString()} <span className="text-[10px] text-indigo-400">AL</span>
-                                    </td>
-                                    <td className="px-8 py-6 text-center">
-                                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusStyle(batch.status)}`}>
-                                            {batch.status.replace('_', ' ')}
-                                        </span>
-                                    </td>
-                                    <td className="px-8 py-6 text-right">
-                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                        <tbody className="divide-y divide-gray-100 font-bold text-[9px] text-gray-700">
+                            {filteredEntries.map(entry => (
+                                <tr key={entry.id} className="hover:bg-blue-50/50 transition-all">
+                                    <td className="p-3 border-r border-gray-100 text-center font-black">{entry.batch.baseBatchNo}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center">{format(new Date(entry.batch.startDate), 'dd-MM-yy')}</td>
+                                    <td className="p-3 border-r border-gray-100 font-black">{entry.batch.brand?.name}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center">{entry.batch.vat?.vatCode}</td>
+
+                                    <td className="p-3 border-r border-gray-100 text-center bg-blue-50/30">{entry.receiptFromVat || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-blue-50/30">{entry.receiptStrength || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-blue-50/30 font-black">{entry.receiptBl?.toLocaleString() || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-blue-50/30 font-black text-blue-600 border-gray-200">{entry.receiptAl?.toFixed(2) || '-'}</td>
+
+                                    <td className="p-3 border-r border-gray-100 text-center bg-purple-50/30">{entry.blendingToVat || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-purple-50/30">{entry.blendingStrength || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-purple-50/30 font-black">{entry.blendingBl?.toLocaleString() || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-purple-50/30 font-black text-purple-600 border-gray-200">{entry.blendingAl?.toFixed(2) || '-'}</td>
+
+                                    <td className="p-3 border-r border-gray-100 text-center font-black">{entry.batchNoDate || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center">{entry.productionDate ? format(new Date(entry.productionDate), 'dd-MM-yy') : '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center font-black">{entry.totalBatchBl?.toLocaleString() || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center font-black">{entry.totalBatchAl?.toFixed(2) || '-'}</td>
+
+                                    <td className="p-3 border-r border-gray-100 text-center bg-indigo-50/30">{entry.mfmDensity || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-indigo-50/30">{entry.mfmTemp || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-indigo-50/30">{entry.mfmStrength || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-indigo-50/30 font-black">{entry.mfmTotalBl?.toLocaleString() || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-indigo-50/30 font-black text-indigo-600 border-gray-200">{entry.mfmTotalAl?.toFixed(2) || '-'}</td>
+
+                                    <td className="p-3 border-r border-gray-100 text-center bg-green-50/30">{entry.bottling750 || 0}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-green-50/30">{entry.bottling600 || 0}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-green-50/30">{entry.bottling500 || 0}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-green-50/30">{entry.bottling375 || 0}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-green-50/30">{entry.bottling300 || 0}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-green-50/30 border-gray-200">{entry.bottling180 || 0}</td>
+
+                                    <td className="p-3 border-r border-gray-100 text-center font-black">{entry.spiritBottledBl?.toFixed(2) || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center">{entry.avgStrength || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center font-black text-green-700 border-gray-200">{entry.spiritBottledAl?.toFixed(2) || '-'}</td>
+
+                                    <td className="p-3 border-r border-gray-100 text-center bg-red-50/30 text-green-600 font-black">{entry.productionIncrease?.toFixed(2) || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-red-50/30 text-red-600 font-black">{entry.productionWastage?.toFixed(2) || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-red-50/30 italic text-gray-400">{entry.allowableWastage?.toFixed(2) || '-'}</td>
+                                    <td className="p-3 border-r border-gray-100 text-center bg-red-50/30 text-red-900 font-black border-gray-200">{entry.chargeableWastage?.toFixed(2) || '-'}</td>
+
+                                    <td className="p-3 text-center">
+                                        <div className="flex gap-2 justify-center">
                                             <button
                                                 onClick={() => {
-                                                    setEditingBatch(batch);
-                                                    setShowEditModal(true);
+                                                    setCurrentEntry(entry);
+                                                    setShowRegAModal(true);
                                                 }}
-                                                className="p-3 bg-white border border-gray-100 text-gray-400 hover:text-indigo-600 hover:shadow-lg rounded-2xl transition-all"
+                                                className="p-1.5 bg-gray-900 text-white rounded-lg hover:bg-indigo-600 transition-all"
+                                                title="Update Bottling Counts"
                                             >
-                                                <Edit size={18} />
+                                                <Calculator size={12} />
                                             </button>
-                                            <button className="p-3 bg-white border border-gray-100 text-gray-400 hover:text-indigo-600 rounded-2xl flex items-center gap-2 hover:shadow-lg transition-all pr-4">
-                                                <ChevronRight size={18} /> <span className="text-xs font-bold uppercase">View Logs</span>
+                                            <button
+                                                onClick={() => handleSync(entry.batchId)}
+                                                className="p-1.5 bg-white border border-gray-200 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-all"
+                                                title="Sync from Reg-74"
+                                            >
+                                                <RefreshCw size={12} />
                                             </button>
                                         </div>
                                     </td>
@@ -233,65 +286,67 @@ const RegABatchRegister = () => {
                 </div>
             </div>
 
-            {/* Edit Modal */}
-            {showEditModal && (
+            {/* Reg-A Bottling Modal */}
+            {showRegAModal && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-lg overflow-hidden border border-white">
+                    <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-4xl overflow-hidden border border-white">
                         <div className="p-10">
-                            <h2 className="text-3xl font-black text-gray-900 mb-2">Edit Production Batch</h2>
-                            <p className="text-gray-400 font-medium mb-8">Update mother batch details and status</p>
+                            <h2 className="text-3xl font-black text-gray-900 mb-2">Update Production Counts</h2>
+                            <p className="text-gray-400 font-medium mb-8 uppercase text-[10px] tracking-widest">Entering Statutory Bottling Data (Cols 22-27)</p>
 
-                            <form onSubmit={handleUpdateBatch} className="space-y-6">
-                                <div>
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 px-1">Base Batch No</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-6 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-700"
-                                        value={editingBatch.baseBatchNo}
-                                        onChange={e => setEditingBatch({ ...editingBatch, baseBatchNo: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 px-1">Brand</label>
-                                    <select
-                                        className="w-full px-6 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-700 appearance-none"
-                                        value={editingBatch.brandId}
-                                        onChange={e => setEditingBatch({ ...editingBatch, brandId: parseInt(e.target.value) })}
-                                        required
-                                    >
-                                        {brands.map(b => (
-                                            <option key={b.id} value={b.id}>{b.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 px-1">Production Status</label>
-                                    <select
-                                        className="w-full px-6 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-700 appearance-none"
-                                        value={editingBatch.status}
-                                        onChange={e => setEditingBatch({ ...editingBatch, status: e.target.value })}
-                                        required
-                                    >
-                                        <option value="OPEN">OPEN</option>
-                                        <option value="IN_PRODUCTION">IN PRODUCTION</option>
-                                        <option value="CLOSED">CLOSED</option>
-                                    </select>
+                            <form onSubmit={handleUpdateRegA} className="space-y-8">
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                                    {[
+                                        { id: 'bottling750', label: '750 ML Bottles' },
+                                        { id: 'bottling600', label: '600 ML Bottles' },
+                                        { id: 'bottling500', label: '500 ML Bottles' },
+                                        { id: 'bottling375', label: '375 ML Bottles' },
+                                        { id: 'bottling300', label: '300 ML Bottles' },
+                                        { id: 'bottling180', label: '180 ML Bottles' },
+                                    ].map(f => (
+                                        <div key={f.id}>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 px-1">{f.label}</label>
+                                            <input
+                                                type="number"
+                                                className="w-full px-6 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-green-500 font-bold text-gray-700 text-xl"
+                                                value={currentEntry[f.id] || 0}
+                                                onChange={e => setCurrentEntry({ ...currentEntry, [f.id]: parseInt(e.target.value) })}
+                                            />
+                                        </div>
+                                    ))}
+                                    <div>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 px-1">Avg Strength (%)</label>
+                                        <input
+                                            type="number" step="0.1"
+                                            className="w-full px-6 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-700 text-xl"
+                                            value={currentEntry.avgStrength || ''}
+                                            onChange={e => setCurrentEntry({ ...currentEntry, avgStrength: parseFloat(e.target.value) })}
+                                        />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 px-1">Remarks</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-6 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-700"
+                                            value={currentEntry.remarks || ''}
+                                            onChange={e => setCurrentEntry({ ...currentEntry, remarks: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
 
-                                <div className="flex gap-4 pt-4">
+                                <div className="flex gap-4 pt-4 border-t border-gray-50">
                                     <button
                                         type="button"
-                                        onClick={() => setShowEditModal(false)}
+                                        onClick={() => setShowRegAModal(false)}
                                         className="flex-1 py-5 bg-gray-50 text-gray-400 rounded-3xl font-black uppercase text-xs tracking-widest hover:bg-gray-100 transition-all"
                                     >
-                                        Cancel
+                                        Discard
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-[2] py-5 bg-indigo-600 text-white rounded-3xl font-black uppercase text-xs tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all"
+                                        className="flex-[2] py-5 bg-green-600 text-white rounded-3xl font-black uppercase text-xs tracking-widest hover:bg-green-700 shadow-xl shadow-green-200 transition-all flex items-center justify-center gap-3"
                                     >
-                                        Save Changes
+                                        <Save size={20} /> Finalize statutory figures
                                     </button>
                                 </div>
                             </form>

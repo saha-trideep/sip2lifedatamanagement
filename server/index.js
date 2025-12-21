@@ -28,6 +28,7 @@ app.use('/api/audit-logs', require('./routes/auditLogs'));
 app.use('/api/admin/invites', require('./routes/invites'));
 app.use('/api/excise', require('./routes/excise'));
 app.use('/api/reg74', require('./routes/reg74'));
+app.use('/api/rega', require('./routes/regA'));
 
 // Database Initialization Endpoint (for production without shell access)
 let dbInitialized = false;

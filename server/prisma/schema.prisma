@@ -84,6 +84,64 @@ model BatchMaster {
   createdAt       DateTime @default(now())
   
   events          Reg74Event[]
+  regAEntries     RegAEntry[]
+}
+
+model RegAEntry {
+  id              Int      @id @default(autoincrement())
+  batchId         Int
+  batch           BatchMaster @relation(fields: [batchId], references: [id])
+  
+  // Phase 1: Receipt Volume of Spirit (Cols 5-8)
+  receiptFromVat  String?
+  receiptStrength Float?
+  receiptBl       Float?
+  receiptAl       Float?
+  
+  // Phase 2: Total Blend Prepared in VAT (Cols 9-12)
+  blendingToVat   String?
+  blendingStrength Float?
+  blendingBl      Float?
+  blendingAl      Float?
+  
+  // Phase 3: Batch Info (Cols 13-16)
+  batchNoDate     String?  // Batch No. & Date
+  productionDate  DateTime?
+  totalBatchBl    Float?
+  totalBatchAl    Float?
+  
+  // Phase 4: MFM Data (Cols 17-21)
+  mfmDensity      Float?
+  mfmTemp         Float?
+  mfmStrength     Float?
+  mfmTotalBl      Float?
+  mfmTotalAl      Float?
+  
+  // Phase 5: Bottling Counts (Cols 22-27)
+  bottling750     Int?     @default(0)
+  bottling600     Int?     @default(0)
+  bottling500     Int?     @default(0)
+  bottling375     Int?     @default(0)
+  bottling300     Int?     @default(0)
+  bottling180     Int?     @default(0)
+  
+  // Phase 6: Finished Goods (Cols 28-30)
+  spiritBottledBl Float?
+  avgStrength     Float?
+  spiritBottledAl Float?
+  
+  // Phase 7: Wastages (Cols 31-34)
+  productionIncrease Float?
+  productionWastage  Float?
+  allowableWastage   Float?
+  chargeableWastage  Float?
+  
+  remarks         String?
+  status          String   @default("OPEN")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([batchId])
 }
 
 model UserInvite {
