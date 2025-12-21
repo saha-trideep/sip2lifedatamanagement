@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const authenticateToken = require('../middleware/auth');
+const { verifyToken } = require('../middleware/auth');
 const { format } = require('date-fns');
 
 // Get all Reg-A entries
-router.get('/entries', authenticateToken, async (req, res) => {
+router.get('/entries', verifyToken, async (req, res) => {
     try {
         const entries = await prisma.regAEntry.findMany({
             include: {
@@ -26,7 +26,7 @@ router.get('/entries', authenticateToken, async (req, res) => {
 });
 
 // Create or update Reg-A entry (Handled primarily by internal sync or manual bottling update)
-router.post('/entry', authenticateToken, async (req, res) => {
+router.post('/entry', verifyToken, async (req, res) => {
     const { id, batchId, ...data } = req.body;
     try {
         if (id) {
@@ -50,7 +50,7 @@ router.post('/entry', authenticateToken, async (req, res) => {
 });
 
 // SYNC Reg-A Data from Reg-74 Events
-router.get('/sync/:batchId', authenticateToken, async (req, res) => {
+router.get('/sync/:batchId', verifyToken, async (req, res) => {
     const batchId = parseInt(req.params.batchId);
     try {
         const events = await prisma.reg74Event.findMany({
