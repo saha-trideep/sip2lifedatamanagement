@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Factory, Wine, FileText, Shield, TrendingUp, Users, FileSpreadsheet, Moon, Sun } from 'lucide-react';
+import { ArrowRight, Factory, Wine, FileText, Shield, TrendingUp, Users, FileSpreadsheet, Moon, Sun, ChevronRight } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 const Landing = () => {
@@ -54,15 +54,22 @@ const Landing = () => {
                         Preparing for IMFL (India Made Foreign Liquor) expansion.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                        <button className="w-full sm:w-auto px-10 py-5 bg-white text-blue-600 font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-blue-50 transition-all shadow-xl hover:-translate-y-1">
-                            Our Capabilities
-                        </button>
                         <Link
                             to="/login"
-                            className="w-full sm:w-auto px-10 py-5 bg-white/10 backdrop-blur-sm text-white font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-white/20 transition-all border border-white/30"
+                            className="w-full sm:w-auto px-10 py-5 bg-white text-blue-600 font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-blue-50 transition-all shadow-xl hover:-translate-y-1 flex items-center justify-center gap-2"
                         >
-                            Employee Portal
+                            <Users size={18} />
+                            <span>Employee Portal</span>
                         </Link>
+                        <a
+                            href="https://excise.wb.gov.in/Portal_New_Default.aspx"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full sm:w-auto px-10 py-5 bg-white/10 backdrop-blur-sm text-white font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-white/20 transition-all border border-white/30 flex items-center justify-center gap-2"
+                        >
+                            <FileText size={18} />
+                            <span>WB Excise Portal</span>
+                        </a>
                     </div>
                 </div>
             </header>
@@ -94,6 +101,31 @@ const Landing = () => {
                             <p className="text-sm font-medium text-gray-400 leading-relaxed">{feature.desc}</p>
                         </div>
                     ))}
+                </div>
+            </section>
+
+            {/* Sales Section */}
+            <section className={`py-20 sm:py-32 px-4 sm:px-6 transition-colors ${isDark ? 'bg-gray-950' : 'bg-gradient-to-br from-blue-50 to-indigo-50'}`}>
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-16">
+                        <h2 className={`text-3xl sm:text-5xl font-black mb-4 tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>Sales & Distribution</h2>
+                        <p className="text-sm sm:text-lg text-gray-400 font-bold uppercase tracking-[0.3em]">
+                            Premium quality products with efficient distribution
+                        </p>
+                    </div>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {[
+                            { title: "Wholesale Distribution", desc: "Bulk orders for retailers and distributors", icon: "📦" },
+                            { title: "Retail Network", desc: "Authorized retail outlets across regions", icon: "🏪" },
+                            { title: "Quality Assurance", desc: "100% quality guaranteed products", icon: "✓" }
+                        ].map((item, idx) => (
+                            <div key={idx} className={`p-8 rounded-[2rem] shadow-lg transition-all hover:-translate-y-2 border ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-blue-50'}`}>
+                                <div className="text-4xl mb-6">{item.icon}</div>
+                                <h3 className={`text-xl font-black mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.title}</h3>
+                                <p className="text-gray-400 font-medium text-sm leading-relaxed">{item.desc}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </section>
 
@@ -131,6 +163,54 @@ const Landing = () => {
                                     ))}
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Contact Section */}
+            <section className={`py-20 sm:py-32 px-4 sm:px-6 transition-colors ${isDark ? 'bg-gray-950' : 'bg-white'}`}>
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-16">
+                        <h2 className={`text-3xl sm:text-5xl font-black mb-4 tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>Get in Touch</h2>
+                        <p className="text-sm sm:text-lg text-gray-400 font-bold uppercase tracking-[0.3em]">
+                            We're here to help. Reach out to us.
+                        </p>
+                    </div>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {[
+                            { title: "General Inquiries", icon: Users, color: "from-blue-500 to-indigo-600", bg: isDark ? "bg-blue-900/10" : "bg-blue-50", text: "info@sip2life.com", phone: "+91 98765 43210" },
+                            { title: "Sales Department", icon: FileSpreadsheet, color: "from-green-500 to-emerald-600", bg: isDark ? "bg-green-900/10" : "bg-green-50", text: "sales@sip2life.com", phone: "+91 98765 43211" },
+                            { title: "Production Unit", icon: Factory, color: "from-purple-500 to-pink-600", bg: isDark ? "bg-purple-900/10" : "bg-purple-50", text: "production@sip2life.com", phone: "+91 98765 43212" }
+                        ].map((contact, idx) => (
+                            <div key={idx} className={`p-8 rounded-[2rem] border transition-all ${isDark ? 'bg-gray-900 border-gray-800 hover:border-indigo-500' : 'bg-white border-gray-100 hover:border-blue-200 shadow-lg'}`}>
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 bg-gradient-to-br ${contact.color}`}>
+                                    <contact.icon className="text-white" size={24} />
+                                </div>
+                                <h3 className={`text-xl font-black mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>{contact.title}</h3>
+                                <div className="space-y-2">
+                                    <a href={`tel:${contact.phone.replace(/ /g, '')}`} className="block text-blue-500 font-bold hover:underline">{contact.phone}</a>
+                                    <a href={`mailto:${contact.text}`} className="block text-gray-400 font-medium hover:text-blue-400">{contact.text}</a>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Subtle Technology Partner */}
+            <section className={`py-12 sm:py-16 px-4 border-t transition-colors ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-gradient-to-r from-blue-600 to-cyan-600 border-blue-700'}`}>
+                <div className="max-w-6xl mx-auto">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                        <span className={`text-sm font-black uppercase tracking-widest ${isDark ? 'text-gray-400' : 'text-white/90'}`}>
+                            Instrumentation & Automation by
+                        </span>
+                        <div className={`px-8 py-4 rounded-2xl shadow-xl transition-all hover:scale-105 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+                            <img
+                                src="/endress-hauser-logo.png"
+                                alt="Endress+Hauser"
+                                className={`h-8 sm:h-10 w-auto ${isDark ? 'brightness-200' : ''}`}
+                            />
                         </div>
                     </div>
                 </div>
