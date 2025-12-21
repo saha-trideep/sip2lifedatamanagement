@@ -153,18 +153,24 @@ const Registers = () => {
                                 </div>
                             </div>
 
-                            {/* Reg A - Future */}
-                            <div className="p-6 opacity-60 cursor-not-allowed flex items-center justify-between">
+                            {/* Reg A */}
+                            <div
+                                onClick={() => navigate('/registers/reg-a')}
+                                className="p-6 hover:bg-gray-50 transition cursor-pointer group flex items-center justify-between"
+                            >
                                 <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-gray-100 text-gray-400 rounded-xl">
+                                    <div className="p-3 bg-orange-100 text-orange-600 rounded-xl group-hover:bg-orange-600 group-hover:text-white transition-colors">
                                         <LayoutDashboard size={24} />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-gray-800">Reg A – Production</h3>
-                                        <p className="text-sm text-gray-500">Bottling and finished goods production (Coming Soon)</p>
+                                        <h3 className="text-lg font-bold text-gray-800 group-hover:text-orange-600">Reg A – Production</h3>
+                                        <p className="text-sm text-gray-500">Bottling operations, finished goods and variance control</p>
                                     </div>
                                 </div>
-                                <span className="text-[10px] font-bold text-gray-400 border border-gray-200 px-2 py-1 rounded">PLANNED</span>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded">Live</span>
+                                    <ChevronRight className="text-gray-300 group-hover:text-orange-600" />
+                                </div>
                             </div>
 
                             {/* Reg 78 - Future */}
