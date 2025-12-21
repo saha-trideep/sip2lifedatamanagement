@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
     ArrowLeft, Download, Search, Filter, Loader,
-    FileText, FileSpreadsheet, Info, ChevronRight, User
+    FileText, FileSpreadsheet, Info, ChevronRight, User, Edit2, Trash2
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { API_URL } from '../../config';
@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import Reg74EventModal from './Reg74EventModal';
 
 const Reg74Register = () => {
     const navigate = useNavigate();
@@ -17,6 +18,8 @@ const Reg74Register = () => {
     const [vat, setVat] = useState(null);
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedEvent, setSelectedEvent] = useState(null);
     const [filters, setFilters] = useState({
         startDate: format(new Date(), 'yyyy-MM-01'),
         endDate: format(new Date(), 'yyyy-MM-dd')
@@ -54,6 +57,24 @@ const Reg74Register = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this event? This will affect live balances.")) return;
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_URL}/api/reg74/event/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchEvents();
+        } catch (error) {
+            alert("Error deleting event");
+        }
+    };
+
+    const handleEdit = (event) => {
+        setSelectedEvent(event);
+        setShowEditModal(true);
     };
 
     const exportPDF = () => {
@@ -166,6 +187,7 @@ const Reg74Register = () => {
                                 <th className="p-2 text-center border-r border-gray-800 bg-red-600/20" colSpan="3">Wastage (Cols 22-24)</th>
                                 <th className="p-2 text-center border-r border-gray-800 bg-purple-600/20" colSpan="9">Production Issue (Cols 25-33)</th>
                                 <th className="p-2 text-center bg-gray-600/20" colSpan="4">Closing Balance (Cols 34-37)</th>
+                                <th className="p-4 border-l border-gray-800" rowSpan="2">Actions</th>
                             </tr>
                             <tr className="bg-gray-800 text-gray-400 text-[8px] font-black uppercase tracking-widest">
                                 {/* Opening 1-7 */}
@@ -194,9 +216,9 @@ const Reg74Register = () => {
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {loading ? (
-                                <tr><td colSpan="41" className="p-20 text-center font-black text-gray-300 uppercase text-xs tracking-[0.5em]">Synchronizing Statutory Data...</td></tr>
+                                <tr><td colSpan="42" className="p-20 text-center font-black text-gray-300 uppercase text-xs tracking-[0.5em]">Synchronizing Statutory Data...</td></tr>
                             ) : events.length === 0 ? (
-                                <tr><td colSpan="41" className="p-20 text-center font-bold text-gray-400">No events found for the selected period.</td></tr>
+                                <tr><td colSpan="42" className="p-20 text-center font-bold text-gray-400">No events found for the selected period.</td></tr>
                             ) : (
                                 events.map((e, idx) => {
                                     const op = e.openingData || {};
@@ -220,14 +242,14 @@ const Reg74Register = () => {
                                             <td className="p-2 border-r border-gray-100 text-center">{op.alcInd || '-'}</td>
                                             <td className="p-2 border-r border-gray-100 text-center">{op.strength || '-'}</td>
                                             <td className="p-2 border-r border-gray-100 text-center font-black">{op.volumeBl?.toLocaleString() || '-'}</td>
-                                            <td className="p-2 border-r border-gray-100 text-center font-black">{op.volumeAl?.toLocaleString() || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center font-black">{(op.volumeBl * (op.strength / 100))?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '-'}</td>
                                             <td className="p-2 border-r border-gray-100 text-center text-gray-400">{op.rltDipCm || '-'}</td>
 
                                             {/* Cols 8-11 */}
                                             <td className="p-2 border-r border-gray-100 text-center">{rec.source || '-'}</td>
                                             <td className="p-2 border-r border-gray-100 text-center font-black text-green-600">{rec.qtyBl?.toLocaleString() || '-'}</td>
                                             <td className="p-2 border-r border-gray-100 text-center">{rec.strength || '-'}</td>
-                                            <td className="p-2 border-r border-gray-100 text-center font-black text-green-600">{(rec.qtyBl * (rec.strength / 100))?.toFixed(2) || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center font-black text-green-600">{(rec.qtyBl * (rec.strength / 100))?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '-'}</td>
 
                                             {/* Cols 12-15 */}
                                             <td className="p-2 border-r border-gray-100 text-center">{iss.dest || '-'}</td>
@@ -249,19 +271,31 @@ const Reg74Register = () => {
                                             {/* Cols 25-33 */}
                                             <td className="p-2 border-r border-gray-100 text-center">{prd.rltBl?.toLocaleString() || '-'}</td>
                                             <td className="p-2 border-r border-gray-100 text-center">{prd.strength || '-'}</td>
-                                            <td className="p-2 border-r border-gray-100 text-center">{prd.rltAl?.toLocaleString() || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center">{(prd.rltBl * (prd.strength / 100))?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '-'}</td>
                                             <td className="p-2 border-r border-gray-100 text-center">{prd.vatCount || '-'}</td>
                                             <td className="p-2 border-r border-gray-100 text-center font-black text-purple-600">{prd.mfmBl?.toLocaleString() || '-'}</td>
                                             <td className="p-2 border-r border-gray-100 text-center text-gray-400">{prd.density || '-'}</td>
-                                            <td className="p-2 border-r border-gray-100 text-center">{prd.mfmStrength || '-'}</td>
-                                            <td className="p-2 border-r border-gray-100 text-center font-black text-purple-600">{prd.mfmAl?.toLocaleString() || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center">{prd.mfmStrength || prd.strength || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center font-black text-purple-600">{(prd.mfmBl * ((prd.mfmStrength || prd.strength) / 100))?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '-'}</td>
                                             <td className="p-2 border-r border-gray-100 text-center text-red-400">{prd.deadStockAl || '-'}</td>
 
                                             {/* Cols 34-37 */}
                                             <td className="p-2 border-r border-gray-100 text-center">{cls.finalDipCm || '-'}</td>
                                             <td className="p-2 border-r border-gray-100 text-center font-black">{cls.finalBl?.toLocaleString() || '-'}</td>
                                             <td className="p-2 border-r border-gray-100 text-center">{cls.finalStrength || '-'}</td>
-                                            <td className="p-2 text-center font-black">{cls.finalAl?.toLocaleString() || '-'}</td>
+                                            <td className="p-2 text-center font-black border-r border-gray-100">{(cls.finalBl * (cls.finalStrength / 100))?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '-'}</td>
+
+                                            {/* Actions */}
+                                            <td className="p-2 text-center bg-gray-50">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button onClick={() => handleEdit(e)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-all" title="Edit Event">
+                                                        <Edit2 size={12} />
+                                                    </button>
+                                                    <button onClick={() => handleDelete(e.id)} className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-all" title="Delete Event">
+                                                        <Trash2 size={12} />
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     );
                                 })
@@ -270,6 +304,18 @@ const Reg74Register = () => {
                     </table>
                 </div>
             </div>
+
+            {showEditModal && (
+                <Reg74EventModal
+                    vat={vat}
+                    type={selectedEvent?.eventType}
+                    initialData={selectedEvent}
+                    onClose={() => {
+                        setShowEditModal(false);
+                        fetchEvents();
+                    }}
+                />
+            )}
         </div>
     );
 };

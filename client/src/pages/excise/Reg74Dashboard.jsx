@@ -77,28 +77,26 @@ const Reg74Dashboard = () => {
                 </div>
             </div>
 
-            <div className="p-4 bg-gray-50/30 grid grid-cols-4 gap-2">
-                <button onClick={() => handleAddEvent(vat, 'OPENING')} title="Opening Snapshot" className="p-3 bg-white border border-gray-100 rounded-2xl hover:border-blue-500 hover:text-blue-600 transition-all flex justify-center shadow-sm">
-                    <Clock size={16} />
+            <div className="p-4 bg-gray-50/30 grid grid-cols-2 gap-2">
+                <button onClick={() => handleAddEvent(vat, 'OPENING')} className="p-2 bg-white border border-gray-100 rounded-xl hover:border-blue-500 hover:text-blue-600 transition-all flex items-center gap-2 shadow-sm text-[10px] font-black uppercase">
+                    <Clock size={14} className="text-blue-500" /> Opening
                 </button>
-                <button onClick={() => handleAddEvent(vat, vat.vatType === 'SST' ? 'UNLOADING' : 'RECEIPT')} title="Receipt/Unloading" className="p-3 bg-white border border-gray-100 rounded-2xl hover:border-blue-500 hover:text-blue-600 transition-all flex justify-center shadow-sm">
-                    <ArrowDownLeft size={16} />
+                <button onClick={() => handleAddEvent(vat, vat.vatType === 'SST' ? 'UNLOADING' : 'RECEIPT')} className="p-2 bg-white border border-gray-100 rounded-xl hover:border-blue-500 hover:text-blue-600 transition-all flex items-center gap-2 shadow-sm text-[10px] font-black uppercase">
+                    <ArrowDownLeft size={14} className="text-green-500" /> {vat.vatType === 'SST' ? 'Unload' : 'Receipt'}
                 </button>
-                <button onClick={() => handleAddEvent(vat, 'INTERNAL_TRANSFER')} title="Transfer/Issue" className="p-3 bg-white border border-gray-100 rounded-2xl hover:border-blue-500 hover:text-blue-600 transition-all flex justify-center shadow-sm">
-                    <RefreshCw size={16} />
+                <button onClick={() => handleAddEvent(vat, 'INTERNAL_TRANSFER')} className="p-2 bg-white border border-gray-100 rounded-xl hover:border-blue-500 hover:text-blue-600 transition-all flex items-center gap-2 shadow-sm text-[10px] font-black uppercase">
+                    <RefreshCw size={14} className="text-indigo-500" /> Transfer
                 </button>
-                <button onClick={() => handleAddEvent(vat, 'ADJUSTMENT')} title="Adjustment" className="p-3 bg-white border border-gray-100 rounded-2xl hover:border-blue-500 hover:text-blue-600 transition-all flex justify-center shadow-sm">
-                    <AlertCircle size={16} />
+                <button onClick={() => handleAddEvent(vat, 'ADJUSTMENT')} className="p-2 bg-white border border-gray-100 rounded-xl hover:border-blue-500 hover:text-blue-600 transition-all flex items-center gap-2 shadow-sm text-[10px] font-black uppercase">
+                    <AlertCircle size={14} className="text-orange-500" /> Adjust
                 </button>
                 {vat.vatType === 'BRT' && (
-                    <>
-                        <button onClick={() => handleAddEvent(vat, 'PRODUCTION')} title="Production Issue" className="p-3 bg-white border border-gray-100 rounded-2xl hover:border-purple-500 hover:text-purple-600 transition-all flex justify-center shadow-sm col-span-2">
-                            <Layers size={16} className="mr-2" /> <span className="text-[10px] font-black uppercase">Production</span>
-                        </button>
-                    </>
+                    <button onClick={() => handleAddEvent(vat, 'PRODUCTION')} className="p-2 bg-white border border-gray-100 rounded-xl hover:border-purple-500 hover:text-purple-600 transition-all flex items-center gap-2 shadow-sm text-[10px] font-black uppercase col-span-1">
+                        <Layers size={14} className="text-purple-500" /> Production
+                    </button>
                 )}
-                <button onClick={() => handleAddEvent(vat, 'CLOSING')} title="Closing Snapshot" className={`p-3 bg-white border border-gray-100 rounded-2xl hover:border-blue-500 hover:text-blue-600 transition-all flex justify-center shadow-sm ${vat.vatType === 'SST' ? 'col-span-1' : 'col-span-2'}`}>
-                    <Clock size={16} />
+                <button onClick={() => handleAddEvent(vat, 'CLOSING')} className={`p-2 bg-white border border-gray-100 rounded-xl hover:border-blue-500 hover:text-blue-600 transition-all flex items-center gap-2 shadow-sm text-[10px] font-black uppercase ${vat.vatType === 'SST' ? '' : ''}`}>
+                    <Clock size={14} className="text-gray-500" /> Closing
                 </button>
             </div>
 
@@ -135,7 +133,13 @@ const Reg74Dashboard = () => {
                         <div className="w-px h-8 bg-gray-100"></div>
                         <div className="flex flex-col">
                             <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Avg Strength</span>
-                            <span className="text-sm font-black text-gray-800">94.8%</span>
+                            <span className="text-sm font-black text-gray-800">
+                                {(() => {
+                                    const totalBl = vats.reduce((sum, v) => sum + (v.balanceBl || 0), 0);
+                                    const totalAl = vats.reduce((sum, v) => sum + (v.balanceAl || 0), 0);
+                                    return totalBl > 0 ? (totalAl / totalBl * 100).toFixed(2) : '0.00';
+                                })()}%
+                            </span>
                         </div>
                     </div>
                 </div>

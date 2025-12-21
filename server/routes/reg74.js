@@ -59,7 +59,7 @@ router.post('/event', verifyToken, async (req, res) => {
 
         await logAudit({
             userId: req.user.id,
-            action: `REG74_${eventType}`,
+            action: `REG74_${eventType}_CREATE`,
             entityType: 'REG74',
             entityId: event.id,
             metadata: { event }
@@ -72,6 +72,68 @@ router.post('/event', verifyToken, async (req, res) => {
     }
 });
 
+// PUT /api/reg74/event/:id
+router.put('/event/:id', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    const {
+        eventDateTime, eventType,
+        openingData, receiptData, issueData,
+        adjustmentData, productionData, closingData,
+        remarks
+    } = req.body;
+
+    try {
+        const event = await prisma.reg74Event.update({
+            where: { id: parseInt(id) },
+            data: {
+                eventDateTime: new Date(eventDateTime),
+                eventType,
+                openingData: openingData || null,
+                receiptData: receiptData || null,
+                issueData: issueData || null,
+                adjustmentData: adjustmentData || null,
+                productionData: productionData || null,
+                closingData: closingData || null,
+                remarks
+            }
+        });
+
+        await logAudit({
+            userId: req.user.id,
+            action: `REG74_${eventType}_UPDATE`,
+            entityType: 'REG74',
+            entityId: event.id,
+            metadata: { event }
+        });
+
+        res.json(event);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update event' });
+    }
+});
+
+// DELETE /api/reg74/event/:id
+router.delete('/event/:id', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const event = await prisma.reg74Event.delete({
+            where: { id: parseInt(id) }
+        });
+
+        await logAudit({
+            userId: req.user.id,
+            action: `REG74_EVENT_DELETE`,
+            entityType: 'REG74',
+            entityId: event.id,
+            metadata: { event }
+        });
+
+        res.json({ message: 'Event deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete event' });
+    }
+});
+
 // GET /api/reg74/generate
 router.get('/generate', verifyToken, async (req, res) => {
     const { vatId, startDate, endDate } = req.query;
@@ -80,9 +142,12 @@ router.get('/generate', verifyToken, async (req, res) => {
     try {
         const where = { vatId: parseInt(vatId) };
         if (startDate && endDate) {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+
             where.eventDateTime = {
                 gte: new Date(startDate),
-                lte: new Date(endDate)
+                lte: end
             };
         }
 
@@ -135,33 +200,40 @@ router.get('/status', verifyToken, async (req, res) => {
 
             eventsSince.forEach(e => {
                 if (e.receiptData) {
-                    balanceBl += e.receiptData.qtyBl || 0;
-                    balanceAl += e.receiptData.qtyAl || 0;
+                    const bl = parseFloat(e.receiptData.qtyBl) || 0;
+                    const str = parseFloat(e.receiptData.strength) || 0;
+                    balanceBl += bl;
+                    balanceAl += (bl * str / 100);
                 }
                 if (e.issueData) {
-                    balanceBl -= e.issueData.qtyBl || 0;
-                    // Note: AL column handled in calculation logic, but for simple balance:
-                    balanceAl -= (e.issueData.qtyBl * (e.issueData.strength / 100)) || 0;
+                    const bl = parseFloat(e.issueData.qtyBl) || 0;
+                    const str = parseFloat(e.issueData.strength) || 0;
+                    balanceBl -= bl;
+                    balanceAl -= (bl * str / 100);
                 }
                 if (e.adjustmentData) {
+                    const bl = parseFloat(e.adjustmentData.qtyBl) || 0;
+                    const str = parseFloat(e.adjustmentData.strength) || 0;
                     if (e.adjustmentData.type === 'INCREASE') {
-                        balanceBl += e.adjustmentData.qtyBl || 0;
-                        balanceAl += e.adjustmentData.qtyAl || 0;
+                        balanceBl += bl;
+                        balanceAl += (bl * str / 100);
                     } else {
-                        balanceBl -= e.adjustmentData.qtyBl || 0;
-                        balanceAl -= e.adjustmentData.qtyAl || 0;
+                        balanceBl -= bl;
+                        balanceAl -= (bl * str / 100);
                     }
                 }
                 if (e.productionData) {
-                    balanceBl -= e.productionData.mfmBl || 0;
-                    balanceAl -= e.productionData.mfmAl || 0;
+                    const bl = parseFloat(e.productionData.mfmBl) || 0;
+                    const str = parseFloat(e.productionData.mfmStrength) || parseFloat(e.productionData.strength) || 0;
+                    balanceBl -= bl;
+                    balanceAl -= (bl * str / 100);
                 }
             });
 
             return {
                 ...vat,
-                balanceBl: Math.max(0, balanceBl),
-                balanceAl: Math.max(0, balanceAl)
+                balanceBl: Math.round(balanceBl * 100) / 100,
+                balanceAl: Math.round(balanceAl * 100) / 100
             };
         }));
 

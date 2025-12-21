@@ -4,20 +4,20 @@ import { X, Save, Clock, Info, Shield, Droplets, Truck, RefreshCw, Archive, Sett
 import { API_URL } from '../../config';
 import { format } from 'date-fns';
 
-const Reg74EventModal = ({ vat, type, onClose }) => {
+const Reg74EventModal = ({ vat, type, onClose, initialData = null }) => {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
-        eventDateTime: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
-        vatId: vat?.id,
-        remarks: '',
+        eventDateTime: initialData ? format(new Date(initialData.eventDateTime), "yyyy-MM-dd'T'HH:mm") : format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+        vatId: vat?.id || initialData?.vatId,
+        remarks: initialData?.remarks || '',
 
         // Contextual Blocks
-        openingData: {},
-        receiptData: {},
-        issueData: {},
-        adjustmentData: {},
-        productionData: {},
-        closingData: {}
+        openingData: initialData?.openingData || {},
+        receiptData: initialData?.receiptData || {},
+        issueData: initialData?.issueData || {},
+        adjustmentData: initialData?.adjustmentData || {},
+        productionData: initialData?.productionData || {},
+        closingData: initialData?.closingData || {}
     });
 
     const handleChange = (block, field, value) => {
@@ -41,10 +41,16 @@ const Reg74EventModal = ({ vat, type, onClose }) => {
                 eventType: type
             };
 
-            await axios.post(`${API_URL}/api/reg74/event`, payload, {
+            const url = initialData
+                ? `${API_URL}/api/reg74/event/${initialData.id}`
+                : `${API_URL}/api/reg74/event`;
+
+            const method = initialData ? 'put' : 'post';
+
+            await axios[method](url, payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            alert(`${type} recorded successfully!`);
+            alert(`${type} ${initialData ? 'updated' : 'recorded'} successfully!`);
             onClose();
         } catch (error) {
             console.error(error);
@@ -67,19 +73,19 @@ const Reg74EventModal = ({ vat, type, onClose }) => {
                         </div>
                         <div>
                             <label className={labelClass}>Dip (CM)</label>
-                            <input type="number" step="0.1" onChange={e => handleChange('openingData', 'dipCm', parseFloat(e.target.value))} className={inputClass} required />
+                            <input type="number" step="0.1" value={formData.openingData.dipCm || ''} onChange={e => handleChange('openingData', 'dipCm', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                         <div>
                             <label className={labelClass}>Temp (C)</label>
-                            <input type="number" step="0.1" onChange={e => handleChange('openingData', 'temp', parseFloat(e.target.value))} className={inputClass} required />
+                            <input type="number" step="0.1" value={formData.openingData.temp || ''} onChange={e => handleChange('openingData', 'temp', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                         <div>
                             <label className={labelClass}>Strength % v/v</label>
-                            <input type="number" step="0.1" onChange={e => handleChange('openingData', 'strength', parseFloat(e.target.value))} className={inputClass} required />
+                            <input type="number" step="0.1" value={formData.openingData.strength || ''} onChange={e => handleChange('openingData', 'strength', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                         <div>
                             <label className={labelClass}>Volume BL</label>
-                            <input type="number" step="0.01" onChange={e => handleChange('openingData', 'volumeBl', parseFloat(e.target.value))} className={inputClass} required />
+                            <input type="number" step="0.01" value={formData.openingData.volumeBl || ''} onChange={e => handleChange('openingData', 'volumeBl', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                     </div>
                 );
@@ -93,15 +99,15 @@ const Reg74EventModal = ({ vat, type, onClose }) => {
                         </div>
                         <div className="col-span-2">
                             <label className={labelClass}>From Which Receiver</label>
-                            <input type="text" placeholder="e.g. Tanker WB65-1234 or SST-5" onChange={e => handleChange('receiptData', 'source', e.target.value)} className={inputClass} required />
+                            <input type="text" placeholder="e.g. Tanker WB65-1234 or SST-5" value={formData.receiptData.source || ''} onChange={e => handleChange('receiptData', 'source', e.target.value)} className={inputClass} required />
                         </div>
                         <div>
                             <label className={labelClass}>Qty BL (MFM-I)</label>
-                            <input type="number" step="0.01" onChange={e => handleChange('receiptData', 'qtyBl', parseFloat(e.target.value))} className={inputClass} required />
+                            <input type="number" step="0.01" value={formData.receiptData.qtyBl || ''} onChange={e => handleChange('receiptData', 'qtyBl', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                         <div>
                             <label className={labelClass}>Strength % v/v</label>
-                            <input type="number" step="0.1" onChange={e => handleChange('receiptData', 'strength', parseFloat(e.target.value))} className={inputClass} required />
+                            <input type="number" step="0.1" value={formData.receiptData.strength || ''} onChange={e => handleChange('receiptData', 'strength', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                     </div>
                 );
@@ -114,15 +120,15 @@ const Reg74EventModal = ({ vat, type, onClose }) => {
                         </div>
                         <div className="col-span-2">
                             <label className={labelClass}>To Which VAT/CASK</label>
-                            <input type="text" onChange={e => handleChange('issueData', 'dest', e.target.value)} className={inputClass} required />
+                            <input type="text" value={formData.issueData.dest || ''} onChange={e => handleChange('issueData', 'dest', e.target.value)} className={inputClass} required />
                         </div>
                         <div>
                             <label className={labelClass}>Qty BL</label>
-                            <input type="number" step="0.01" onChange={e => handleChange('issueData', 'qtyBl', parseFloat(e.target.value))} className={inputClass} required />
+                            <input type="number" step="0.01" value={formData.issueData.qtyBl || ''} onChange={e => handleChange('issueData', 'qtyBl', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                         <div>
                             <label className={labelClass}>Strength % v/v</label>
-                            <input type="number" step="0.1" onChange={e => handleChange('issueData', 'strength', parseFloat(e.target.value))} className={inputClass} required />
+                            <input type="number" step="0.1" value={formData.issueData.strength || ''} onChange={e => handleChange('issueData', 'strength', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                     </div>
                 );
@@ -136,14 +142,14 @@ const Reg74EventModal = ({ vat, type, onClose }) => {
                         </div>
                         <div>
                             <label className={labelClass}>Adjustment Type</label>
-                            <select onChange={e => handleChange('adjustmentData', 'type', e.target.value)} className={inputClass}>
+                            <select value={formData.adjustmentData.type || 'INCREASE'} onChange={e => handleChange('adjustmentData', 'type', e.target.value)} className={inputClass}>
                                 <option value="INCREASE">INCREASE (Gain/Water)</option>
                                 <option value="WASTAGE">WASTAGE (Loss)</option>
                             </select>
                         </div>
                         <div>
                             <label className={labelClass}>Qty BL</label>
-                            <input type="number" step="0.01" onChange={e => handleChange('adjustmentData', 'qtyBl', parseFloat(e.target.value))} className={inputClass} required />
+                            <input type="number" step="0.01" value={formData.adjustmentData.qtyBl || ''} onChange={e => handleChange('adjustmentData', 'qtyBl', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                     </div>
                 );
@@ -156,19 +162,19 @@ const Reg74EventModal = ({ vat, type, onClose }) => {
                         </div>
                         <div>
                             <label className={labelClass}>RLT Volume BL</label>
-                            <input type="number" step="0.01" onChange={e => handleChange('productionData', 'rltBl', parseFloat(e.target.value))} className={inputClass} required />
+                            <input type="number" step="0.01" value={formData.productionData.rltBl || ''} onChange={e => handleChange('productionData', 'rltBl', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                         <div>
                             <label className={labelClass}>Strength % v/v</label>
-                            <input type="number" step="0.1" onChange={e => handleChange('productionData', 'strength', parseFloat(e.target.value))} className={inputClass} required />
+                            <input type="number" step="0.1" value={formData.productionData.strength || ''} onChange={e => handleChange('productionData', 'strength', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                         <div>
                             <label className={labelClass}>MFM-II Qty BL</label>
-                            <input type="number" step="0.01" onChange={e => handleChange('productionData', 'mfmBl', parseFloat(e.target.value))} className={inputClass} required />
+                            <input type="number" step="0.01" value={formData.productionData.mfmBl || ''} onChange={e => handleChange('productionData', 'mfmBl', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                         <div>
                             <label className={labelClass}>Avg Density</label>
-                            <input type="number" step="0.0001" onChange={e => handleChange('productionData', 'density', parseFloat(e.target.value))} className={inputClass} required />
+                            <input type="number" step="0.0001" value={formData.productionData.density || ''} onChange={e => handleChange('productionData', 'density', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                     </div>
                 );
@@ -181,15 +187,15 @@ const Reg74EventModal = ({ vat, type, onClose }) => {
                         </div>
                         <div>
                             <label className={labelClass}>Final Dip (CM)</label>
-                            <input type="number" step="0.1" onChange={e => handleChange('closingData', 'finalDipCm', parseFloat(e.target.value))} className={inputClass} required />
+                            <input type="number" step="0.1" value={formData.closingData.finalDipCm || ''} onChange={e => handleChange('closingData', 'finalDipCm', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                         <div>
                             <label className={labelClass}>Final BL</label>
-                            <input type="number" step="0.01" onChange={e => handleChange('closingData', 'finalBl', parseFloat(e.target.value))} className={inputClass} required />
+                            <input type="number" step="0.01" value={formData.closingData.finalBl || ''} onChange={e => handleChange('closingData', 'finalBl', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                         <div>
                             <label className={labelClass}>Strength % v/v</label>
-                            <input type="number" step="0.1" onChange={e => handleChange('closingData', 'finalStrength', parseFloat(e.target.value))} className={inputClass} required />
+                            <input type="number" step="0.1" value={formData.closingData.finalStrength || ''} onChange={e => handleChange('closingData', 'finalStrength', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                     </div>
                 );
@@ -234,6 +240,7 @@ const Reg74EventModal = ({ vat, type, onClose }) => {
                     <div className="space-y-2">
                         <label className={labelClass}>Remarks / Nature of Operation</label>
                         <textarea
+                            value={formData.remarks}
                             onChange={e => handleChange('root', 'remarks', e.target.value)}
                             className={`${inputClass} h-24 pt-3`}
                             placeholder="Enter any additional context or batch numbers..."
@@ -254,7 +261,7 @@ const Reg74EventModal = ({ vat, type, onClose }) => {
                             className="flex-[2] py-4 px-6 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 hover:shadow-lg disabled:bg-blue-300 transition-all text-sm flex items-center justify-center gap-2"
                         >
                             {loading ? <RefreshCw className="animate-spin" size={20} /> : <Save size={20} />}
-                            Record Event
+                            {initialData ? 'Update Event' : 'Record Event'}
                         </button>
                     </div>
                 </form>
