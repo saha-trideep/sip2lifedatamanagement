@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
     ArrowLeft, Calculator, Database, Plus, Eye,
-    ArrowUpRight, ArrowDownLeft, CheckCircle, Clock, AlertCircle, RefreshCw, Layers
+    ArrowUpRight, ArrowDownLeft, CheckCircle, Clock, AlertCircle, RefreshCw, Layers, Package, FlaskConical
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { API_URL } from '../../config';
 import Reg74EventModal from './Reg74EventModal';
 
@@ -71,7 +71,7 @@ const Reg74Dashboard = () => {
                     </span>
                     <div className="mt-3">
                         <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-0.5">Live Balance</div>
-                        <div className="text-lg font-black text-blue-600 leading-none">{vat.balanceBl?.toFixed(2)} <span className="text-[10px] text-blue-300">BL</span></div>
+                        <div className="text-lg font-black text-blue-600 leading-none">{vat.balanceBl?.toFixed(2)} <span className="text-[10px]">BL</span></div>
                         <div className="text-xs font-bold text-gray-400">{vat.balanceAl?.toFixed(2)} <span className="text-[10px]">AL</span></div>
                     </div>
                 </div>
@@ -95,7 +95,7 @@ const Reg74Dashboard = () => {
                         <Layers size={14} className="text-purple-500" /> Production
                     </button>
                 )}
-                <button onClick={() => handleAddEvent(vat, 'CLOSING')} className={`p-2 bg-white border border-gray-100 rounded-xl hover:border-blue-500 hover:text-blue-600 transition-all flex items-center gap-2 shadow-sm text-[10px] font-black uppercase ${vat.vatType === 'SST' ? '' : ''}`}>
+                <button onClick={() => handleAddEvent(vat, 'CLOSING')} className="p-2 bg-white border border-gray-100 rounded-xl hover:border-blue-500 hover:text-blue-600 transition-all flex items-center gap-2 shadow-sm text-[10px] font-black uppercase">
                     <Clock size={14} className="text-gray-500" /> Closing
                 </button>
             </div>
@@ -124,8 +124,24 @@ const Reg74Dashboard = () => {
                         <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.2em] mt-1">SST & BRT Operational Terminal</p>
                     </div>
                 </div>
-                <div className="flex gap-2">
-                    <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 px-4">
+                <div className="flex gap-4 items-center">
+                    <Link to="/registers/reg-a" className="px-6 py-4 bg-indigo-600 text-white rounded-3xl font-bold hover:bg-indigo-700 hover:shadow-indigo-400 shadow-xl transition-all flex items-center gap-3 text-sm">
+                        <Package size={20} /> Reg-A Batch Register
+                    </Link>
+                    <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm items-center gap-6 px-6 overflow-hidden">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-orange-50 text-orange-600 rounded-xl"><AlertCircle size={20} /></div>
+                            <div>
+                                <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest block">Excise Limit (0.3%)</span>
+                                <span className="text-sm font-black text-orange-600">
+                                    {(() => {
+                                        const totalAl = vats.reduce((sum, v) => sum + (v.balanceAl || 0), 0);
+                                        return (totalAl * 0.003).toFixed(2);
+                                    })()} <span className="text-[10px]">AL</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div className="w-px h-8 bg-gray-100"></div>
                         <div className="flex flex-col">
                             <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Total Spirit</span>
                             <span className="text-sm font-black text-blue-600">{vats.reduce((sum, v) => sum + (v.balanceBl || 0), 0).toLocaleString()} <span className="text-[10px]">BL</span></span>
@@ -158,7 +174,7 @@ const Reg74Dashboard = () => {
                             <div className="p-2 bg-blue-100 text-blue-600 rounded-xl"><Database size={20} /></div>
                             <h2 className="text-xl font-black text-gray-800 uppercase tracking-tight">Spirit Storage Vats (SST)</h2>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {sstVats.map(vat => <VatCard key={vat.id} vat={vat} />)}
                         </div>
                     </div>
@@ -166,10 +182,10 @@ const Reg74Dashboard = () => {
                     {/* BRT Section */}
                     <div className="space-y-6">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-indigo-100 text-indigo-600 rounded-xl"><Calculator size={20} /></div>
-                            <h2 className="text-xl font-black text-gray-800 uppercase tracking-tight">Blending & Receipt Vats (BRT)</h2>
+                            <div className="p-2 bg-purple-100 text-purple-600 rounded-xl"><FlaskConical size={20} /></div>
+                            <h2 className="text-xl font-black text-gray-800 uppercase tracking-tight">Blending & Reduction Tanks (BRT)</h2>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {brtVats.map(vat => <VatCard key={vat.id} vat={vat} />)}
                         </div>
                     </div>

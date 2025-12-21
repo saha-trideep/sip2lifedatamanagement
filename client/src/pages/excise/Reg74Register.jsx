@@ -201,10 +201,10 @@ const Reg74Register = () => {
                                 <th className="p-2 border-r border-gray-700">Dest</th><th className="p-2 border-r border-gray-700">Cask</th>
                                 <th className="p-2 border-r border-gray-700">BL</th><th className="p-2 border-r border-gray-700">Str</th>
                                 {/* Inc 16-19 */}
-                                <th className="p-2 border-r border-gray-700">Inc</th><th className="p-2 border-r border-gray-700">Audit</th>
-                                <th className="p-2 border-r border-gray-700">RLT Dip</th><th className="p-2 border-r border-gray-700">RLT BL</th>
+                                <th className="p-2 border-r border-gray-700">Inc BL</th><th className="p-2 border-r border-gray-700">Audit</th>
+                                <th className="p-2 border-r border-gray-700">Dip</th><th className="p-2 border-r border-gray-700">AL</th>
                                 {/* Loss 22-24 */}
-                                <th className="p-2 border-r border-gray-700">Op</th><th className="p-2 border-r border-gray-700">Audit</th><th className="p-2 border-r border-gray-700">Dest</th>
+                                <th className="p-2 border-r border-gray-700">Loss BL</th><th className="p-2 border-r border-gray-700">Audit</th><th className="p-2 border-r border-gray-700">AL</th>
                                 {/* Prod 25-33 */}
                                 <th className="p-2 border-r border-gray-700">RLT BL</th><th className="p-2 border-r border-gray-700">Str</th><th className="p-2 border-r border-gray-700">AL</th>
                                 <th className="p-2 border-r border-gray-700">Vats</th><th className="p-2 border-r border-gray-700">MFM BL</th><th className="p-2 border-r border-gray-700">Dens</th>
@@ -259,14 +259,22 @@ const Reg74Register = () => {
 
                                             {/* Cols 16-19 */}
                                             <td className="p-2 border-r border-gray-100 text-center font-black text-orange-600">{adj.type === 'INCREASE' ? adj.qtyBl?.toLocaleString() : '-'}</td>
-                                            <td className="p-2 border-r border-gray-100 text-center">{adj.reason === 'STOCK_AUDIT' && adj.type === 'INCREASE' ? 'YES' : '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center text-[7px] leading-tight">
+                                                {adj.type === 'INCREASE' ? (adj.reason || '-') : '-'}
+                                            </td>
                                             <td className="p-2 border-r border-gray-100 text-center text-gray-400">{adj.rltDip || '-'}</td>
-                                            <td className="p-2 border-r border-gray-100 text-center text-gray-400">{adj.rltBl || '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center font-black text-orange-600">
+                                                {adj.type === 'INCREASE' ? (adj.qtyAl || (adj.qtyBl * adj.strength / 100))?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}
+                                            </td>
 
                                             {/* Cols 22-24 */}
                                             <td className="p-2 border-r border-gray-100 text-center font-black text-red-600">{adj.type === 'WASTAGE' ? adj.qtyBl?.toLocaleString() : '-'}</td>
-                                            <td className="p-2 border-r border-gray-100 text-center">{adj.reason === 'STOCK_AUDIT' && adj.type === 'WASTAGE' ? 'YES' : '-'}</td>
-                                            <td className="p-2 border-r border-gray-100 text-center">{adj.type === 'WASTAGE' ? (adj.dest || 'LOSS') : '-'}</td>
+                                            <td className="p-2 border-r border-gray-100 text-center text-[7px] leading-tight">
+                                                {adj.type === 'WASTAGE' ? (adj.reason || '-') : '-'}
+                                            </td>
+                                            <td className="p-2 border-r border-gray-100 text-center font-black text-red-600">
+                                                {adj.type === 'WASTAGE' ? (adj.qtyAl || (adj.qtyBl * adj.strength / 100))?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}
+                                            </td>
 
                                             {/* Cols 25-33 */}
                                             <td className="p-2 border-r border-gray-100 text-center">{prd.rltBl?.toLocaleString() || '-'}</td>

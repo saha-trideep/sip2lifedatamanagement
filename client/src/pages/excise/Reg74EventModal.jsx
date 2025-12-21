@@ -10,15 +10,36 @@ const Reg74EventModal = ({ vat, type, onClose, initialData = null }) => {
         eventDateTime: initialData ? format(new Date(initialData.eventDateTime), "yyyy-MM-dd'T'HH:mm") : format(new Date(), "yyyy-MM-dd'T'HH:mm"),
         vatId: vat?.id || initialData?.vatId,
         remarks: initialData?.remarks || '',
-
-        // Contextual Blocks
         openingData: initialData?.openingData || {},
         receiptData: initialData?.receiptData || {},
         issueData: initialData?.issueData || {},
         adjustmentData: initialData?.adjustmentData || {},
         productionData: initialData?.productionData || {},
-        closingData: initialData?.closingData || {}
+        closingData: initialData?.closingData || {},
+        batchId: initialData?.batchId || ''
     });
+
+    const [brands, setBrands] = useState([]);
+    const [batches, setBatches] = useState([]);
+    const [showBatchForm, setShowBatchForm] = useState(false);
+    const [newBatch, setNewBatch] = useState({ baseBatchNo: '', brandId: '', startDate: format(new Date(), "yyyy-MM-dd") });
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const [brandRes, batchRes] = await Promise.all([
+                    axios.get(`${API_URL}/api/reg74/brands`, { headers: { Authorization: `Bearer ${token}` } }),
+                    axios.get(`${API_URL}/api/reg74/batches?status=OPEN&vatId=${vat?.id}`, { headers: { Authorization: `Bearer ${token}` } })
+                ]);
+                setBrands(brandRes.data);
+                setBatches(batchRes.data);
+            } catch (error) {
+                console.error("Failed to fetch metadata", error);
+            }
+        };
+        fetchData();
+    }, [vat?.id]);
 
     const handleChange = (block, field, value) => {
         if (block === 'root') {
@@ -31,29 +52,36 @@ const Reg74EventModal = ({ vat, type, onClose, initialData = null }) => {
         }
     };
 
+    const handleCreateBatch = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(`${API_URL}/api/reg74/batches`, {
+                ...newBatch,
+                vatId: vat.id,
+                totalVolumeBl: formData.adjustmentData.qtyBl || 0,
+                totalVolumeAl: (formData.adjustmentData.qtyBl * 0.428) || 0
+            }, { headers: { Authorization: `Bearer ${token}` } });
+            setBatches([...batches, res.data]);
+            handleChange('root', 'batchId', res.data.id);
+            setShowBatchForm(false);
+            alert("Batch created successfully!");
+        } catch (error) {
+            alert("Error creating batch: " + error.message);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const payload = {
-                ...formData,
-                eventType: type
-            };
-
-            const url = initialData
-                ? `${API_URL}/api/reg74/event/${initialData.id}`
-                : `${API_URL}/api/reg74/event`;
-
+            const payload = { ...formData, eventType: type };
+            const url = initialData ? `${API_URL}/api/reg74/event/${initialData.id}` : `${API_URL}/api/reg74/event`;
             const method = initialData ? 'put' : 'post';
-
-            await axios[method](url, payload, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await axios[method](url, payload, { headers: { Authorization: `Bearer ${token}` } });
             alert(`${type} ${initialData ? 'updated' : 'recorded'} successfully!`);
             onClose();
         } catch (error) {
-            console.error(error);
             alert("Error: " + (error.response?.data?.error || error.message));
         } finally {
             setLoading(false);
@@ -134,6 +162,62 @@ const Reg74EventModal = ({ vat, type, onClose, initialData = null }) => {
                 );
 
             case 'WATER_ADDITION':
+            case 'BLENDING':
+                return (
+                    <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
+                        <div className="col-span-2 p-3 bg-indigo-50 rounded-xl mb-2 flex items-center gap-2 text-indigo-700 font-bold text-xs uppercase">
+                            <RefreshCw size={14} /> {type} (Cols 16-19)
+                        </div>
+                        <div className="col-span-2">
+                            <label className={labelClass}>Associate with Batch</label>
+                            <div className="flex gap-2">
+                                <select
+                                    className={inputClass}
+                                    value={formData.batchId || ''}
+                                    onChange={e => handleChange('root', 'batchId', e.target.value)}
+                                >
+                                    <option value="">Select Existing Batch</option>
+                                    {batches.map(b => (
+                                        <option key={b.id} value={b.id}>{b.baseBatchNo} - {b.brand?.name}</option>
+                                    ))}
+                                </select>
+                                <button type="button" onClick={() => setShowBatchForm(!showBatchForm)} className="px-3 bg-blue-100 text-blue-600 rounded-lg text-xs font-bold">NEW</button>
+                            </div>
+                        </div>
+
+                        {showBatchForm && (
+                            <div className="col-span-2 p-4 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-3">
+                                <div className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Create Mother Batch</div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className={labelClass}>Base Batch No</label>
+                                        <input type="text" placeholder="e.g. 10AJD01" className={inputClass} value={newBatch.baseBatchNo} onChange={e => setNewBatch({ ...newBatch, baseBatchNo: e.target.value })} />
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Brand</label>
+                                        <select className={inputClass} value={newBatch.brandId} onChange={e => setNewBatch({ ...newBatch, brandId: e.target.value })}>
+                                            <option value="">Select Brand</option>
+                                            {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <button type="button" onClick={handleCreateBatch} className="w-full py-2 bg-blue-600 text-white rounded-lg font-bold text-[10px] uppercase">Initialize Mother Batch</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div>
+                            <label className={labelClass}>Water/Ing. Qty BL</label>
+                            <input type="number" step="0.01" value={formData.adjustmentData.qtyBl || ''} onChange={e => handleChange('adjustmentData', 'qtyBl', parseFloat(e.target.value))} className={inputClass} required />
+                        </div>
+                        <div>
+                            <label className={labelClass}>Resultant Strength % v/v</label>
+                            <input type="number" step="0.1" value={formData.adjustmentData.strength || ''} onChange={e => handleChange('adjustmentData', 'strength', parseFloat(e.target.value))} className={inputClass} required />
+                        </div>
+                    </div>
+                );
+
             case 'ADJUSTMENT':
                 return (
                     <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
@@ -151,6 +235,17 @@ const Reg74EventModal = ({ vat, type, onClose, initialData = null }) => {
                             <label className={labelClass}>Qty BL</label>
                             <input type="number" step="0.01" value={formData.adjustmentData.qtyBl || ''} onChange={e => handleChange('adjustmentData', 'qtyBl', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
+                        <div>
+                            <label className={labelClass}>Qty AL (Excise Chargeable)</label>
+                            <input type="number" step="0.01" value={formData.adjustmentData.qtyAl || ''} onChange={e => handleChange('adjustmentData', 'qtyAl', parseFloat(e.target.value))} className={inputClass} required />
+                        </div>
+                        <div>
+                            <label className={labelClass}>Audit Reason</label>
+                            <select value={formData.adjustmentData.reason || 'OPERATIONAL'} onChange={e => handleChange('adjustmentData', 'reason', e.target.value)} className={inputClass}>
+                                <option value="OPERATIONAL">Operational</option>
+                                <option value="STOCK_AUDIT">Stock Audit (Physical vs Book)</option>
+                            </select>
+                        </div>
                     </div>
                 );
 
@@ -160,21 +255,35 @@ const Reg74EventModal = ({ vat, type, onClose, initialData = null }) => {
                         <div className="col-span-2 p-3 bg-purple-50 rounded-xl mb-2 flex items-center gap-2 text-purple-700 font-bold text-xs uppercase">
                             <Droplets size={14} /> Production Issue (Cols 25-33)
                         </div>
+                        <div className="col-span-2">
+                            <label className={labelClass}>Active Blend Batch</label>
+                            <select
+                                className={inputClass}
+                                value={formData.batchId || ''}
+                                onChange={e => handleChange('root', 'batchId', e.target.value)}
+                                required
+                            >
+                                <option value="">Select Mother Batch</option>
+                                {batches.map(b => (
+                                    <option key={b.id} value={b.id}>{b.baseBatchNo} - {b.brand?.name} (Started: {format(new Date(b.startDate), 'dd/MM/yy')})</option>
+                                ))}
+                            </select>
+                        </div>
                         <div>
-                            <label className={labelClass}>RLT Volume BL</label>
-                            <input type="number" step="0.01" value={formData.productionData.rltBl || ''} onChange={e => handleChange('productionData', 'rltBl', parseFloat(e.target.value))} className={inputClass} required />
+                            <label className={labelClass}>Session Suffix</label>
+                            <input type="text" placeholder="e.g. -1 or -2" value={formData.productionData.batchSessionSuffix || ''} onChange={e => handleChange('productionData', 'batchSessionSuffix', e.target.value)} className={inputClass} required />
                         </div>
                         <div>
                             <label className={labelClass}>Strength % v/v</label>
                             <input type="number" step="0.1" value={formData.productionData.strength || ''} onChange={e => handleChange('productionData', 'strength', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                         <div>
-                            <label className={labelClass}>MFM-II Qty BL</label>
-                            <input type="number" step="0.01" value={formData.productionData.mfmBl || ''} onChange={e => handleChange('productionData', 'mfmBl', parseFloat(e.target.value))} className={inputClass} required />
+                            <label className={labelClass}>RLT Volume BL</label>
+                            <input type="number" step="0.01" value={formData.productionData.rltBl || ''} onChange={e => handleChange('productionData', 'rltBl', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                         <div>
-                            <label className={labelClass}>Avg Density</label>
-                            <input type="number" step="0.0001" value={formData.productionData.density || ''} onChange={e => handleChange('productionData', 'density', parseFloat(e.target.value))} className={inputClass} required />
+                            <label className={labelClass}>MFM-II Qty BL</label>
+                            <input type="number" step="0.01" value={formData.productionData.mfmBl || ''} onChange={e => handleChange('productionData', 'mfmBl', parseFloat(e.target.value))} className={inputClass} required />
                         </div>
                     </div>
                 );

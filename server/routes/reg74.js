@@ -18,16 +18,85 @@ router.get('/vats', verifyToken, async (req, res) => {
     }
 });
 
+// GET /api/reg74/brands
+router.get('/brands', verifyToken, async (req, res) => {
+    try {
+        const brands = await prisma.brand.findMany({ orderBy: { name: 'asc' } });
+        res.json(brands);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch brands' });
+    }
+});
+
+// POST /api/reg74/brands
+router.post('/brands', verifyToken, async (req, res) => {
+    try {
+        const { name, category } = req.body;
+        const brand = await prisma.brand.create({ data: { name, category } });
+        res.json(brand);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create brand' });
+    }
+});
+
+// GET /api/reg74/batches
+router.get('/batches', verifyToken, async (req, res) => {
+    const { status, vatId } = req.query;
+    try {
+        const where = {};
+        if (status) where.status = status;
+        if (vatId) where.vatId = parseInt(vatId);
+
+        const batches = await prisma.batchMaster.findMany({
+            where,
+            include: { brand: true, vat: true },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json(batches);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch batches' });
+    }
+});
+
+// POST /api/reg74/batches
+router.post('/batches', verifyToken, async (req, res) => {
+    try {
+        const { baseBatchNo, brandId, vatId, startDate, totalVolumeBl, totalVolumeAl } = req.body;
+        const batch = await prisma.batchMaster.create({
+            data: {
+                baseBatchNo,
+                brandId: parseInt(brandId),
+                vatId: parseInt(vatId),
+                startDate: new Date(startDate),
+                totalVolumeBl: parseFloat(totalVolumeBl),
+                totalVolumeAl: parseFloat(totalVolumeAl),
+                status: 'OPEN'
+            }
+        });
+        res.json(batch);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create batch' });
+    }
+});
+
 // POST /api/reg74/event
 router.post('/event', verifyToken, async (req, res) => {
     const {
         vatId, eventDateTime, eventType,
         openingData, receiptData, issueData,
         adjustmentData, productionData, closingData,
-        remarks
+        remarks, batchId
     } = req.body;
 
     try {
+        // Auto-calculate AL for snapshots if missing
+        if (openingData && openingData.volumeBl && openingData.strength && !openingData.volumeAl) {
+            openingData.volumeAl = (openingData.volumeBl * openingData.strength / 100);
+        }
+        if (closingData && closingData.finalBl && closingData.finalStrength && !closingData.finalAl) {
+            closingData.finalAl = (closingData.finalBl * closingData.finalStrength / 100);
+        }
+
         const event = await prisma.reg74Event.create({
             data: {
                 vatId: parseInt(vatId),
@@ -39,6 +108,7 @@ router.post('/event', verifyToken, async (req, res) => {
                 adjustmentData: adjustmentData || null,
                 productionData: productionData || null,
                 closingData: closingData || null,
+                batchId: batchId ? parseInt(batchId) : null,
                 remarks,
                 createdBy: req.user.id
             },
@@ -79,10 +149,18 @@ router.put('/event/:id', verifyToken, async (req, res) => {
         eventDateTime, eventType,
         openingData, receiptData, issueData,
         adjustmentData, productionData, closingData,
-        remarks
+        remarks, batchId
     } = req.body;
 
     try {
+        // Auto-calculate AL for snapshots if missing
+        if (openingData && openingData.volumeBl && openingData.strength && !openingData.volumeAl) {
+            openingData.volumeAl = (openingData.volumeBl * openingData.strength / 100);
+        }
+        if (closingData && closingData.finalBl && closingData.finalStrength && !closingData.finalAl) {
+            closingData.finalAl = (closingData.finalBl * closingData.finalStrength / 100);
+        }
+
         const event = await prisma.reg74Event.update({
             where: { id: parseInt(id) },
             data: {
@@ -94,6 +172,7 @@ router.put('/event/:id', verifyToken, async (req, res) => {
                 adjustmentData: adjustmentData || null,
                 productionData: productionData || null,
                 closingData: closingData || null,
+                batchId: batchId ? parseInt(batchId) : null,
                 remarks
             }
         });
@@ -214,12 +293,14 @@ router.get('/status', verifyToken, async (req, res) => {
                 if (e.adjustmentData) {
                     const bl = parseFloat(e.adjustmentData.qtyBl) || 0;
                     const str = parseFloat(e.adjustmentData.strength) || 0;
+                    const al = parseFloat(e.adjustmentData.qtyAl) || (bl * str / 100);
+
                     if (e.adjustmentData.type === 'INCREASE') {
                         balanceBl += bl;
-                        balanceAl += (bl * str / 100);
+                        balanceAl += al;
                     } else {
                         balanceBl -= bl;
-                        balanceAl -= (bl * str / 100);
+                        balanceAl -= al;
                     }
                 }
                 if (e.productionData) {

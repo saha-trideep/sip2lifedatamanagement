@@ -33,6 +33,7 @@ model VatMaster {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   events      Reg74Event[]
+  batches     BatchMaster[]
 }
 
 model Reg74Event {
@@ -47,9 +48,12 @@ model Reg74Event {
   receiptData      Json?    // Cols 8-11: source, qtyBl, strength, qtyAl
   issueData        Json?    // Cols 12-15: dest, caskNo, qtyBl, strength
   adjustmentData   Json?    // Cols 16-19 / 22-24: type(INC/WAST), reason, qtyBl, qtyAl, rltDip, rltBl
-  productionData   Json?    // Cols 25-33: rltBl, strength, rltAl, vatCount, mfmBl, density, mfmStrength, mfmAl, deadStockAl
+  productionData   Json?    // Cols 25-33: rltBl, strength, rltAl, vatCount, mfmBl, density, mfmStrength, mfmAl, deadStockAl, batchSessionSuffix
   closingData      Json?    // Cols 34-37: finalDipCm, finalBl, finalStrength, finalAl
   
+  batchId          Int?
+  batch            BatchMaster? @relation(fields: [batchId], references: [id])
+
   remarks          String?
   createdBy        Int
   user             User     @relation(fields: [createdBy], references: [id])
@@ -57,6 +61,29 @@ model Reg74Event {
 
   @@index([vatId])
   @@index([eventDateTime])
+}
+
+model Brand {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  category  String?  // IMFL, AS, etc.
+  batches   BatchMaster[]
+}
+
+model BatchMaster {
+  id              Int      @id @default(autoincrement())
+  baseBatchNo     String   @unique // e.g. 10AJD01
+  brandId         Int
+  brand           Brand    @relation(fields: [brandId], references: [id])
+  vatId           Int
+  vat             VatMaster @relation(fields: [vatId], references: [id])
+  startDate       DateTime // Batch start date
+  totalVolumeBl   Float?   // Total blend prepared in VAT
+  totalVolumeAl   Float?
+  status          String   @default("OPEN") // OPEN, IN_PRODUCTION, CLOSED
+  createdAt       DateTime @default(now())
+  
+  events          Reg74Event[]
 }
 
 model UserInvite {
