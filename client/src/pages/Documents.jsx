@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import {
@@ -12,6 +13,7 @@ import { useTheme } from '../context/ThemeContext';
 const DEFAULT_DEPARTMENTS = ["General", "Maintenance", "Sales", "Excise", "HR", "Production"];
 
 const Documents = () => {
+    const navigate = useNavigate();
     const { isDark, toggleTheme } = useTheme();
     // Data State
     const [docs, setDocs] = useState([]);
