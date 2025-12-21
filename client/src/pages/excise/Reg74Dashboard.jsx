@@ -125,9 +125,6 @@ const Reg74Dashboard = () => {
                     </div>
                 </div>
                 <div className="flex gap-4 items-center">
-                    <Link to="/registers/reg-a" className="px-6 py-4 bg-indigo-600 text-white rounded-3xl font-bold hover:bg-indigo-700 hover:shadow-indigo-400 shadow-xl transition-all flex items-center gap-3 text-sm">
-                        <Package size={20} /> Reg-A Batch Register
-                    </Link>
                     <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm items-center gap-6 px-6 overflow-hidden">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-orange-50 text-orange-600 rounded-xl"><AlertCircle size={20} /></div>

@@ -22,6 +22,7 @@ model User {
   invitesCreated UserInvite[] @relation("InvitedBy")
   reg76Entries   Reg76Entry[]
   reg74Events    Reg74Event[]
+  regAVerifications RegAEntry[] @relation("RegAVerifier")
 }
 
 model VatMaster {
@@ -137,7 +138,9 @@ model RegAEntry {
   chargeableWastage  Float?
   
   remarks         String?
-  status          String   @default("OPEN")
+  status          String   @default("PLANNED") // PLANNED, ACTIVE, COMPLETED
+  verifiedBy      Int?
+  verifier        User?    @relation("RegAVerifier", fields: [verifiedBy], references: [id])
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
