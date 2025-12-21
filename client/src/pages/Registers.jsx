@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Trash2, ExternalLink, FileSpreadsheet, ArrowLeft, Loader, Edit } from 'lucide-react';
+import {
+    Plus, Trash2, ExternalLink, FileSpreadsheet, ArrowLeft, Loader, Edit,
+    Database, FileText, LayoutDashboard, ChevronRight, Calculator
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../config';
 
 const Registers = () => {
+    const navigate = useNavigate();
     const [registers, setRegisters] = useState([]);
-    const [viewRegister, setViewRegister] = useState(null); // If set, we are viewing this register
+    const [viewRegister, setViewRegister] = useState(null);
     const [showForm, setShowForm] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingRegister, setEditingRegister] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    // Form State
+    // Form State for Zoho links
     const [newName, setNewName] = useState('');
     const [newUrl, setNewUrl] = useState('');
 
@@ -37,10 +42,9 @@ const Registers = () => {
             setShowForm(false);
             setNewName('');
             setNewUrl('');
-            alert(`✅ Register "${newName}" saved successfully!`);
         } catch (error) {
             console.error(error);
-            alert("Error adding register: " + (error.response?.data?.details || error.message));
+            alert("Error adding register link");
         } finally {
             setLoading(false);
         }
@@ -48,57 +52,25 @@ const Registers = () => {
 
     const handleDelete = async (id, e) => {
         e.stopPropagation();
-        if (!window.confirm("Delete this register link?")) return;
+        if (!window.confirm("Delete this reference link?")) return;
         try {
             await axios.delete(`${API_URL}/api/registers/${id}`);
-            const updated = registers.filter(r => r.id !== id);
-            setRegisters(updated);
-            if (viewRegister && viewRegister.id === id) {
-                setViewRegister(null);
-            }
+            setRegisters(registers.filter(r => r.id !== id));
         } catch (error) {
             alert("Error deleting");
         }
     };
 
-    const handleEdit = (register, e) => {
-        e.stopPropagation();
-        setEditingRegister({ ...register });
-        setShowEditModal(true);
-    };
-
-    const handleUpdate = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const res = await axios.put(`${API_URL}/api/registers/${editingRegister.id}`, {
-                name: editingRegister.name,
-                url: editingRegister.url
-            });
-
-            // Update local state
-            setRegisters(registers.map(r => r.id === editingRegister.id ? res.data : r));
-            setShowEditModal(false);
-            setEditingRegister(null);
-            alert(`✅ Register "${res.data.name}" updated successfully!`);
-        } catch (error) {
-            console.error(error);
-            alert("Error updating register: " + (error.response?.data?.error || error.message));
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // View Mode (Iframe)
+    // View Mode (Iframe for Zoho)
     if (viewRegister) {
         return (
             <div className="flex flex-col h-screen bg-gray-100">
                 <div className="bg-white p-4 shadow-sm flex items-center justify-between">
                     <button onClick={() => setViewRegister(null)} className="flex items-center text-gray-600 hover:text-blue-600">
-                        <ArrowLeft className="mr-2" /> Back to List
+                        <ArrowLeft className="mr-2" /> Back to Registers
                     </button>
-                    <h1 className="font-bold text-lg text-gray-800">{viewRegister.name}</h1>
-                    <div className="w-24"></div> {/* Spacer for center alignment */}
+                    <h1 className="font-bold text-lg text-gray-800">{viewRegister.name} (Zoho Reference)</h1>
+                    <div className="w-24"></div>
                 </div>
                 <div className="flex-1 p-4">
                     <iframe
@@ -111,174 +83,177 @@ const Registers = () => {
         );
     }
 
-    // List Mode
     return (
         <div className="p-8 min-h-screen bg-gray-50">
+            {/* Header */}
             <div className="flex justify-between items-center mb-8">
                 <div className="flex items-center gap-4">
-                    <a href="/dashboard" className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition text-gray-600">
+                    <button onClick={() => navigate('/dashboard')} className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition text-gray-600">
                         <ArrowLeft size={20} />
-                    </a>
-                    <h1 className="text-3xl font-bold text-gray-800">Registers</h1>
+                    </button>
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-800">Register Engine</h1>
+                        <p className="text-gray-500">Excise-compliant automated registers</p>
+                    </div>
                 </div>
-                <button
-                    onClick={() => setShowForm(!showForm)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                >
-                    <Plus size={20} /> Add Live Link
-                </button>
             </div>
 
-            {/* Add Form */}
-            {showForm && (
-                <div className="mb-8 p-6 bg-white rounded-lg shadow-md border border-blue-100">
-                    <h3 className="text-lg font-semibold mb-4 text-gray-700">Add New Register Sheet</h3>
-                    <form onSubmit={handleAdd} className="flex gap-4 items-end">
-                        <div className="flex-1">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
-                            <input
-                                type="text"
-                                placeholder="e.g. Spirit Transaction"
-                                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-                                value={newName}
-                                onChange={e => setNewName(e.target.value)}
-                                required
-                            />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Main Excise Registers */}
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-blue-50/50">
+                            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                <Database className="text-blue-600" size={24} />
+                                Active Excise Registers
+                            </h2>
+                            <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full uppercase tracking-wider">
+                                System Generated
+                            </span>
                         </div>
-                        <div className="flex-[2]">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Zoho Publish URL</label>
-                            <input
-                                type="url"
-                                placeholder="https://sheet.zohopublic.in/..."
-                                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-                                value={newUrl}
-                                onChange={e => setNewUrl(e.target.value)}
-                                required
-                            />
+
+                        <div className="divide-y divide-gray-100">
+                            {/* Reg 76 */}
+                            <div
+                                onClick={() => navigate('/registers/reg76')}
+                                className="p-6 hover:bg-gray-50 transition cursor-pointer group flex items-center justify-between"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-blue-100 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                        <FileText size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-gray-800 group-hover:text-blue-600">Reg 76 – Spirit Receipt</h3>
+                                        <p className="text-sm text-gray-500">Detailed record of daily spirit receipts from distilleries</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">Live</span>
+                                    <ChevronRight className="text-gray-300 group-hover:text-blue-600" />
+                                </div>
+                            </div>
+
+                            {/* Reg 74 - Future */}
+                            <div className="p-6 opacity-60 cursor-not-allowed flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-gray-100 text-gray-400 rounded-xl">
+                                        <Calculator size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-gray-800">Reg 74 – Blending</h3>
+                                        <p className="text-sm text-gray-500">Blending operations and vat transfers (Coming Soon)</p>
+                                    </div>
+                                </div>
+                                <span className="text-[10px] font-bold text-gray-400 border border-gray-200 px-2 py-1 rounded">PLANNED</span>
+                            </div>
+
+                            {/* Reg A - Future */}
+                            <div className="p-6 opacity-60 cursor-not-allowed flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-gray-100 text-gray-400 rounded-xl">
+                                        <LayoutDashboard size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-gray-800">Reg A – Production</h3>
+                                        <p className="text-sm text-gray-500">Bottling and finished goods production (Coming Soon)</p>
+                                    </div>
+                                </div>
+                                <span className="text-[10px] font-bold text-gray-400 border border-gray-200 px-2 py-1 rounded">PLANNED</span>
+                            </div>
+
+                            {/* Reg 78 - Future */}
+                            <div className="p-6 opacity-60 cursor-not-allowed flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-gray-100 text-gray-400 rounded-xl">
+                                        <FileSpreadsheet size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-gray-800">Reg 78 – Consolidated</h3>
+                                        <p className="text-sm text-gray-500">Consolidated monthly spirit and production summary (Coming Soon)</p>
+                                    </div>
+                                </div>
+                                <span className="text-[10px] font-bold text-gray-400 border border-gray-200 px-2 py-1 rounded">PLANNED</span>
+                            </div>
                         </div>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 h-10 flex items-center gap-2 disabled:bg-green-400 disabled:cursor-not-allowed"
-                        >
-                            {loading ? (
-                                <>
-                                    <Loader className="animate-spin" size={16} />
-                                    <span>Saving...</span>
-                                </>
+                    </div>
+                </div>
+
+                {/* Zoho Reference Links */}
+                <div className="space-y-6">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                            <h2 className="text-lg font-bold text-gray-700 flex items-center gap-2">
+                                <ExternalLink size={20} />
+                                Reference Links (Zoho)
+                            </h2>
+                            <button
+                                onClick={() => setShowForm(!showForm)}
+                                className="p-1 hover:bg-blue-50 text-blue-600 rounded transition"
+                            >
+                                <Plus size={20} />
+                            </button>
+                        </div>
+
+                        {showForm && (
+                            <div className="p-6 bg-blue-50/50 border-b border-gray-100">
+                                <form onSubmit={handleAdd} className="space-y-3">
+                                    <input
+                                        type="text"
+                                        placeholder="Name"
+                                        className="w-full p-2 text-sm border rounded"
+                                        value={newName}
+                                        onChange={e => setNewName(e.target.value)}
+                                        required
+                                    />
+                                    <input
+                                        type="url"
+                                        placeholder="URL"
+                                        className="w-full p-2 text-sm border rounded"
+                                        value={newUrl}
+                                        onChange={e => setNewUrl(e.target.value)}
+                                        required
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full bg-blue-600 text-white py-2 rounded text-sm font-bold hover:bg-blue-700 disabled:bg-blue-300"
+                                    >
+                                        {loading ? 'Saving...' : 'Add Link'}
+                                    </button>
+                                </form>
+                            </div>
+                        )}
+
+                        <div className="max-h-[500px] overflow-y-auto">
+                            {registers.length > 0 ? (
+                                <div className="divide-y divide-gray-100">
+                                    {registers.map(reg => (
+                                        <div key={reg.id} className="p-4 hover:bg-gray-50 flex items-center justify-between group">
+                                            <div
+                                                className="flex-1 cursor-pointer"
+                                                onClick={() => setViewRegister(reg)}
+                                            >
+                                                <h4 className="text-sm font-bold text-gray-800 group-hover:text-blue-600">{reg.name}</h4>
+                                                <p className="text-[10px] text-gray-400 truncate w-48">{reg.url}</p>
+                                            </div>
+                                            <button
+                                                onClick={(e) => handleDelete(reg.id, e)}
+                                                className="p-2 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                             ) : (
-                                <span>Save</span>
+                                <div className="p-8 text-center text-gray-400 text-sm">
+                                    No reference links found.
+                                </div>
                             )}
-                        </button>
-                    </form>
-                </div>
-            )}
-
-            {/* Grid of Links */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {registers.map(reg => (
-                    <div
-                        key={reg.id}
-                        onClick={() => setViewRegister(reg)}
-                        className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition cursor-pointer group hover:border-blue-300"
-                    >
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="p-3 bg-green-50 text-green-600 rounded-lg">
-                                <FileSpreadsheet size={24} />
-                            </div>
-                            <div className="flex gap-1">
-                                <button
-                                    onClick={(e) => handleEdit(reg, e)}
-                                    className="text-gray-400 hover:text-blue-500 p-1 rounded-full hover:bg-blue-50 transition"
-                                    title="Edit"
-                                >
-                                    <Edit size={18} />
-                                </button>
-                                <button
-                                    onClick={(e) => handleDelete(reg.id, e)}
-                                    className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition"
-                                    title="Delete"
-                                >
-                                    <Trash2 size={18} />
-                                </button>
-                            </div>
                         </div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600">{reg.name}</h3>
-                        <p className="text-gray-500 text-sm flex items-center gap-1">
-                            Click to view live sheet <ExternalLink size={12} />
-                        </p>
-                    </div>
-                ))}
-
-                {registers.length === 0 && !showForm && (
-                    <div className="col-span-full text-center py-20 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
-                        <FileSpreadsheet size={48} className="mx-auto mb-4 opacity-50" />
-                        <p className="text-lg">No registers found.</p>
-                        <p className="text-sm">Click "Add Live Link" to start.</p>
-                    </div>
-                )}
-            </div>
-
-            {/* Edit Modal */}
-            {showEditModal && editingRegister && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
-                        <h2 className="text-2xl font-bold mb-6 text-gray-800">Edit Register</h2>
-                        <form onSubmit={handleUpdate} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Display Name
-                                </label>
-                                <input
-                                    type="text"
-                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    value={editingRegister.name}
-                                    onChange={(e) => setEditingRegister({ ...editingRegister, name: e.target.value })}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Zoho Publish URL
-                                </label>
-                                <input
-                                    type="url"
-                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    value={editingRegister.url}
-                                    onChange={(e) => setEditingRegister({ ...editingRegister, url: e.target.value })}
-                                    required
-                                />
-                            </div>
-                            <div className="flex gap-3 pt-4">
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                >
-                                    {loading ? (
-                                        <>
-                                            <Loader className="animate-spin" size={18} />
-                                            <span>Updating...</span>
-                                        </>
-                                    ) : (
-                                        <span>Save Changes</span>
-                                    )}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowEditModal(false);
-                                        setEditingRegister(null);
-                                    }}
-                                    className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 font-semibold"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
                     </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 };

@@ -23,10 +23,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/folders', require('./routes/folders'));
 app.use('/api/registers', registerRoutes);
-app.use('/api/registers', registerRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/audit-logs', require('./routes/auditLogs'));
 app.use('/api/admin/invites', require('./routes/invites'));
+app.use('/api/excise', require('./routes/excise'));
 
 // Database Initialization Endpoint (for production without shell access)
 let dbInitialized = false;

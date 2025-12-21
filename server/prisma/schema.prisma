@@ -20,6 +20,7 @@ model User {
   registers RegisterLink[]
   auditLogs AuditLog[]
   invitesCreated UserInvite[] @relation("InvitedBy")
+  reg76Entries   Reg76Entry[]
 }
 
 model UserInvite {
@@ -89,4 +90,53 @@ model AuditLog {
   @@index([action])
   @@index([entityType])
   @@index([createdAt])
+}
+
+model Vat {
+  id    Int    @id @default(autoincrement())
+  name  String @unique // e.g., SST-5
+  type  String // e.g., Spirit Storage
+}
+
+model Reg76Entry {
+  id                    Int      @id @default(autoincrement())
+  receiptDate           DateTime
+  arrivalDate           DateTime?
+  permitNo              String
+  permitDate            DateTime?
+  exportingDistillery   String
+  invoiceNo             String
+  invoiceDate           DateTime?
+  vehicleNo             String
+  tankerMakeModel       String?
+  natureOfSpirit        String   
+  storageVat            String   
+
+  // Advised
+  advisedBl             Float
+  advisedAl             Float
+  advisedStrength       Float
+  advisedMassKg         Float
+
+  // Measurement
+  ladenWeightKg         Float
+  unladenWeightKg       Float
+  avgDensity            Float
+  avgTemperature        Float
+
+  // Result
+  receivedStrength      Float
+  remarks               String?
+
+  // Auto-calculated fields
+  receivedMass          Float
+  receivedBl            Float
+  receivedAl            Float
+  transitWastageBl      Float
+  transitWastageAl      Float
+
+  createdBy             Int
+  user                  User     @relation(fields: [createdBy], references: [id])
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
