@@ -4,13 +4,15 @@ import axios from 'axios';
 import {
     FileText, Upload, Download, Trash2, FileSpreadsheet,
     Image as ImageIcon, Loader, ArrowLeft, Search, Filter,
-    Folder, FolderPlus, Grid, List as ListIcon, MoreVertical, X
+    Folder, FolderPlus, Grid, List as ListIcon, MoreVertical, X, Moon, Sun
 } from 'lucide-react';
 import { API_URL } from '../config';
+import { useTheme } from '../context/ThemeContext';
 
 const DEFAULT_DEPARTMENTS = ["General", "Maintenance", "Sales", "Excise", "HR", "Production"];
 
 const Documents = () => {
+    const { isDark, toggleTheme } = useTheme();
     // Data State
     const [docs, setDocs] = useState([]);
     const [folders, setFolders] = useState([]);
@@ -128,7 +130,7 @@ const Documents = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm("Delete this document?")) return;
+        if (!window.confirm("Delete this document?")) return;
         try {
             await axios.delete(`${API_URL}/api/documents/${id}`);
             setDocs(docs.filter(d => d.id !== id));
@@ -137,7 +139,7 @@ const Documents = () => {
 
     const handleDeleteFolder = async (id, e) => {
         e.stopPropagation();
-        if (!confirm("Delete this folder? Documents inside will be unsorted.")) return;
+        if (!window.confirm("Delete this folder? Documents inside will be unsorted.")) return;
         try {
             await axios.delete(`${API_URL}/api/folders/${id}`);
             fetchFolders();
@@ -171,50 +173,57 @@ const Documents = () => {
     const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
     const getIcon = (type) => {
-        if (!type) return <FileText className="text-gray-400" />;
+        if (!type) return <FileText className={isDark ? "text-gray-500" : "text-gray-400"} />;
         const t = type.toLowerCase();
         if (t.includes('pdf')) return <FileText className="text-red-500" />;
         if (t.includes('xls') || t.includes('sheet') || t.includes('csv')) return <FileSpreadsheet className="text-green-500" />;
         if (t.includes('png') || t.includes('jpg')) return <ImageIcon className="text-blue-500" />;
-        return <FileText className="text-gray-500" />;
+        return <FileText className={isDark ? "text-gray-400" : "text-gray-500"} />;
     };
 
     return (
-        <div className="flex h-screen bg-gray-50 overflow-hidden">
+        <div className={`flex h-screen overflow-hidden transition-colors duration-300 ${isDark ? 'bg-gray-950' : 'bg-gray-50'}`}>
             {/* Hidden dropzone input */}
             <input {...getInputProps()} style={{ display: 'none' }} id="dropzone-input" />
 
             {/* Sidebar Filters */}
-            <aside className="w-64 bg-white border-r border-gray-200 flex flex-col hidden md:flex">
-                <div className="p-4 border-b border-gray-200">
-                    <div className="flex items-center gap-2 mb-6">
-                        <a href="/dashboard" className="p-1 bg-gray-100 rounded-full hover:bg-gray-200"><ArrowLeft size={16} /></a>
-                        <h2 className="font-bold text-gray-800">Documents</h2>
+            <aside className={`w-72 border-r flex flex-col hidden md:flex transition-colors duration-300 ${isDark ? 'bg-gray-900 border-gray-800 shadow-2xl' : 'bg-white border-gray-200'}`}>
+                <div className={`p-6 border-b transition-colors ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => navigate('/dashboard')}
+                                className={`p-2 rounded-xl transition ${isDark ? 'bg-gray-800 hover:bg-gray-700 text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
+                            >
+                                <ArrowLeft size={18} />
+                            </button>
+                            <h2 className={`font-black text-xl tracking-tight ${isDark ? 'text-white' : 'text-gray-800'}`}>Cloud Files</h2>
+                        </div>
+                        <button onClick={toggleTheme} className={`p-2 rounded-xl transition ${isDark ? 'text-yellow-400 hover:bg-gray-800' : 'text-gray-500 hover:bg-gray-100'}`}>
+                            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+                        </button>
                     </div>
 
                     <button
                         onClick={() => {
                             setUploadFile(null);
                             resetForm();
-                            // Auto-select current department filter if not "All"
-                            if (selectedDept !== 'All') {
-                                setMetaDept(selectedDept);
-                            }
+                            if (selectedDept !== 'All') setMetaDept(selectedDept);
                             document.getElementById('dropzone-input').click();
                         }}
-                        className="w-full bg-blue-600 text-white py-2 rounded shadow hover:bg-blue-700 flex items-center justify-center gap-2"
+                        className={`w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all shadow-lg active:scale-95 ${isDark ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-900/20' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/20'}`}
                     >
-                        <Upload size={16} /> Upload New
+                        <Upload size={18} /> Upload New
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
                     {/* Departments */}
                     <div>
-                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Departments</h3>
+                        <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Departments</h3>
                         <ul className="space-y-1">
                             <li
-                                className={`px-3 py-2 rounded cursor-pointer text-sm ${selectedDept === 'All' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
+                                className={`px-4 py-3 rounded-xl cursor-pointer text-sm font-bold transition-all ${selectedDept === 'All' ? (isDark ? 'bg-indigo-600/10 text-indigo-400' : 'bg-blue-50 text-blue-700') : (isDark ? 'text-gray-400 hover:bg-gray-800 hover:text-white' : 'text-gray-600 hover:bg-gray-50')}`}
                                 onClick={() => setSelectedDept('All')}
                             >
                                 All Departments
@@ -222,7 +231,7 @@ const Documents = () => {
                             {allDepartments.map(dept => (
                                 <li
                                     key={dept}
-                                    className={`px-3 py-2 rounded cursor-pointer text-sm ${selectedDept === dept ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
+                                    className={`px-4 py-3 rounded-xl cursor-pointer text-sm font-bold transition-all ${selectedDept === dept ? (isDark ? 'bg-indigo-600/10 text-indigo-400' : 'bg-blue-50 text-blue-700') : (isDark ? 'text-gray-400 hover:bg-gray-800 hover:text-white' : 'text-gray-600 hover:bg-gray-50')}`}
                                     onClick={() => setSelectedDept(dept)}
                                 >
                                     {dept}
@@ -233,35 +242,40 @@ const Documents = () => {
 
                     {/* Folders */}
                     <div>
-                        <div className="flex justify-between items-center mb-2">
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Folders</h3>
-                            <button onClick={() => { setShowFolderModal(true); setMetaTitle(''); }}><FolderPlus size={14} className="text-gray-400 hover:text-blue-600" /></button>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Folders</h3>
+                            <button
+                                onClick={() => { setShowFolderModal(true); setMetaTitle(''); }}
+                                className={`p-1.5 rounded-lg transition ${isDark ? 'hover:bg-gray-800 text-gray-500' : 'hover:bg-gray-100 text-gray-400'}`}
+                            >
+                                <FolderPlus size={16} />
+                            </button>
                         </div>
                         <ul className="space-y-1">
                             <li
-                                className={`px-3 py-2 rounded cursor-pointer text-sm flex items-center gap-2 ${selectedFolder === 'All' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
+                                className={`px-4 py-3 rounded-xl cursor-pointer text-sm font-bold flex items-center gap-3 transition-all ${selectedFolder === 'All' ? (isDark ? 'bg-indigo-600/10 text-indigo-400' : 'bg-blue-50 text-blue-700') : (isDark ? 'text-gray-400 hover:bg-gray-800 hover:text-white' : 'text-gray-600 hover:bg-gray-50')}`}
                                 onClick={() => setSelectedFolder('All')}
                             >
-                                <Folder size={14} className="text-yellow-500 fill-yellow-500" /> All Documents
+                                <Folder size={16} className={`fill-current ${selectedFolder === 'All' ? 'text-yellow-500' : 'text-gray-400'}`} /> All Documents
                             </li>
                             {folders.map(folder => (
                                 <li
                                     key={folder.id}
-                                    className={`px-3 py-2 rounded cursor-pointer text-sm flex justify-between group ${selectedFolder == folder.id ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
+                                    className={`px-4 py-3 rounded-xl cursor-pointer text-sm font-bold flex justify-between items-center group transition-all ${selectedFolder == folder.id ? (isDark ? 'bg-indigo-600/10 text-indigo-400' : 'bg-blue-50 text-blue-700') : (isDark ? 'text-gray-400 hover:bg-gray-800 hover:text-white' : 'text-gray-600 hover:bg-gray-50')}`}
                                     onClick={() => setSelectedFolder(folder.id)}
                                 >
-                                    <div className="flex items-center gap-2 truncate">
-                                        <Folder size={14} className="text-yellow-500" />
+                                    <div className="flex items-center gap-3 truncate">
+                                        <Folder size={16} className={`fill-current ${selectedFolder == folder.id ? 'text-yellow-500' : 'text-gray-400'}`} />
                                         {folder.name}
                                     </div>
-                                    <button onClick={(e) => handleDeleteFolder(folder.id, e)} className="text-gray-300 hover:text-red-500 hidden group-hover:block"><X size={12} /></button>
+                                    <button onClick={(e) => handleDeleteFolder(folder.id, e)} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X size={14} /></button>
                                 </li>
                             ))}
                             <li
-                                className={`px-3 py-2 rounded cursor-pointer text-sm flex items-center gap-2 ${selectedFolder === 'Unsorted' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
+                                className={`px-4 py-3 rounded-xl cursor-pointer text-sm font-bold flex items-center gap-3 transition-all ${selectedFolder === 'Unsorted' ? (isDark ? 'bg-indigo-600/10 text-indigo-400' : 'bg-blue-50 text-blue-700') : (isDark ? 'text-gray-400 hover:bg-gray-800 hover:text-white' : 'text-gray-600 hover:bg-gray-50')}`}
                                 onClick={() => setSelectedFolder('Unsorted')}
                             >
-                                <Folder size={14} className="text-gray-300" /> Unsorted
+                                <Folder size={16} className="text-gray-300" /> Unsorted
                             </li>
                         </ul>
                     </div>
@@ -271,39 +285,31 @@ const Documents = () => {
             {/* Main Area */}
             <main className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="bg-white border-b border-gray-200 p-3 sm:p-4 sticky top-0 z-10">
-                    <div className="flex items-center justify-between gap-2 sm:gap-4">
-                        {/* Left: Back Button & Search */}
-                        <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-                            <a
-                                href="/dashboard"
-                                className="flex-shrink-0 p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
-                            >
-                                <ArrowLeft size={18} className="text-gray-600" />
-                            </a>
-                            <div className="relative flex-1 max-w-lg">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <header className={`border-b p-4 sm:p-6 sticky top-0 z-10 transition-colors ${isDark ? 'bg-gray-950 border-gray-800' : 'bg-white border-gray-200'}`}>
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4 flex-1">
+                            <div className="relative flex-1 max-w-2xl">
+                                <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} size={18} />
                                 <input
                                     type="text"
-                                    placeholder="Search..."
-                                    className="w-full pl-9 pr-3 py-2 text-sm bg-gray-100 border-none rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                                    placeholder="Search your library..."
+                                    className={`w-full pl-12 pr-4 py-3 rounded-2xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-900 text-white placeholder:text-gray-600' : 'bg-gray-50 text-gray-900'}`}
                                     value={search}
                                     onChange={e => setSearch(e.target.value)}
                                 />
                             </div>
                         </div>
 
-                        {/* Right: Sort & View Toggle */}
-                        <div className="flex items-center gap-2">
-                            <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600">
-                                <Filter size={16} />
+                        <div className="flex items-center gap-4">
+                            <div className={`hidden sm:flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors ${isDark ? 'bg-gray-900 border border-gray-800' : 'bg-gray-50'}`}>
+                                <Filter size={16} className={isDark ? "text-indigo-400" : "text-blue-600"} />
                                 <select
                                     value={sort}
                                     onChange={e => setSort(e.target.value)}
-                                    className="border-none bg-transparent focus:ring-0 cursor-pointer font-medium"
+                                    className={`bg-transparent border-0 p-0 pr-8 focus:ring-0 font-bold text-xs uppercase tracking-widest cursor-pointer ${isDark ? 'text-white' : 'text-gray-700'}`}
                                 >
-                                    <option value="newest">Newest First</option>
-                                    <option value="oldest">Oldest First</option>
+                                    <option value="newest">Newest</option>
+                                    <option value="oldest">Oldest</option>
                                     <option value="alpha_asc">A-Z</option>
                                 </select>
                             </div>
@@ -311,120 +317,104 @@ const Documents = () => {
                     </div>
                 </header>
 
-                {/* Mobile Upload FAB (Floating Action Button) */}
-                <button
-                    onClick={() => {
-                        setUploadFile(null);
-                        resetForm();
-                        if (selectedDept !== 'All') {
-                            setMetaDept(selectedDept);
-                        }
-                        document.getElementById('dropzone-input').click();
-                    }}
-                    className="md:hidden fixed bottom-6 right-6 z-20 w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-2xl hover:shadow-3xl flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-                >
-                    <Upload size={24} />
-                </button>
-
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-3 sm:p-6">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
                     {loading ? (
-                        <div className="flex justify-center items-center h-full"><Loader className="animate-spin text-blue-600" /></div>
+                        <div className="flex flex-col justify-center items-center h-full gap-4 text-gray-500">
+                            <Loader className={`animate-spin ${isDark ? 'text-indigo-500' : 'text-blue-600'}`} size={48} />
+                            <p className="font-black text-[10px] uppercase tracking-widest">Accessing Secure Vault...</p>
+                        </div>
                     ) : (
-                        <div className="space-y-1">
-                            {/* Table Header - Hidden on Mobile */}
-                            <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 bg-gray-50 rounded-lg text-xs font-semibold text-gray-500 uppercase">
-                                <div className="col-span-4">Name</div>
-                                <div className="col-span-2">Department</div>
+                        <div className="space-y-4 max-w-7xl mx-auto">
+                            {/* Table Heading */}
+                            <div className={`hidden md:grid grid-cols-12 gap-6 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest ${isDark ? 'bg-gray-900 text-gray-500' : 'bg-gray-50 text-gray-500'}`}>
+                                <div className="col-span-4">Resource Name</div>
+                                <div className="col-span-2">Domain</div>
                                 <div className="col-span-2">Uploader</div>
-                                <div className="col-span-2">Description</div>
-                                <div className="col-span-2 text-right">Date</div>
+                                <div className="col-span-2">Context</div>
+                                <div className="col-span-2 text-right">Commit Date</div>
                             </div>
 
-                            {/* List */}
                             {docs.length === 0 && (
-                                <div className="text-center py-20 text-gray-400">
-                                    <FileText size={48} className="mx-auto mb-4 opacity-50" />
-                                    <p>No documents found matching filters.</p>
+                                <div className="text-center py-32 space-y-4">
+                                    <FileText size={64} className={`mx-auto opacity-10 ${isDark ? 'text-white' : 'text-black'}`} />
+                                    <p className="font-black text-gray-500 uppercase text-xs tracking-widest">The vault is currently empty</p>
                                 </div>
                             )}
 
                             {docs.map(doc => (
                                 <div
                                     key={doc.id}
-                                    className="bg-white border border-gray-100 rounded-lg hover:shadow-md transition group"
+                                    className={`rounded-3xl border transition-all group ${isDark ? 'bg-gray-900 border-gray-800 hover:border-indigo-500 hover:shadow-[0_0_20px_rgba(99,102,241,0.05)]' : 'bg-white border-gray-100 hover:shadow-xl'}`}
                                 >
-                                    {/* Desktop Grid Layout */}
-                                    <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 items-center">
-                                        <div className="col-span-4 flex items-center gap-3 overflow-hidden">
-                                            <div className="p-2 bg-gray-50 rounded text-gray-500">
+                                    {/* Desktop Grid */}
+                                    <div className="hidden md:grid grid-cols-12 gap-6 px-6 py-5 items-center">
+                                        <div className="col-span-4 flex items-center gap-4 overflow-hidden">
+                                            <div className={`p-3 rounded-2xl flex-shrink-0 transition-colors ${isDark ? 'bg-gray-800 text-gray-400 group-hover:text-indigo-400' : 'bg-gray-50 text-gray-500 group-hover:text-blue-600'}`}>
                                                 {getIcon(doc.type)}
                                             </div>
                                             <div className="min-w-0">
-                                                <h4 className="font-medium text-gray-900 truncate" title={doc.title}>{doc.title}</h4>
-                                                <p className="text-xs text-gray-500 truncate" title={doc.filename}>{doc.filename}</p>
+                                                <h4 className={`font-black tracking-tight truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{doc.title}</h4>
+                                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest truncate">{doc.filename}</p>
                                             </div>
                                         </div>
                                         <div className="col-span-2">
-                                            <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">{doc.department}</span>
+                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${isDark ? 'bg-indigo-900/30 text-indigo-400' : 'bg-blue-50 text-blue-700'}`}>{doc.department}</span>
                                         </div>
-                                        <div className="col-span-2 text-sm text-gray-600 truncate">
-                                            {doc.user?.name || doc.user?.role || "Admin"}
+                                        <div className={`col-span-2 text-xs font-bold truncate ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            {doc.user?.name || doc.user?.role || "System Admin"}
                                         </div>
-                                        <div className="col-span-2 text-sm text-gray-500 truncate">
-                                            {doc.description || '-'}
+                                        <div className={`col-span-2 text-xs italic truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                            {doc.description || 'No description'}
                                         </div>
-                                        <div className="col-span-2 flex items-center justify-end gap-3">
-                                            <span className="text-xs text-gray-400">{new Date(doc.uploadedAt).toLocaleDateString()}</span>
-                                            <div className="hidden group-hover:flex gap-2">
+                                        <div className="col-span-2 flex items-center justify-end gap-4">
+                                            <span className="text-[10px] font-black text-gray-500 uppercase">{new Date(doc.uploadedAt).toLocaleDateString()}</span>
+                                            <div className="opacity-0 group-hover:opacity-100 flex gap-2 transition-all">
                                                 <a
                                                     href={doc.path}
                                                     target="_blank" rel="noreferrer"
-                                                    className="p-1 text-gray-400 hover:text-blue-600"
+                                                    className={`p-2 rounded-xl transition ${isDark ? 'bg-gray-800 text-indigo-400 hover:bg-gray-700' : 'bg-gray-100 text-blue-600 hover:bg-white border border-gray-100'}`}
                                                 >
-                                                    <Download size={16} />
+                                                    <Download size={14} />
                                                 </a>
-                                                <button onClick={() => handleDelete(doc.id)} className="p-1 text-gray-400 hover:text-red-600">
-                                                    <Trash2 size={16} />
+                                                <button
+                                                    onClick={() => handleDelete(doc.id)}
+                                                    className={`p-2 rounded-xl transition ${isDark ? 'bg-gray-800 text-red-400 hover:bg-red-900/40' : 'bg-gray-100 text-red-600 hover:bg-red-50'}`}
+                                                >
+                                                    <Trash2 size={14} />
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Mobile Stack Layout */}
-                                    <div className="md:hidden p-3 space-y-2">
-                                        <div className="flex items-start gap-3">
-                                            <div className="p-2 bg-gray-50 rounded text-gray-500 flex-shrink-0">
+                                    {/* Mobile Stack */}
+                                    <div className="md:hidden p-5 space-y-4">
+                                        <div className="flex items-start gap-4">
+                                            <div className={`p-4 rounded-2xl ${isDark ? 'bg-gray-800 text-indigo-400' : 'bg-gray-50'}`}>
                                                 {getIcon(doc.type)}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <h4 className="font-medium text-gray-900 text-sm">{doc.title}</h4>
-                                                <p className="text-xs text-gray-500 truncate">{doc.filename}</p>
+                                                <h4 className={`font-black text-lg tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>{doc.title}</h4>
+                                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest truncate">{doc.filename}</p>
                                             </div>
                                         </div>
-                                        <div className="flex flex-wrap gap-2 text-xs">
-                                            <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full">{doc.department}</span>
-                                            <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full">{doc.user?.name || "Admin"}</span>
-                                            <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded-full">{new Date(doc.uploadedAt).toLocaleDateString()}</span>
+                                        <div className="flex flex-wrap gap-2">
+                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${isDark ? 'bg-indigo-900/30 text-indigo-400' : 'bg-blue-50 text-blue-700'}`}>{doc.department}</span>
+                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-600'}`}>{doc.user?.name || "Admin"}</span>
                                         </div>
-                                        {doc.description && (
-                                            <p className="text-xs text-gray-500">{doc.description}</p>
-                                        )}
-                                        <div className="flex gap-2 pt-2">
+                                        <div className="flex gap-2">
                                             <a
                                                 href={doc.path}
                                                 target="_blank" rel="noreferrer"
-                                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"
+                                                className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${isDark ? 'bg-indigo-600 text-white shadow-indigo-900/20 shadow-xl' : 'bg-blue-600 text-white shadow-lg'}`}
                                             >
-                                                <Download size={14} />
-                                                <span>Download</span>
+                                                <Download size={16} /> Download
                                             </a>
                                             <button
                                                 onClick={() => handleDelete(doc.id)}
-                                                className="flex items-center justify-center gap-2 px-3 py-2 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100"
+                                                className={`flex items-center justify-center p-4 rounded-2xl transition-all ${isDark ? 'bg-gray-800 text-red-400' : 'bg-red-50 text-red-600'}`}
                                             >
-                                                <Trash2 size={14} />
-                                                <span>Delete</span>
+                                                <Trash2 size={18} />
                                             </button>
                                         </div>
                                     </div>
@@ -435,117 +425,97 @@ const Documents = () => {
                 </div>
             </main>
 
-            {/* Upload Modal */}
-            {showUploadModal && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-bold text-gray-800">Upload Document</h2>
-                            <button onClick={() => setShowUploadModal(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+            {/* Modals with Dark Support */}
+            {(showUploadModal || showFolderModal) && (
+                <div className="fixed inset-0 bg-gray-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+                    <div className={`rounded-[3rem] shadow-2xl w-full max-w-lg overflow-hidden border transition-all ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-white'}`}>
+                        <div className={`p-8 border-b flex justify-between items-center ${isDark ? 'bg-gray-800/50 border-gray-800' : 'bg-gray-50/50 border-gray-100'}`}>
+                            <div>
+                                <h2 className={`text-2xl font-black tracking-tighter ${isDark ? 'text-white' : 'text-gray-800'}`}>{showUploadModal ? 'Secure Upload' : 'New Folder'}</h2>
+                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">DMS Regulatory Commit</p>
+                            </div>
+                            <button onClick={() => { setShowUploadModal(false); setShowFolderModal(false); }} className={`p-2 rounded-full transition-all ${isDark ? 'hover:bg-gray-800 text-gray-500' : 'hover:bg-white hover:shadow-sm text-gray-400'}`}>
+                                <X size={24} />
+                            </button>
                         </div>
 
-                        <form onSubmit={handleUpload} className="space-y-4">
-                            {/* File Preview */}
-                            {!uploadFile ? (
-                                <div {...getRootProps()} className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition">
-                                    <input {...getInputProps()} />
-                                    <Upload className="mx-auto text-gray-400 mb-2" size={24} />
-                                    <p className="text-sm text-gray-600">Click or Drag file here</p>
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                                    <FileText size={20} className="text-blue-600" />
-                                    <span className="text-sm font-medium text-blue-900 truncate flex-1">{uploadFile.name}</span>
-                                    <button type="button" onClick={() => setUploadFile(null)} className="text-blue-400 hover:text-blue-700"><X size={16} /></button>
-                                </div>
-                            )}
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Document Title</label>
-                                <input required type="text" className="w-full p-2 border rounded-lg" value={metaTitle} onChange={e => setMetaTitle(e.target.value)} placeholder="e.g. Monthly Production Report" />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                                    <select
-                                        className="w-full p-2 border rounded-lg"
-                                        value={showCustomDept ? 'Other' : metaDept}
-                                        onChange={e => {
-                                            if (e.target.value === 'Other') {
-                                                setShowCustomDept(true);
-                                                setMetaDept('General');
-                                            } else {
-                                                setShowCustomDept(false);
-                                                setMetaDept(e.target.value);
-                                                setCustomDept('');
-                                            }
-                                        }}
-                                    >
-                                        {allDepartments.map(d => <option key={d} value={d}>{d}</option>)}
-                                        <option value="Other">Other...</option>
-                                    </select>
-                                    {showCustomDept && (
-                                        <input
-                                            type="text"
-                                            className="w-full p-2 border rounded-lg mt-2"
-                                            placeholder="Enter department name"
-                                            value={customDept}
-                                            onChange={e => setCustomDept(e.target.value)}
-                                            required
-                                        />
+                        <div className="p-10 space-y-6">
+                            {showUploadModal ? (
+                                <form onSubmit={handleUpload} className="space-y-6">
+                                    {!uploadFile ? (
+                                        <div {...getRootProps()} className={`border-2 border-dashed rounded-[2rem] p-12 text-center cursor-pointer transition-all ${isDark ? 'border-gray-800 hover:border-indigo-500 bg-gray-950/50' : 'border-gray-200 hover:border-blue-500 bg-gray-50 hover:bg-blue-50/50'}`}>
+                                            <input {...getInputProps()} />
+                                            <Upload className={`mx-auto mb-4 ${isDark ? 'text-indigo-400' : 'text-blue-500'}`} size={32} />
+                                            <p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Drop statutory documents here or click to browse</p>
+                                        </div>
+                                    ) : (
+                                        <div className={`flex items-center gap-4 p-4 rounded-2xl border ${isDark ? 'bg-indigo-900/10 border-indigo-900/30' : 'bg-blue-50 border-blue-100'}`}>
+                                            <FileText size={24} className={isDark ? "text-indigo-400" : "text-blue-600"} />
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`text-sm font-black truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{uploadFile.name}</p>
+                                                <p className="text-[10px] font-bold text-gray-500">{(uploadFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                                            </div>
+                                            <button type="button" onClick={() => setUploadFile(null)} className="text-gray-400 hover:text-red-500"><X size={18} /></button>
+                                        </div>
                                     )}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Folder</label>
-                                    <select className="w-full p-2 border rounded-lg" value={metaFolder} onChange={e => setMetaFolder(e.target.value)}>
-                                        <option value="">Unsorted</option>
-                                        {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                                    </select>
-                                </div>
-                            </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Description <span className="text-red-500">*</span>
-                                </label>
-                                <textarea
-                                    required
-                                    className="w-full p-2 border rounded-lg"
-                                    rows="2"
-                                    value={metaDesc}
-                                    onChange={e => setMetaDesc(e.target.value)}
-                                    placeholder="Brief notes about this file (required)..."
-                                />
-                            </div>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Document Identifier</label>
+                                            <input required type="text" className={`w-full p-4 rounded-2xl font-bold transition-all border-0 focus:ring-2 focus:ring-indigo-500 ${isDark ? 'bg-gray-800 text-white placeholder:text-gray-700' : 'bg-gray-50 text-gray-900'}`} value={metaTitle} onChange={e => setMetaTitle(e.target.value)} placeholder="e.g. WB-IML-REC-2024" />
+                                        </div>
 
-                            <button disabled={!uploadFile} type="submit" className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                                Upload Document
-                            </button>
-                        </form>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Domain</label>
+                                                <select className={`w-full p-4 rounded-2xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} value={showCustomDept ? 'Other' : metaDept} onChange={e => { if (e.target.value === 'Other') setShowCustomDept(true); else { setShowCustomDept(false); setMetaDept(e.target.value); } }}>
+                                                    {allDepartments.map(d => <option key={d} value={d}>{d}</option>)}
+                                                    <option value="Other">Other Category...</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Logic Folder</label>
+                                                <select className={`w-full p-4 rounded-2xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} value={metaFolder} onChange={e => setMetaFolder(e.target.value)}>
+                                                    <option value="">Root / Unsorted</option>
+                                                    {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        {showCustomDept && (
+                                            <input type="text" className={`w-full p-4 rounded-2xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} placeholder="Define new department..." value={customDept} onChange={e => setCustomDept(e.target.value)} required />
+                                        )}
+
+                                        <div>
+                                            <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Brief Description</label>
+                                            <textarea required rows="2" className={`w-full p-4 rounded-2xl font-bold transition-all border-0 focus:ring-2 focus:ring-indigo-500 ${isDark ? 'bg-gray-800 text-white placeholder:text-gray-700' : 'bg-gray-50 text-gray-900'}`} value={metaDesc} onChange={e => setMetaDesc(e.target.value)} placeholder="Regulatory notes or context..." />
+                                        </div>
+                                    </div>
+
+                                    <button disabled={!uploadFile} type="submit" className={`w-full py-5 rounded-[1.5rem] font-black uppercase text-xs tracking-widest transition-all shadow-xl ${isDark ? 'bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-gray-800' : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'}`}>Upload To DMS</button>
+                                </form>
+                            ) : (
+                                <form onSubmit={handleCreateFolder} className="space-y-6">
+                                    <div>
+                                        <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Directory Name</label>
+                                        <input required type="text" className={`w-full p-4 rounded-2xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} value={metaTitle} onChange={e => setMetaTitle(e.target.value)} placeholder="e.g. Audit Reports 2024" />
+                                    </div>
+                                    <div>
+                                        <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Associate Department</label>
+                                        <select className={`w-full p-4 rounded-2xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} value={metaDept} onChange={e => setMetaDept(e.target.value)}>
+                                            {allDepartments.map(d => <option key={d} value={d}>{d}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="flex gap-4 pt-4">
+                                        <button type="button" onClick={() => setShowFolderModal(false)} className={`flex-1 py-5 rounded-[1.5rem] font-black uppercase text-[10px] tracking-widest border transition-all ${isDark ? 'border-gray-800 text-gray-500 hover:bg-gray-800' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>Cancel</button>
+                                        <button type="submit" className={`flex-1 py-5 rounded-[1.5rem] font-black uppercase text-[10px] tracking-widest transition-all shadow-xl ${isDark ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>Initialize</button>
+                                    </div>
+                                </form>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
-
-            {/* Create Folder Modal */}
-            {showFolderModal && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
-                        <h2 className="text-lg font-bold text-gray-800 mb-4">Create New Folder</h2>
-                        <form onSubmit={handleCreateFolder} className="space-y-4">
-                            <input required type="text" className="w-full p-2 border rounded-lg" value={metaTitle} onChange={e => setMetaTitle(e.target.value)} placeholder="Folder Name..." />
-                            <select className="w-full p-2 border rounded-lg" value={metaDept} onChange={e => setMetaDept(e.target.value)}>
-                                {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                            </select>
-                            <div className="flex justify-end gap-2">
-                                <button type="button" onClick={() => setShowFolderModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Create</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
         </div>
     );
 };
