@@ -55,6 +55,8 @@ router.get('/report', verifyToken, async (req, res) => {
                 productionInc: 0,
                 auditInc: 0,
                 issueDutyAl: 0,
+                issueDutyBl: 0,
+                productionFees: 0,
                 sampleAl: 0,
                 operationalWastage: 0,
                 productionWastage: 0,
@@ -107,20 +109,14 @@ router.get('/report', verifyToken, async (req, res) => {
             }
 
             if (event.eventType === 'PRODUCTION') {
-                // Production usually involves a "Production Issue" (debit from vat)
-                // and sometimes a "Production Wastage" check.
                 const prod = event.productionData;
-                // In Reg-A, we have the precise 0.1% wastage.
-                // But in Reg-74, a PRODUCTION event records what was issued to MFM-II.
                 const mfmAl = prod?.mfmAl || 0;
+                const mfmBl = prod?.mfmBl || 0;
 
-                // For Reg 78, usually the "Production Issue" (Col 6/12)
-                // If it's an issue for production, it's a debit.
                 row.issueDutyAl = mfmAl;
+                row.issueDutyBl = mfmBl;
+                row.productionFees = mfmBl * 3; // Statutory ₹3 per BL fee
                 cumulativeAl -= mfmAl;
-
-                // If there's linked Reg-A data for this session, we could pull production wastage
-                // But for now, we use the Reg-74 event's own data.
             }
 
             if (event.eventType === 'OPENING' && cumulativeAl === 0) {

@@ -198,7 +198,15 @@ const Reg78Register = () => {
                                         <td className="p-4 border-r dark:border-gray-800 text-purple-600">{r.productionInc > 0 ? r.productionInc.toFixed(2) : '-'}</td>
                                         <td className="p-4 border-r dark:border-gray-800 text-orange-600">{r.auditInc > 0 ? r.auditInc.toFixed(2) : '-'}</td>
                                         <td className="p-4 border-r dark:border-gray-800 font-black text-gray-900 dark:text-gray-100">{r.totalAlInHand?.toFixed(2)}</td>
-                                        <td className="p-4 border-r dark:border-gray-800 text-red-600">{r.issueDutyAl > 0 ? r.issueDutyAl.toFixed(2) : '-'}</td>
+                                        <td className="p-4 border-r dark:border-gray-800">
+                                            <div className="text-red-600">{r.issueDutyAl > 0 ? r.issueDutyAl.toFixed(2) : '-'} <span className="text-[7px]">AL</span></div>
+                                            {r.productionFees > 0 && (
+                                                <div className="text-[7px] font-black text-gray-400 mt-1 uppercase">
+                                                    Fee: ₹{r.productionFees.toFixed(2)}
+                                                    <br />({r.issueDutyBl} BL)
+                                                </div>
+                                            )}
+                                        </td>
                                         <td className="p-4 border-r dark:border-gray-800 text-gray-500">{r.sampleAl > 0 ? r.sampleAl.toFixed(2) : '-'}</td>
                                         <td className="p-4 border-r dark:border-gray-800 text-red-400">{r.operationalWastage > 0 ? r.operationalWastage.toFixed(2) : '-'}</td>
                                         <td className="p-4 border-r dark:border-gray-800 text-red-500">{r.productionWastage > 0 ? r.productionWastage.toFixed(2) : '-'}</td>
