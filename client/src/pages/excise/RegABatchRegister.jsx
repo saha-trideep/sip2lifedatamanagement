@@ -40,10 +40,10 @@ const RegABatchRegister = () => {
         fetchData();
     }, []);
 
-    const handlePlanBatch = async (batchId) => {
+    const handlePlanBatch = async (batchId, sessionNo = 1) => {
         try {
             const token = localStorage.getItem('token');
-            await axios.post(`${API_URL}/api/rega/plan`, { batchId }, {
+            await axios.post(`${API_URL}/api/rega/plan`, { batchId, sessionNo }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setShowPlanModal(false);
@@ -196,8 +196,8 @@ const RegABatchRegister = () => {
                                         {entries.filter(e => e.batch?.baseBatchNo.toLowerCase().includes(search.toLowerCase())).map(e => (
                                             <tr key={e.id} className="group hover:bg-gray-50/80 dark:hover:bg-gray-800/50 transition-all">
                                                 <td className="px-10 py-8">
-                                                    <div className="font-black text-xl text-gray-900 dark:text-white">{e.batch?.baseBatchNo}</div>
-                                                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Start: {format(new Date(e.batch.startDate), 'dd MMM yyyy')}</div>
+                                                    <div className="font-black text-xl text-gray-900 dark:text-white">{e.batch?.baseBatchNo} <span className="text-xs bg-indigo-100 dark:bg-indigo-900 px-2 py-0.5 rounded ml-2">Session {e.sessionNo}</span></div>
+                                                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Prod Date: {format(new Date(e.productionDate), 'dd MMM yyyy')}</div>
                                                 </td>
                                                 <td className="px-10 py-8">
                                                     <div className="font-bold text-gray-700 dark:text-gray-300">{e.batch.brand.name}</div>
@@ -290,8 +290,8 @@ const RegABatchRegister = () => {
                             </thead>
                             <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-bold text-gray-700 dark:text-gray-300">
                                 {entries.map(e => (
-                                    <tr key={e.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-all text-center">
-                                        <td className="p-3 border-r border-gray-50 dark:border-gray-800">{e.batch.baseBatchNo}</td>
+                                    <tr key={e.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-all text-center text-[8px]">
+                                        <td className="p-3 border-r border-gray-50 dark:border-gray-800">{e.batch.baseBatchNo} <br /> <span className="text-[6px] font-black opacity-40">SES {e.sessionNo}</span></td>
                                         <td className="p-3 border-r border-gray-50 dark:border-gray-800">{format(new Date(e.batch.startDate), 'dd-MM-yy')}</td>
                                         <td className="p-3 border-r border-gray-50 dark:border-gray-800 text-left font-black">{e.batch.brand.name}</td>
                                         <td className="p-3 border-r border-gray-50 dark:border-gray-800">{e.batch.vat.vatCode}</td>
@@ -349,17 +349,24 @@ const RegABatchRegister = () => {
                             <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">Create Production Batch</h2>
                             <p className="text-gray-400 font-medium mb-8 uppercase text-[10px] tracking-widest">Select an existing Reg-74 mother batch to initialize Reg-A</p>
                             <div className="space-y-3">
-                                {batches.filter(b => !entries.find(e => e.batchId === b.id)).map(b => (
-                                    <button key={b.id} onClick={() => handlePlanBatch(b.id)} className="w-full p-6 text-left border border-gray-100 dark:border-gray-800 rounded-3xl hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 group transition-all">
-                                        <div className="flex justify-between items-center">
+                                {batches.map(b => {
+                                    const sessionCount = entries.filter(e => e.batchId === b.id).length;
+                                    const nextSession = sessionCount + 1;
+                                    return (
+                                        <div key={b.id} className="w-full p-6 text-left border border-gray-100 dark:border-gray-800 rounded-3xl hover:border-indigo-500 hover:bg-gray-50 dark:hover:bg-indigo-900/10 group transition-all flex justify-between items-center">
                                             <div>
-                                                <div className="font-black text-lg text-gray-900 dark:text-white group-hover:text-indigo-600">{b.baseBatchNo}</div>
+                                                <div className="font-black text-lg text-gray-900 dark:text-white group-hover:text-indigo-600">{b.baseBatchNo} <span className="text-xs bg-gray-100 dark:bg-gray-800 px-2 rounded">Active Sessions: {sessionCount}</span></div>
                                                 <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">{b.brand.name}</div>
                                             </div>
-                                            <ChevronRight className="text-gray-300 group-hover:text-indigo-600" />
+                                            <button
+                                                onClick={() => handlePlanBatch(b.id, nextSession)}
+                                                className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all"
+                                            >
+                                                Start Session {nextSession}
+                                            </button>
                                         </div>
-                                    </button>
-                                ))}
+                                    );
+                                })}
                                 {batches.filter(b => !entries.find(e => e.batchId === b.id)).length === 0 && (
                                     <p className="text-center py-10 text-gray-400 font-bold">No active batches available to plan. Create one in Reg-74 first.</p>
                                 )}
@@ -378,7 +385,7 @@ const RegABatchRegister = () => {
                             <div className="flex justify-between items-start mb-8">
                                 <div>
                                     <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">Production Declaration</h2>
-                                    <p className="text-gray-400 font-medium uppercase text-[10px] tracking-widest">Manual Data Entry for Batch {currentEntry?.batch.baseBatchNo}</p>
+                                    <p className="text-gray-400 font-medium uppercase text-[10px] tracking-widest">Manual Data Entry for Batch {currentEntry?.batch.baseBatchNo} (Session {currentEntry.sessionNo})</p>
                                 </div>
                                 <div className="text-right">
                                     <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Target Strength</div>

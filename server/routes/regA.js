@@ -23,38 +23,47 @@ router.get('/entries', verifyToken, async (req, res) => {
     }
 });
 
-// CREATE a new planned entry with auto-fetched details
+// CREATE a new planned entry with auto-fetched details and session support
 router.post('/plan', verifyToken, async (req, res) => {
-    const { batchId } = req.body;
+    const { batchId, sessionNo = 1 } = req.body;
     try {
         const batch = await prisma.batchMaster.findUnique({
             where: { id: parseInt(batchId) },
-            include: { vat: true }
+            include: { vat: true, brand: true }
         });
 
         if (!batch) return res.status(404).json({ error: "Batch not found" });
 
-        const entry = await prisma.regAEntry.create({
-            data: {
-                batchId: batch.id,
-                status: 'PLANNED',
-                batchNoDate: `${batch.baseBatchNo} (${format(new Date(batch.startDate), 'dd MMM')})`,
-
-                // Auto-fetch from manual batch creation details
-                receiptFromVat: batch.sourceVatCode || "SST",
-                receiptStrength: batch.receiptStrength || null,
-                receiptBl: batch.receiptBl || null,
-                receiptAl: batch.receiptAl || null,
-
-                // Reduction details usually match the batch realization
-                blendingToVat: batch.vat.vatCode, // The BRT
-                blendingStrength: batch.totalVolumeBl && batch.totalVolumeAl ? (batch.totalVolumeAl / batch.totalVolumeBl * 100) : (batch.brand.category === 'IMFL' ? 42.8 : null),
-                blendingBl: batch.totalVolumeBl || null,
-                blendingAl: batch.totalVolumeAl || null,
-
-                avgStrength: batch.brand.category === 'IMFL' ? 42.8 : null
-            }
+        // Check if session already exists
+        const existing = await prisma.regAEntry.findFirst({
+            where: { batchId: batch.id, sessionNo: parseInt(sessionNo) }
         });
+        if (existing) return res.status(400).json({ error: `Session ${sessionNo} for this batch already exists.` });
+
+        const data = {
+            batchId: batch.id,
+            sessionNo: parseInt(sessionNo),
+            status: 'PLANNED',
+            batchNoDate: `${batch.baseBatchNo} (${format(new Date(), 'dd MMM')})`,
+            productionDate: new Date(),
+        };
+
+        // Only fill Receipt/Blending pillars for Session 1
+        if (parseInt(sessionNo) === 1) {
+            data.receiptFromVat = batch.sourceVatCode || "SST";
+            data.receiptStrength = batch.receiptStrength || null;
+            data.receiptBl = batch.receiptBl || null;
+            data.receiptAl = batch.receiptAl || null;
+
+            data.blendingToVat = batch.vat.vatCode;
+            data.blendingStrength = batch.totalVolumeBl && batch.totalVolumeAl ? (batch.totalVolumeAl / batch.totalVolumeBl * 100) : (batch.brand.category === 'IMFL' ? 42.8 : null);
+            data.blendingBl = batch.totalVolumeBl || null;
+            data.blendingAl = batch.totalVolumeAl || null;
+
+            data.avgStrength = batch.brand.category === 'IMFL' ? 42.8 : null;
+        }
+
+        const entry = await prisma.regAEntry.create({ data });
         res.status(201).json(entry);
     } catch (error) {
         console.error(error);
@@ -135,7 +144,7 @@ router.get('/link-mfm/:id', verifyToken, async (req, res) => {
     }
 });
 
-// FINALIZE Batch (COMPLETED)
+// FINALIZE Batch (COMPLETED) with 0.1% MFM Wastage Rule
 router.post('/finalize/:id', verifyToken, async (req, res) => {
     const { id } = req.params;
     try {
@@ -151,11 +160,13 @@ router.post('/finalize/:id', verifyToken, async (req, res) => {
             return res.status(403).json({ error: "Only Admin or Excise roles can finalize production records." });
         }
 
-        // Final Calculations
-        const bottledAl = entry.spiritBottledAl || 0;
+        // Production Wastage Rule: 0.1% threshold for MFM vs Bottles
         const mfmAl = entry.mfmTotalAl;
+        const bottledAl = entry.spiritBottledAl || 0;
         const diffAl = mfmAl - bottledAl;
-        const allowWastage = mfmAl * 0.01; // 1% Rule
+
+        // 0.1% Allowed for Bottling Operations
+        const allowWastage = mfmAl * 0.001;
 
         const finalized = await prisma.regAEntry.update({
             where: { id: parseInt(id) },
@@ -170,8 +181,9 @@ router.post('/finalize/:id', verifyToken, async (req, res) => {
             }
         });
 
-        res.json({ message: "Batch production finalized and verified", entry: finalized });
+        res.json({ message: "Production session finalized and verified", entry: finalized });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: error.message });
     }
 });

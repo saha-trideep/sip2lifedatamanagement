@@ -99,14 +99,15 @@ model RegAEntry {
   id              Int      @id @default(autoincrement())
   batchId         Int
   batch           BatchMaster @relation(fields: [batchId], references: [id])
+  sessionNo       Int      @default(1) // To support multi-day production (Batch-1, Batch-2 etc)
   
-  // Phase 1: Receipt Volume of Spirit (Cols 5-8)
+  // Phase 1: Receipt Volume of Spirit (Cols 5-8) - Copied from Batch on Session 1
   receiptFromVat  String?
   receiptStrength Float?
   receiptBl       Float?
   receiptAl       Float?
   
-  // Phase 2: Total Blend Prepared in VAT (Cols 9-12)
+  // Phase 2: Total Blend Prepared in VAT (Cols 9-12) - Copied from Batch on Session 1
   blendingToVat   String?
   blendingStrength Float?
   blendingBl      Float?
@@ -114,18 +115,16 @@ model RegAEntry {
   
   // Phase 3: Batch Info (Cols 13-16)
   batchNoDate     String?  // Batch No. & Date
-  productionDate  DateTime?
-  totalBatchBl    Float?
-  totalBatchAl    Float?
+  productionDate  DateTime? // The specific date of this production session
   
-  // Phase 4: MFM Data (Cols 17-21)
+  // Phase 4: MFM Data (Cols 17-21) - Specific to this session
   mfmDensity      Float?
   mfmTemp         Float?
   mfmStrength     Float?
   mfmTotalBl      Float?
   mfmTotalAl      Float?
   
-  // Phase 5: Bottling Counts (Cols 22-27)
+  // Phase 5: Bottling Counts (Bottle Counts Only, as requested)
   bottling750     Int?     @default(0)
   bottling600     Int?     @default(0)
   bottling500     Int?     @default(0)
@@ -138,10 +137,11 @@ model RegAEntry {
   avgStrength     Float?
   spiritBottledAl Float?
   
-  // Phase 7: Wastages (Cols 31-34)
+  // Phase 7: Wastages (Threshold 0.1% for MFM vs Bottles)
+  differenceFoundAl  Float? // Difference between MFM-II and Bottled (AL)
   productionIncrease Float?
   productionWastage  Float?
-  allowableWastage   Float?
+  allowableWastage   Float? // 0.1% of MFM AL
   chargeableWastage  Float?
   
   remarks         String?

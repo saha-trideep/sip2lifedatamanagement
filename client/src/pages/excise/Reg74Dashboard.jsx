@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
     ArrowLeft, Calculator, Database, Plus, Eye,
-    ArrowUpRight, ArrowDownLeft, CheckCircle, Clock, AlertCircle, RefreshCw, Layers, Package, FlaskConical, Moon, Sun
+    ArrowUpRight, ArrowDownLeft, CheckCircle, Clock, AlertCircle, RefreshCw, Layers, Package, FlaskConical, Moon, Sun, ShieldCheck
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { API_URL } from '../../config';
 import Reg74EventModal from './Reg74EventModal';
 import ManualBatchModal from './ManualBatchModal';
+import StorageAuditModal from './StorageAuditModal';
 import { useTheme } from '../../context/ThemeContext';
 
 const Reg74Dashboard = () => {
@@ -19,6 +20,7 @@ const Reg74Dashboard = () => {
     const [selectedVat, setSelectedVat] = useState(null);
     const [eventType, setEventType] = useState('OPENING');
     const [showBatchModal, setShowBatchModal] = useState(false);
+    const [showAuditModal, setShowAuditModal] = useState(false);
 
     useEffect(() => {
         fetchVats();
@@ -94,6 +96,12 @@ const Reg74Dashboard = () => {
                         <act.icon size={14} className={act.iconCol} /> {act.label}
                     </button>
                 ))}
+                <button
+                    onClick={() => { setSelectedVat(vat); setShowAuditModal(true); }}
+                    className={`col-span-2 p-2 mt-2 border-2 border-dashed rounded-xl transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase ${isDark ? 'border-orange-900/40 text-orange-400 hover:bg-orange-900/20' : 'border-orange-100 text-orange-600 hover:bg-orange-50'}`}
+                >
+                    <ShieldCheck size={14} /> Stock Audit (0.3% Rule)
+                </button>
             </div>
 
             <div className={`p-4 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
@@ -147,12 +155,25 @@ const Reg74Dashboard = () => {
                         </div>
                         <div className={`w-px h-8 ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}></div>
                         <div className="flex flex-col">
-                            <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Avg Strength</span>
-                            <span className={`text-sm font-black ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+                            <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">SST Avg Str</span>
+                            <span className={`text-sm font-black ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
                                 {(() => {
-                                    const totalBl = vats.reduce((sum, v) => sum + (v.balanceBl || 0), 0);
-                                    const totalAl = vats.reduce((sum, v) => sum + (v.balanceAl || 0), 0);
-                                    return totalBl > 0 ? (totalAl / totalBl * 100).toFixed(2) : '0.00';
+                                    const filtered = vats.filter(v => v.vatType === 'SST');
+                                    const bl = filtered.reduce((s, v) => s + (v.balanceBl || 0), 0);
+                                    const al = filtered.reduce((s, v) => s + (v.balanceAl || 0), 0);
+                                    return bl > 0 ? (al / bl * 100).toFixed(2) : '0.00';
+                                })()}%
+                            </span>
+                        </div>
+                        <div className={`w-px h-8 ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}></div>
+                        <div className="flex flex-col">
+                            <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">BRT Avg Str</span>
+                            <span className={`text-sm font-black ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
+                                {(() => {
+                                    const filtered = vats.filter(v => v.vatType === 'BRT');
+                                    const bl = filtered.reduce((s, v) => s + (v.balanceBl || 0), 0);
+                                    const al = filtered.reduce((s, v) => s + (v.balanceAl || 0), 0);
+                                    return bl > 0 ? (al / bl * 100).toFixed(2) : '0.00';
                                 })()}%
                             </span>
                         </div>
@@ -205,6 +226,14 @@ const Reg74Dashboard = () => {
             {showBatchModal && (
                 <ManualBatchModal
                     onClose={() => setShowBatchModal(false)}
+                    onSuccess={fetchVats}
+                />
+            )}
+
+            {showAuditModal && (
+                <StorageAuditModal
+                    vat={selectedVat}
+                    onClose={() => setShowAuditModal(false)}
                     onSuccess={fetchVats}
                 />
             )}
