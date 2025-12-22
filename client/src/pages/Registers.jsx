@@ -180,18 +180,24 @@ const Registers = () => {
                                 </div>
                             </div>
 
-                            {/* Reg 78 - Future */}
-                            <div className={`p-8 opacity-40 flex items-center justify-between ${isDark ? 'bg-gray-900/50' : 'bg-gray-50/50'}`}>
+                            {/* Reg 78 - Consolidated */}
+                            <div
+                                onClick={() => navigate('/registers/reg78')}
+                                className={`p-8 transition cursor-pointer group flex items-center justify-between ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}
+                            >
                                 <div className="flex items-center gap-6">
-                                    <div className={`p-4 rounded-2xl ${isDark ? 'bg-gray-800 text-gray-600' : 'bg-gray-100 text-gray-400'}`}>
+                                    <div className={`p-4 rounded-2xl transition-all ${isDark ? 'bg-gray-800 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white' : 'bg-gray-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white'}`}>
                                         <FileSpreadsheet size={28} />
                                     </div>
                                     <div>
-                                        <h3 className={`text-xl font-black ${isDark ? 'text-gray-600' : 'text-gray-800'}`}>Reg 78 – Consolidated</h3>
-                                        <p className="text-sm text-gray-500 font-medium tracking-tight">Consolidated monthly summary (Coming Soon)</p>
+                                        <h3 className={`text-xl font-black ${isDark ? 'text-white' : 'text-gray-800'}`}>Reg 78 – Consolidated</h3>
+                                        <p className="text-sm text-gray-500 font-medium tracking-tight">Master Distillery Spirit Account & Consolidation</p>
                                     </div>
                                 </div>
-                                <span className={`text-[10px] font-black border px-3 py-1 rounded-full uppercase tracking-widest ${isDark ? 'border-gray-800 text-gray-600' : 'border-gray-200 text-gray-400'}`}>PLANNED</span>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-[10px] font-black text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full uppercase tracking-widest">Live</span>
+                                    <ChevronRight className="text-gray-300 group-hover:translate-x-1 transition-transform" />
+                                </div>
                             </div>
                         </div>
                     </div>

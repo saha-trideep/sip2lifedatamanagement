@@ -29,6 +29,7 @@ app.use('/api/admin/invites', require('./routes/invites'));
 app.use('/api/excise', require('./routes/excise'));
 app.use('/api/reg74', require('./routes/reg74'));
 app.use('/api/rega', require('./routes/regA'));
+app.use('/api/reg78', require('./routes/reg78'));
 
 // Database Initialization Endpoint (for production without shell access)
 let dbInitialized = false;

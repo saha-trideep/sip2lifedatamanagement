@@ -12,6 +12,7 @@ import Reg76Form from './pages/excise/Reg76Form';
 import Reg74Dashboard from './pages/excise/Reg74Dashboard';
 import Reg74Register from './pages/excise/Reg74Register';
 import RegABatchRegister from './pages/excise/RegABatchRegister';
+import Reg78Register from './pages/excise/Reg78Register';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -61,6 +62,11 @@ function App() {
           <Route path="/registers/reg-a" element={
             <ProtectedRoute>
               <RegABatchRegister />
+            </ProtectedRoute>
+          } />
+          <Route path="/registers/reg78" element={
+            <ProtectedRoute>
+              <Reg78Register />
             </ProtectedRoute>
           } />
           <Route path="/documents" element={
