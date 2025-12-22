@@ -23,7 +23,7 @@ router.get('/entries', verifyToken, async (req, res) => {
     }
 });
 
-// CREATE a new planned entry
+// CREATE a new planned entry with auto-fetched details
 router.post('/plan', verifyToken, async (req, res) => {
     const { batchId } = req.body;
     try {
@@ -38,11 +38,26 @@ router.post('/plan', verifyToken, async (req, res) => {
             data: {
                 batchId: batch.id,
                 status: 'PLANNED',
-                batchNoDate: `${batch.baseBatchNo} (${format(new Date(batch.startDate), 'dd MMM')})`
+                batchNoDate: `${batch.baseBatchNo} (${format(new Date(batch.startDate), 'dd MMM')})`,
+
+                // Auto-fetch from manual batch creation details
+                receiptFromVat: batch.sourceVatCode || "SST",
+                receiptStrength: batch.receiptStrength || null,
+                receiptBl: batch.receiptBl || null,
+                receiptAl: batch.receiptAl || null,
+
+                // Reduction details usually match the batch realization
+                blendingToVat: batch.vat.vatCode, // The BRT
+                blendingStrength: batch.totalVolumeBl && batch.totalVolumeAl ? (batch.totalVolumeAl / batch.totalVolumeBl * 100) : (batch.brand.category === 'IMFL' ? 42.8 : null),
+                blendingBl: batch.totalVolumeBl || null,
+                blendingAl: batch.totalVolumeAl || null,
+
+                avgStrength: batch.brand.category === 'IMFL' ? 42.8 : null
             }
         });
         res.status(201).json(entry);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: error.message });
     }
 });

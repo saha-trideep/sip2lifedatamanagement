@@ -7,6 +7,7 @@ import {
 import { useNavigate, Link } from 'react-router-dom';
 import { API_URL } from '../../config';
 import Reg74EventModal from './Reg74EventModal';
+import ManualBatchModal from './ManualBatchModal';
 import { useTheme } from '../../context/ThemeContext';
 
 const Reg74Dashboard = () => {
@@ -17,6 +18,7 @@ const Reg74Dashboard = () => {
     const [showModal, setShowModal] = useState(false);
     const [selectedVat, setSelectedVat] = useState(null);
     const [eventType, setEventType] = useState('OPENING');
+    const [showBatchModal, setShowBatchModal] = useState(false);
 
     useEffect(() => {
         fetchVats();
@@ -119,6 +121,9 @@ const Reg74Dashboard = () => {
                     </div>
                 </div>
                 <div className="flex gap-4 items-center">
+                    <button onClick={() => setShowBatchModal(true)} className={`px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl flex items-center gap-3 ${isDark ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-900 text-white hover:bg-black'}`}>
+                        <Plus size={20} /> New Blending Batch
+                    </button>
                     <button onClick={toggleTheme} className={`p-4 rounded-3xl shadow-sm border transition ${isDark ? 'bg-gray-900 border-gray-800 text-yellow-400' : 'bg-white border-gray-100 text-gray-600'}`}>
                         {isDark ? <Sun size={20} /> : <Moon size={20} />}
                     </button>
@@ -194,6 +199,13 @@ const Reg74Dashboard = () => {
                         setShowModal(false);
                         fetchVats();
                     }}
+                />
+            )}
+
+            {showBatchModal && (
+                <ManualBatchModal
+                    onClose={() => setShowBatchModal(false)}
+                    onSuccess={fetchVats}
                 />
             )}
         </div>

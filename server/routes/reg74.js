@@ -61,20 +61,32 @@ router.get('/batches', verifyToken, async (req, res) => {
 // POST /api/reg74/batches
 router.post('/batches', verifyToken, async (req, res) => {
     try {
-        const { baseBatchNo, brandId, vatId, startDate, totalVolumeBl, totalVolumeAl } = req.body;
+        const {
+            baseBatchNo, brandId, vatId, startDate,
+            totalVolumeBl, totalVolumeAl,
+            sourceVatId, sourceVatCode,
+            receiptBl, receiptAl, receiptStrength
+        } = req.body;
+
         const batch = await prisma.batchMaster.create({
             data: {
                 baseBatchNo,
                 brandId: parseInt(brandId),
                 vatId: parseInt(vatId),
+                sourceVatId: sourceVatId ? parseInt(sourceVatId) : null,
+                sourceVatCode: sourceVatCode || null,
+                receiptBl: receiptBl ? parseFloat(receiptBl) : null,
+                receiptAl: receiptAl ? parseFloat(receiptAl) : null,
+                receiptStrength: receiptStrength ? parseFloat(receiptStrength) : null,
                 startDate: new Date(startDate),
-                totalVolumeBl: parseFloat(totalVolumeBl),
-                totalVolumeAl: parseFloat(totalVolumeAl),
+                totalVolumeBl: totalVolumeBl ? parseFloat(totalVolumeBl) : null,
+                totalVolumeAl: totalVolumeAl ? parseFloat(totalVolumeAl) : null,
                 status: 'OPEN'
             }
         });
         res.json(batch);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Failed to create batch' });
     }
 });

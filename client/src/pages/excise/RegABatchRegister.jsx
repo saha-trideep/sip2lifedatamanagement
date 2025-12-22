@@ -387,55 +387,88 @@ const RegABatchRegister = () => {
                             </div>
 
                             <form onSubmit={handleUpdateDeclaration} className="space-y-10">
-                                {/* Section 1: Receipts & Blends */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50/50 dark:bg-gray-800/50 p-8 rounded-[2.5rem]">
+                                {/* Section 1: Receipts & Blends (Auto-Fetched from Batch Creation) */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-indigo-50/20 dark:bg-indigo-900/10 p-8 rounded-[2.5rem] border border-indigo-100 dark:border-indigo-900/30">
                                     <div className="space-y-4">
-                                        <h4 className="text-xs font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 border-b border-blue-100 dark:border-blue-900/50 pb-2">1. Receipt Declaration (Cols 6-9)</h4>
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <h4 className="text-xs font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 border-b border-blue-100 dark:border-blue-900/50 pb-2 flex justify-between">
+                                            <span>1. Receipt Declaration (Cols 6-9)</span>
+                                            <span className="text-[8px] font-black bg-blue-100 dark:bg-blue-900 px-2 py-0.5 rounded text-blue-600">AUTO-FETCHED</span>
+                                        </h4>
+                                        <div className="grid grid-cols-2 gap-4 opacity-70">
                                             <div>
                                                 <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">From VAT</label>
-                                                <input type="text" className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" value={currentEntry.receiptFromVat || ''} onChange={e => setCurrentEntry({ ...currentEntry, receiptFromVat: e.target.value })} />
+                                                <input type="text" readOnly className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl font-bold text-gray-500 cursor-not-allowed" value={currentEntry.receiptFromVat || ''} />
                                             </div>
                                             <div>
                                                 <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Strength</label>
-                                                <input type="number" step="0.1" className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl font-bold text-gray-900 dark:text-white" value={currentEntry.receiptStrength || ''} onChange={e => setCurrentEntry({ ...currentEntry, receiptStrength: parseFloat(e.target.value) })} />
+                                                <input type="number" readOnly className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl font-bold text-gray-500 cursor-not-allowed" value={currentEntry.receiptStrength || ''} />
                                             </div>
                                             <div>
                                                 <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Volume BL</label>
-                                                <input type="number" className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl font-bold text-gray-900 dark:text-white" value={currentEntry.receiptBl || ''} onChange={e => setCurrentEntry({ ...currentEntry, receiptBl: parseFloat(e.target.value) })} />
+                                                <input type="number" readOnly className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl font-bold text-gray-500 cursor-not-allowed" value={currentEntry.receiptBl || ''} />
                                             </div>
                                             <div>
                                                 <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Volume AL</label>
-                                                <input type="number" className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl font-bold text-blue-600 dark:text-blue-400" value={currentEntry.receiptAl || ''} onChange={e => setCurrentEntry({ ...currentEntry, receiptAl: parseFloat(e.target.value) })} />
+                                                <input type="number" readOnly className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl font-bold text-gray-500 cursor-not-allowed" value={currentEntry.receiptAl || ''} />
                                             </div>
                                         </div>
                                     </div>
                                     <div className="space-y-4">
-                                        <h4 className="text-xs font-black uppercase tracking-widest text-purple-600 dark:text-purple-400 border-b border-purple-100 dark:border-purple-900/50 pb-2">2. Final Blend Declaration (Cols 10-13)</h4>
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <h4 className="text-xs font-black uppercase tracking-widest text-purple-600 dark:text-purple-400 border-b border-purple-100 dark:border-purple-900/50 pb-2 flex justify-between">
+                                            <span>2. Final Blend Declaration (Cols 10-13)</span>
+                                            <span className="text-[8px] font-black bg-purple-100 dark:bg-purple-900 px-2 py-0.5 rounded text-purple-600">REDUCTION DATA</span>
+                                        </h4>
+                                        <div className="grid grid-cols-2 gap-4 opacity-70">
                                             <div>
                                                 <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">To VAT</label>
-                                                <input type="text" className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl font-bold text-gray-900 dark:text-white" value={currentEntry.blendingToVat || ''} onChange={e => setCurrentEntry({ ...currentEntry, blendingToVat: e.target.value })} />
+                                                <input type="text" readOnly className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl font-bold text-gray-500 cursor-not-allowed" value={currentEntry.blendingToVat || ''} />
                                             </div>
                                             <div>
                                                 <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Strength</label>
-                                                <input type="number" step="0.1" className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl font-bold text-gray-900 dark:text-white" value={currentEntry.blendingStrength || ''} onChange={e => setCurrentEntry({ ...currentEntry, blendingStrength: parseFloat(e.target.value) })} />
+                                                <input type="number" readOnly className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl font-bold text-gray-500 cursor-not-allowed" value={currentEntry.blendingStrength || ''} />
                                             </div>
                                             <div>
                                                 <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Final Vol BL</label>
-                                                <input type="number" className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl font-bold text-gray-900 dark:text-white" value={currentEntry.blendingBl || ''} onChange={e => setCurrentEntry({ ...currentEntry, blendingBl: parseFloat(e.target.value) })} />
+                                                <input type="number" readOnly className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl font-bold text-gray-500 cursor-not-allowed" value={currentEntry.blendingBl || ''} />
                                             </div>
                                             <div>
                                                 <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Final Vol AL</label>
-                                                <input type="number" className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl font-bold text-purple-600 dark:text-purple-400" value={currentEntry.blendingAl || ''} onChange={e => setCurrentEntry({ ...currentEntry, blendingAl: parseFloat(e.target.value) })} />
+                                                <input type="number" readOnly className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl font-bold text-gray-500 cursor-not-allowed" value={currentEntry.blendingAl || ''} />
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Section 2: Bottle Counts */}
+                                {/* Section 2: MFM-II Entry (User's specific requirement) */}
+                                <div className="p-8 rounded-[2.5rem] bg-orange-50/30 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30">
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-orange-600 dark:text-orange-400 border-b border-orange-100 dark:border-orange-900/50 pb-2 mb-6">3. MFM-II Production Data (Cols 17-22)</h4>
+                                    <div className="grid grid-cols-4 gap-6">
+                                        <div className="col-span-2">
+                                            <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Total Spirit Transferred from MFM 2 (BL)</label>
+                                            <input type="number" step="0.01" className="w-full px-4 py-4 bg-white dark:bg-gray-800 border-2 border-orange-200 dark:border-orange-900 rounded-2xl font-black text-xl text-orange-600 focus:ring-2 focus:ring-orange-500" value={currentEntry.mfmTotalBl || ''} onChange={e => {
+                                                const bl = parseFloat(e.target.value);
+                                                const al = bl * (currentEntry.mfmStrength || 42.8) / 100;
+                                                setCurrentEntry({ ...currentEntry, mfmTotalBl: bl, mfmTotalAl: al });
+                                            }} />
+                                        </div>
+                                        <div>
+                                            <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">MFM Strength %</label>
+                                            <input type="number" step="0.1" className="w-full px-4 py-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl font-black text-xl text-gray-700 dark:text-gray-300" value={currentEntry.mfmStrength || '42.8'} onChange={e => {
+                                                const str = parseFloat(e.target.value);
+                                                const al = (currentEntry.mfmTotalBl || 0) * str / 100;
+                                                setCurrentEntry({ ...currentEntry, mfmStrength: str, mfmTotalAl: al });
+                                            }} />
+                                        </div>
+                                        <div>
+                                            <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Result AL</label>
+                                            <input type="number" readOnly className="w-full px-4 py-4 bg-gray-100 dark:bg-gray-900 border-0 rounded-2xl font-black text-xl text-gray-400" value={currentEntry.mfmTotalAl?.toFixed(2) || '0.00'} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Section 3: Bottle Counts */}
                                 <div className="space-y-4">
-                                    <h4 className="text-xs font-black uppercase tracking-widest text-green-600 dark:text-green-400 border-b border-green-100 dark:border-green-900/50 pb-2">3. Bottling Mix (Cols 23-28)</h4>
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-green-600 dark:text-green-400 border-b border-green-100 dark:border-green-900/50 pb-2">4. Bottling Mix (Cols 23-28)</h4>
                                     <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
                                         {[
                                             { id: 'bottling750', label: '750 ML' }, { id: 'bottling600', label: '600 ML' }, { id: 'bottling500', label: '500 ML' },
