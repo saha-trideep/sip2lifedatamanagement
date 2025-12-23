@@ -10,9 +10,11 @@ import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useTheme } from '../../context/ThemeContext';
 
 const Reg76List = () => {
     const navigate = useNavigate();
+    const { isDark } = useTheme();
     const [entries, setEntries] = useState([]);
     const [vats, setVats] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -132,16 +134,16 @@ const Reg76List = () => {
     };
 
     return (
-        <div className="p-8 min-h-screen bg-gray-50">
+        <div className={`p-8 min-h-screen transition-colors duration-300 ${isDark ? 'bg-gray-950 mt-1' : 'bg-gray-50'}`}>
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/registers')} className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition text-gray-600">
+                    <button onClick={() => navigate('/registers')} className={`p-2 rounded-full transition ${isDark ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}>
                         <ArrowLeft size={20} />
                     </button>
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800">Reg 76 – Spirit Receipt</h1>
-                        <p className="text-gray-500">Daily receipt of spirit from distilleries</p>
+                        <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Reg 76 – Spirit Receipt</h1>
+                        <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>Daily receipt of spirit from distilleries</p>
                     </div>
                 </div>
                 <div className="flex gap-3">
@@ -170,46 +172,46 @@ const Reg76List = () => {
             </div>
 
             {/* Filters */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-8">
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Date Range</label>
+            <div className={`${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} p-6 rounded-2xl shadow-sm border mb-8`}>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+                    <div className="lg:col-span-2">
+                        <label className={`block text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Date Range</label>
                         <div className="flex gap-2">
                             <input
                                 type="date"
                                 name="startDate"
                                 value={filters.startDate}
                                 onChange={handleFilterChange}
-                                className="w-full p-2 border rounded-lg text-sm"
+                                className={`w-full p-2.5 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`}
                             />
                             <input
                                 type="date"
                                 name="endDate"
                                 value={filters.endDate}
                                 onChange={handleFilterChange}
-                                className="w-full p-2 border rounded-lg text-sm"
+                                className={`w-full p-2.5 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`}
                             />
                         </div>
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Storage Vat</label>
+                        <label className={`block text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Storage Vat</label>
                         <select
                             name="vat"
                             value={filters.vat}
                             onChange={handleFilterChange}
-                            className="w-full p-2 border rounded-lg text-sm"
+                            className={`w-full p-2.5 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`}
                         >
                             <option value="">All Vats</option>
                             {vats.map(v => <option key={v.id} value={v.name}>{v.name}</option>)}
                         </select>
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Spirit Type</label>
+                        <label className={`block text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Spirit Type</label>
                         <select
                             name="spiritType"
                             value={filters.spiritType}
                             onChange={handleFilterChange}
-                            className="w-full p-2 border rounded-lg text-sm"
+                            className={`w-full p-2.5 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`}
                         >
                             <option value="">All Types</option>
                             <option value="GENA">GENA</option>
@@ -217,17 +219,17 @@ const Reg76List = () => {
                             <option value="RS">RS</option>
                         </select>
                     </div>
-                    <div className="md:col-span-2">
-                        <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Search</label>
+                    <div className="lg:col-span-2">
+                        <label className={`block text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Search Resources</label>
                         <div className="relative">
-                            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                            <Search className={`absolute left-3 top-2.5 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} size={18} />
                             <input
                                 type="text"
                                 name="search"
                                 value={filters.search}
                                 onChange={handleFilterChange}
                                 placeholder="Permit, Vehicle, Distillery..."
-                                className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm"
+                                className={`w-full pl-10 pr-4 py-2.5 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white placeholder:text-gray-600' : 'bg-gray-50 text-gray-900'}`}
                             />
                         </div>
                     </div>
@@ -235,22 +237,22 @@ const Reg76List = () => {
             </div>
 
             {/* List Table */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className={`${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} rounded-2xl shadow-sm border overflow-hidden`}>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-gray-50 border-b border-gray-100">
-                                <th className="p-4 text-xs font-bold text-gray-500 uppercase">Receipt Date</th>
-                                <th className="p-4 text-xs font-bold text-gray-500 uppercase">Permit No</th>
-                                <th className="p-4 text-xs font-bold text-gray-500 uppercase">Distillery</th>
-                                <th className="p-4 text-xs font-bold text-gray-500 uppercase">Vat</th>
-                                <th className="p-4 text-xs font-bold text-gray-500 uppercase text-right">Advised AL</th>
-                                <th className="p-4 text-xs font-bold text-gray-500 uppercase text-right">Received AL</th>
-                                <th className="p-4 text-xs font-bold text-gray-500 uppercase text-right">Wastage AL</th>
-                                <th className="p-4 text-xs font-bold text-gray-500 uppercase text-center">Actions</th>
+                            <tr className={`${isDark ? 'bg-gray-800/50 border-gray-800' : 'bg-gray-50 border-gray-100'} border-b`}>
+                                <th className={`p-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Receipt Date</th>
+                                <th className={`p-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Permit No</th>
+                                <th className={`p-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Distillery</th>
+                                <th className={`p-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Vat</th>
+                                <th className={`p-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-gray-500'} text-right`}>Advised AL</th>
+                                <th className={`p-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-gray-500'} text-right`}>Received AL</th>
+                                <th className={`p-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-gray-500'} text-right`}>Wastage AL</th>
+                                <th className={`p-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-gray-500'} text-center`}>Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className={`divide-y ${isDark ? 'divide-gray-800' : 'divide-gray-100'}`}>
                             {loading ? (
                                 <tr>
                                     <td colSpan="8" className="p-12 text-center text-gray-400">
@@ -266,24 +268,24 @@ const Reg76List = () => {
                                 </tr>
                             ) : (
                                 entries.map(entry => (
-                                    <tr key={entry.id} className="hover:bg-blue-50/30 transition group">
+                                    <tr key={entry.id} className={`transition group ${isDark ? 'hover:bg-indigo-900/10' : 'hover:bg-blue-50/30'}`}>
                                         <td className="p-4">
-                                            <div className="font-bold text-gray-800">{format(new Date(entry.receiptDate), 'dd MMM yyyy')}</div>
-                                            <div className="text-[10px] text-gray-400 uppercase">By {entry.user?.name || 'Admin'}</div>
+                                            <div className={`font-black tracking-tight ${isDark ? 'text-white' : 'text-gray-800'}`}>{format(new Date(entry.receiptDate), 'dd MMM yyyy')}</div>
+                                            <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">By {entry.user?.name || 'Admin'}</div>
                                         </td>
-                                        <td className="p-4 font-mono text-sm text-blue-600">{entry.permitNo}</td>
+                                        <td className={`p-4 font-black text-sm ${isDark ? 'text-indigo-400' : 'text-blue-600'}`}>{entry.permitNo}</td>
                                         <td className="p-4">
-                                            <div className="text-sm font-medium text-gray-700">{entry.exportingDistillery}</div>
-                                            <div className="text-[10px] text-gray-400">{entry.vehicleNo}</div>
+                                            <div className={`text-sm font-black ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{entry.exportingDistillery}</div>
+                                            <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{entry.vehicleNo}</div>
                                         </td>
                                         <td className="p-4">
-                                            <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-bold">
+                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${isDark ? 'bg-indigo-900/30 text-indigo-400 border border-indigo-800' : 'bg-gray-100 text-gray-600 border border-gray-200'}`}>
                                                 {entry.storageVat}
                                             </span>
                                         </td>
-                                        <td className="p-4 text-right font-mono text-sm">{entry.advisedAl.toFixed(2)}</td>
-                                        <td className="p-4 text-right font-mono text-sm font-bold text-green-700">{entry.receivedAl.toFixed(2)}</td>
-                                        <td className="p-4 text-right font-mono text-sm text-red-600">
+                                        <td className={`p-4 text-right font-black text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{entry.advisedAl.toFixed(2)}</td>
+                                        <td className={`p-4 text-right font-black text-sm ${isDark ? 'text-green-400' : 'text-green-700'}`}>{entry.receivedAl.toFixed(2)}</td>
+                                        <td className={`p-4 text-right font-black text-xs ${isDark ? 'text-red-400' : 'text-red-600'}`}>
                                             {entry.transitWastageAl.toFixed(2)}
                                         </td>
                                         <td className="p-4 text-center">

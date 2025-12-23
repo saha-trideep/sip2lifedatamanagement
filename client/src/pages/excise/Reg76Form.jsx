@@ -7,9 +7,11 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { API_URL } from '../../config';
 import { format } from 'date-fns';
+import { useTheme } from '../../context/ThemeContext';
 
 const Reg76Form = () => {
     const navigate = useNavigate();
+    const { isDark } = useTheme();
     const { id } = useParams();
     const isEdit = !!id;
 
@@ -148,20 +150,20 @@ const Reg76Form = () => {
         }
     };
 
-    if (fetching) return <div className="p-10 text-center text-gray-400">Loading entry details...</div>;
+    if (fetching) return <div className={`p-10 text-center ${isDark ? 'text-gray-500 bg-gray-950 min-h-screen' : 'text-gray-400 bg-gray-50'}`}>Loading entry details...</div>;
 
     return (
-        <div className="p-8 min-h-screen bg-gray-50 flex justify-center">
+        <div className={`p-8 min-h-screen transition-colors duration-300 ${isDark ? 'bg-gray-950 mt-1' : 'bg-gray-50'} flex justify-center`}>
             <div className="max-w-5xl w-full">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => navigate('/registers/reg76')} className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition text-gray-600">
+                        <button onClick={() => navigate('/registers/reg76')} className={`p-2 rounded-full transition ${isDark ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}>
                             <ArrowLeft size={20} />
                         </button>
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-800">{isEdit ? 'Edit' : 'New'} Reg-76 Entry</h1>
-                            <p className="text-gray-500">Excise Spirit Receipt Register</p>
+                            <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{isEdit ? 'Edit' : 'New'} Reg-76 Entry</h1>
+                            <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>Excise Spirit Receipt Register</p>
                         </div>
                     </div>
                 </div>
@@ -169,110 +171,110 @@ const Reg76Form = () => {
                 <form onSubmit={handleSubmit} className="space-y-8 pb-20">
 
                     {/* Section 1: Permit & Identification */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="p-4 bg-gray-50 border-b border-gray-100 flex items-center gap-2 font-bold text-gray-700">
-                            <Truck size={18} className="text-blue-600" />
+                    <div className={`${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} rounded-2xl shadow-sm border overflow-hidden`}>
+                        <div className={`p-4 border-b flex items-center gap-2 font-black uppercase text-[10px] tracking-widest ${isDark ? 'bg-gray-800 text-gray-300 border-gray-800' : 'bg-gray-50 text-gray-700 border-gray-100'}`}>
+                            <Truck size={18} className={isDark ? "text-indigo-400" : "text-blue-600"} />
                             1. Transit & Permit Details
                         </div>
                         <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Receipt Date (System)</label>
-                                <input type="date" name="receiptDate" value={formData.receiptDate} onChange={handleChange} required className="w-full p-2 border rounded-lg" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Receipt Date (System)</label>
+                                <input type="date" name="receiptDate" value={formData.receiptDate} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Arrival Date (Physical)</label>
-                                <input type="date" name="arrivalDate" value={formData.arrivalDate} onChange={handleChange} required className="w-full p-2 border rounded-lg" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Arrival Date (Physical)</label>
+                                <input type="date" name="arrivalDate" value={formData.arrivalDate} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Storage Vat</label>
-                                <select name="storageVat" value={formData.storageVat} onChange={handleChange} required className="w-full p-2 border rounded-lg">
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Storage Vat</label>
+                                <select name="storageVat" value={formData.storageVat} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`}>
                                     <option value="">Select Vat</option>
                                     {vats.map(v => <option key={v.id} value={v.name}>{v.name}</option>)}
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Permit No</label>
-                                <input type="text" name="permitNo" value={formData.permitNo} onChange={handleChange} required className="w-full p-2 border rounded-lg" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Permit No</label>
+                                <input type="text" name="permitNo" value={formData.permitNo} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white placeholder:text-gray-700' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Permit Date</label>
-                                <input type="date" name="permitDate" value={formData.permitDate} onChange={handleChange} required className="w-full p-2 border rounded-lg" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Permit Date</label>
+                                <input type="date" name="permitDate" value={formData.permitDate} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Exporting Distillery</label>
-                                <input type="text" name="exportingDistillery" value={formData.exportingDistillery} onChange={handleChange} required className="w-full p-2 border rounded-lg" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Exporting Distillery</label>
+                                <input type="text" name="exportingDistillery" value={formData.exportingDistillery} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white placeholder:text-gray-700' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Invoice No</label>
-                                <input type="text" name="invoiceNo" value={formData.invoiceNo} onChange={handleChange} required className="w-full p-2 border rounded-lg" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Invoice No</label>
+                                <input type="text" name="invoiceNo" value={formData.invoiceNo} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white placeholder:text-gray-700' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Invoice Date</label>
-                                <input type="date" name="invoiceDate" value={formData.invoiceDate} onChange={handleChange} required className="w-full p-2 border rounded-lg" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Invoice Date</label>
+                                <input type="date" name="invoiceDate" value={formData.invoiceDate} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Vehicle No</label>
-                                <input type="text" name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} required className="w-full p-2 border rounded-lg" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Vehicle No</label>
+                                <input type="text" name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white placeholder:text-gray-700' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                         </div>
                     </div>
 
                     {/* Section 2: Dispatch (Advised) Data */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="p-4 bg-gray-50 border-b border-gray-100 flex items-center gap-2 font-bold text-gray-700">
-                            <Info size={18} className="text-blue-600" />
+                    <div className={`${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} rounded-2xl shadow-sm border overflow-hidden`}>
+                        <div className={`p-4 border-b flex items-center gap-2 font-black uppercase text-[10px] tracking-widest ${isDark ? 'bg-gray-800 text-gray-300 border-gray-800' : 'bg-gray-50 text-gray-700 border-gray-100'}`}>
+                            <Info size={18} className={isDark ? "text-indigo-400" : "text-blue-600"} />
                             2. Advised Data (From Permit/Invoice)
                         </div>
                         <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-6">
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Nature of Spirit</label>
-                                <select name="natureOfSpirit" value={formData.natureOfSpirit} onChange={handleChange} className="w-full p-2 border rounded-lg">
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Nature of Spirit</label>
+                                <select name="natureOfSpirit" value={formData.natureOfSpirit} onChange={handleChange} className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`}>
                                     <option value="GENA">GENA</option>
                                     <option value="ENA">ENA</option>
                                     <option value="RS">RS</option>
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Advised BL</label>
-                                <input type="number" step="0.01" name="advisedBl" value={formData.advisedBl} onChange={handleChange} required className="w-full p-2 border rounded-lg" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Advised BL</label>
+                                <input type="number" step="0.01" name="advisedBl" value={formData.advisedBl} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Advised AL</label>
-                                <input type="number" step="0.01" name="advisedAl" value={formData.advisedAl} onChange={handleChange} required className="w-full p-2 border rounded-lg" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Advised AL</label>
+                                <input type="number" step="0.01" name="advisedAl" value={formData.advisedAl} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Advised Strength</label>
-                                <input type="number" step="0.1" name="advisedStrength" value={formData.advisedStrength} onChange={handleChange} required className="w-full p-2 border rounded-lg" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Advised Strength</label>
+                                <input type="number" step="0.1" name="advisedStrength" value={formData.advisedStrength} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                             <div className="md:col-start-2">
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Advised Mass (Kg)</label>
-                                <input type="number" step="0.01" name="advisedMassKg" value={formData.advisedMassKg} onChange={handleChange} required className="w-full p-2 border rounded-lg" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Advised Mass (Kg)</label>
+                                <input type="number" step="0.01" name="advisedMassKg" value={formData.advisedMassKg} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                         </div>
                     </div>
 
                     {/* Section 3: Receipt Measurement */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="p-4 bg-gray-50 border-b border-gray-100 flex items-center gap-2 font-bold text-gray-700">
-                            <Scale size={18} className="text-blue-600" />
+                    <div className={`${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} rounded-2xl shadow-sm border overflow-hidden`}>
+                        <div className={`p-4 border-b flex items-center gap-2 font-black uppercase text-[10px] tracking-widest ${isDark ? 'bg-gray-800 text-gray-300 border-gray-800' : 'bg-gray-50 text-gray-700 border-gray-100'}`}>
+                            <Scale size={18} className={isDark ? "text-indigo-400" : "text-blue-600"} />
                             3. Physical Receipt Measurement
                         </div>
                         <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-6">
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Laden Weight (Kg)</label>
-                                <input type="number" step="0.01" name="ladenWeightKg" value={formData.ladenWeightKg} onChange={handleChange} required className="w-full p-2 border rounded-lg" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Laden Weight (Kg)</label>
+                                <input type="number" step="0.01" name="ladenWeightKg" value={formData.ladenWeightKg} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Unladen Weight (Kg)</label>
-                                <input type="number" step="0.01" name="unladenWeightKg" value={formData.unladenWeightKg} onChange={handleChange} required className="w-full p-2 border rounded-lg" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Unladen Weight (Kg)</label>
+                                <input type="number" step="0.01" name="unladenWeightKg" value={formData.unladenWeightKg} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Avg Density</label>
-                                <input type="number" step="0.0001" name="avgDensity" value={formData.avgDensity} onChange={handleChange} required className="w-full p-2 border rounded-lg" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Avg Density</label>
+                                <input type="number" step="0.0001" name="avgDensity" value={formData.avgDensity} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Received Strength</label>
-                                <input type="number" step="0.1" name="receivedStrength" value={formData.receivedStrength} onChange={handleChange} required className="w-full p-2 border rounded-lg" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Received Strength</label>
+                                <input type="number" step="0.1" name="receivedStrength" value={formData.receivedStrength} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                         </div>
                     </div>
@@ -280,21 +282,21 @@ const Reg76Form = () => {
                     {/* Section 4: Live Results & Remarks */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-2 space-y-6">
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Remarks</label>
+                            <div className={`${isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-200'} p-6 rounded-2xl shadow-sm border`}>
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Remarks</label>
                                 <textarea
                                     name="remarks"
                                     value={formData.remarks}
                                     onChange={handleChange}
                                     rows="4"
-                                    className="w-full p-3 border rounded-lg text-sm"
+                                    className={`w-full p-4 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white placeholder:text-gray-700' : 'bg-gray-50 text-gray-900'}`}
                                     placeholder="Enter any transit notes or wastage explanations..."
                                 ></textarea>
                             </div>
 
                             {isEdit && (
-                                <div className="bg-orange-50 p-6 rounded-2xl border border-orange-200">
-                                    <label className="flex items-center gap-2 text-xs font-bold text-orange-700 mb-2 uppercase">
+                                <div className={`${isDark ? 'bg-orange-950/20 border-orange-900/40' : 'bg-orange-50 border-orange-200'} p-6 rounded-2xl border`}>
+                                    <label className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-orange-500' : 'text-orange-700'}`}>
                                         <AlertTriangle size={16} />
                                         Reason for Edit (Mandatory)
                                     </label>
@@ -303,7 +305,7 @@ const Reg76Form = () => {
                                         value={editReason}
                                         onChange={e => setEditReason(e.target.value)}
                                         placeholder="Explain why this data is being changed..."
-                                        className="w-full p-3 border border-orange-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-orange-500"
+                                        className={`w-full p-4 rounded-xl font-bold border-0 focus:ring-2 focus:ring-orange-500 transition-all ${isDark ? 'bg-gray-800 text-white placeholder:text-gray-700' : 'bg-white text-gray-900'}`}
                                         required={isEdit}
                                     />
                                 </div>
