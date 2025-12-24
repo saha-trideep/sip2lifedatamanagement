@@ -1,8 +1,7 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../utils/prisma');
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // GET /api/folders - List all folders (supports optional filtering by department)
 router.get('/', async (req, res) => {
@@ -34,7 +33,7 @@ router.post('/', async (req, res) => {
             data: {
                 name,
                 department,
-                userId: parseInt(userId) || 1 
+                userId: parseInt(userId) || 1
             }
         });
         res.json(folder);

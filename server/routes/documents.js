@@ -1,12 +1,11 @@
 const express = require('express');
 const multer = require('multer');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../utils/prisma');
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const { logAudit } = require('../utils/auditLogger');
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Initialize Supabase (for Storage)
 // If env vars are missing, this might throw, but we rely on .env being set now

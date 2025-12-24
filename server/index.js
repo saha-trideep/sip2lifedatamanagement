@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('./utils/prisma');
 const path = require('path');
 const authRoutes = require('./routes/auth');
 const documentRoutes = require('./routes/documents');
@@ -11,7 +11,6 @@ const dashboardRoutes = require('./routes/dashboard');
 dotenv.config();
 
 const app = express();
-const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());

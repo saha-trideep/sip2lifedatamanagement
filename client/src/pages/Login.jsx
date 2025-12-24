@@ -18,12 +18,22 @@ const Login = () => {
         setLoading(true);
         setError('');
         try {
-            const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
+            // Add timeout to prevent hanging requests
+            const res = await axios.post(`${API_URL}/api/auth/login`,
+                { email, password },
+                { timeout: 10000 } // 10 second timeout
+            );
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
             navigate('/dashboard');
         } catch (err) {
-            setError('Invalid credentials');
+            if (err.code === 'ECONNABORTED') {
+                setError('Request timeout. Please check your connection.');
+            } else if (err.response?.status === 401) {
+                setError('Invalid credentials');
+            } else {
+                setError('Login failed. Please try again.');
+            }
         } finally {
             setLoading(false);
         }
