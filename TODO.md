@@ -1,12 +1,13 @@
 # 📋 TODO: Register Engine Implementation
 ## SIP2LIFE Data Management System
 
-**Last Updated:** 2025-12-27 15:45 IST  
+**Last Updated:** 2025-12-27 16:05 IST  
 **Project Status:** In Progress - 7 Registers to Implement  
 **Completion:** 3/7 Registers Complete (42.8%)  
 **Phase 1 Progress:** 100% Complete ✅ (4/4 tasks done)
 **Phase 2 Progress:** 100% Complete ✅ (3/3 tasks done)
-**Current Branch:** `main` (Phase 2 Deployed)
+**Phase 3 Progress:** 0% Complete 🟡 (Ready to Start)
+**Current Branch:** `main` (Phase 3 Documentation Ready)
 
 ---
 
@@ -420,14 +421,39 @@ client/src/pages/excise/RegBRegister.jsx
 ### 3.1 Excise Duty: Database Schema
 **Priority:** 🔥 HIGH
 
-- [ ] Add `ExciseDutyEntry` model to `server/prisma/schema.prisma`
-- [ ] Add `DutyRate` configuration model
-- [ ] Update `User` model relation
-- [ ] Run migration
+**Status:** 📋 Ready for Implementation
+
+- [ ] Add `DutyRate` model to `server/prisma/schema.prisma`
+  - [ ] Fields: category, ratePerAl, effectiveFrom, effectiveTo, isActive
+  - [ ] Indexes on category and effectiveFrom
+- [ ] Add `ExciseDutyEntry` model
+  - [ ] Fields: monthYear, category, openingBalance, dutyAccrued, totalPayments, closingBalance, status
+  - [ ] Unique constraint on [monthYear, category]
+  - [ ] Relation to TreasuryChallan
+- [ ] Add `TreasuryChallan` model
+  - [ ] Fields: challanNumber, challanDate, amountPaid, documentUrl, verificationStatus
+  - [ ] Unique constraint on challanNumber
+  - [ ] Relation to ExciseDutyEntry (cascade delete)
+- [ ] Update `User` model relations:
+  ```prisma
+  exciseDutyEntries  ExciseDutyEntry[]
+  treasuryChallans   TreasuryChallan[]
+  ```
+- [ ] Run migration:
+  ```bash
+  npx prisma db push
+  npx prisma generate
+  ```
+- [ ] Seed initial duty rates (IMFL, Beer, Wine, CL)
+
+**Reference Documents:**
+- 📖 [PHASE3_SCHEMA_DRAFT.md](.agent/PHASE3_SCHEMA_DRAFT.md) - Complete schema specification
+- 📖 [PHASE3_CHECKLIST.md](.agent/PHASE3_CHECKLIST.md) - Implementation guide
 
 **Files to Update:**
 ```
 server/prisma/schema.prisma
+server/prisma/seed-duty-rates.js (NEW)
 ```
 
 ---
@@ -435,14 +461,55 @@ server/prisma/schema.prisma
 ### 3.2 Excise Duty: Backend API
 **Priority:** 🔥 HIGH
 
-- [ ] Create `server/routes/exciseDuty.js`
+**Status:** 📋 Ready for Implementation
+
 - [ ] Create `server/utils/exciseDutyCalculations.js`
-- [ ] Register route
+  - [ ] `getCurrentDutyRate(category, date)` - Fetch active rate
+  - [ ] `calculateDutyAccrued(alIssued, rate)` - AL × Rate
+  - [ ] `calculateClosingBalance(opening, accrued, payments)` - Balance equation
+  - [ ] `determineStatus(closingBalance, totalLiability)` - Status logic
+  - [ ] `validateDutyEntry(data)` - Input validation
+  - [ ] `validateChallan(data)` - Challan validation
+
+- [ ] Create `server/routes/exciseDuty.js` with 12 endpoints:
+  - [ ] **Duty Rates (4 endpoints):**
+    - [ ] GET `/api/excise-duty/rates` - List rates
+    - [ ] POST `/api/excise-duty/rates` - Create rate
+    - [ ] PUT `/api/excise-duty/rates/:id` - Update rate
+    - [ ] DELETE `/api/excise-duty/rates/:id` - Deactivate rate
+  - [ ] **Duty Ledger (5 endpoints):**
+    - [ ] GET `/api/excise-duty/ledger` - List entries
+    - [ ] GET `/api/excise-duty/ledger/:id` - Get single entry
+    - [ ] POST `/api/excise-duty/ledger` - Create entry (auto-fill from Reg-B)
+    - [ ] PUT `/api/excise-duty/ledger/:id` - Update entry
+    - [ ] DELETE `/api/excise-duty/ledger/:id` - Delete entry
+  - [ ] **Challans (4 endpoints):**
+    - [ ] POST `/api/excise-duty/challans` - Record payment
+    - [ ] GET `/api/excise-duty/challans` - List challans
+    - [ ] PUT `/api/excise-duty/challans/:id/verify` - Verify challan
+    - [ ] DELETE `/api/excise-duty/challans/:id` - Delete challan
+  - [ ] **Auto-Generation & Reports (3 endpoints):**
+    - [ ] POST `/api/excise-duty/generate-monthly` - Auto-create entries
+    - [ ] POST `/api/excise-duty/calculate` - Preview calculation
+    - [ ] GET `/api/excise-duty/summary/stats` - Dashboard stats
+    - [ ] GET `/api/excise-duty/summary/monthly-report/:monthYear` - Monthly report
+
+- [ ] Register route in `server/index.js`:
+  ```javascript
+  app.use('/api/excise-duty', require('./routes/exciseDuty'));
+  ```
+
+- [ ] Add audit logging for all operations
+- [ ] Integrate with Reg-B summary endpoint
+
+**Reference Documents:**
+- 📖 [PHASE3_API_SPEC.md](.agent/PHASE3_API_SPEC.md) - Complete API specification
+- 📖 [PHASE3_CHECKLIST.md](.agent/PHASE3_CHECKLIST.md) - Implementation guide
 
 **Files to Create:**
 ```
-server/routes/exciseDuty.js
-server/utils/exciseDutyCalculations.js
+server/routes/exciseDuty.js (400+ lines expected)
+server/utils/exciseDutyCalculations.js (150+ lines expected)
 ```
 
 ---
@@ -450,37 +517,61 @@ server/utils/exciseDutyCalculations.js
 ### 3.3 Excise Duty: Frontend UI
 **Priority:** 🔥 HIGH
 
-- [ ] Create `client/src/pages/excise/ExciseDutyRegister.jsx`
-- [ ] E-Challan entry form
-- [ ] Auto-fill from Reg-B
-- [ ] Balance display
+**Status:** 📋 Ready for Implementation
 
-#### **3.4 Phase 3: Frontend UI Blueprint (Excise Duty)**
-**Priority:** 🔥 HIGH
+- [ ] Create reusable components:
+  - [ ] `client/src/components/excise/DutyLedgerTable.jsx`
+    - [ ] Monthly ledger table with sorting/filtering
+    - [ ] Columns: Month, Category, Opening, Accrued, Payments, Closing, Status
+    - [ ] Dark mode support
+  - [ ] `client/src/components/excise/ChallanForm.jsx`
+    - [ ] Form for recording treasury challans
+    - [ ] Fields: TR Number, Date, Amount, Bank, Branch
+    - [ ] File upload for scanned copy
+  - [ ] `client/src/components/excise/DutyRateConfig.jsx`
+    - [ ] Admin panel for managing duty rates
+    - [ ] CRUD operations for rates
+    - [ ] Effective date tracking
 
-**Conceptual Components:**
-- [ ] **`DutyRateConfig.jsx`**:
-  - Grid to manage duty rates for different liquor categories (IMFL, Beer, Wine, CL).
-  - Effective Date tracking (Rates change by gov policy).
-- [ ] **`DutyDashboard.jsx`**:
-  - **Ledger View**: Monthly balance sheet (Opening Balance + Duty Accrued - Payments = Closing).
-  - **Visual Indicators**: Progress bar for duty paid vs liability.
-- [ ] **`ChallanModal.jsx`**:
-  - Form to record Treasury Receipt (TR) numbers, dates, and amounts.
-  - Image upload for Challan copy (linked to Document Management).
-- [ ] **`AutoCalculation.jsx`**:
-  - Real-time link to Reg-B Data: `Total AL Issued` × `Current Rate` = `Daily Duty Liability`.
+- [ ] Create main page: `client/src/pages/excise/ExciseDutyRegister.jsx`
+  - [ ] **Dashboard View:**
+    - [ ] Summary cards (Total Accrued, Payments, Outstanding, Pending Entries)
+    - [ ] Visual progress bar (Paid vs Liability)
+    - [ ] Monthly ledger table
+    - [ ] Filters (date range, category, status)
+  - [ ] **Entry Modal:**
+    - [ ] Date/Month selector
+    - [ ] Category dropdown
+    - [ ] Auto-fill button (triggers `/generate-monthly`)
+    - [ ] Display calculated values (Opening, AL Issued, Rate, Accrued, Closing)
+    - [ ] Save/Update functionality
+  - [ ] **Challan Recording:**
+    - [ ] "Record Payment" button
+    - [ ] Opens ChallanForm modal
+    - [ ] Updates balance in real-time
+  - [ ] **Rate Management:**
+    - [ ] Admin-only section
+    - [ ] Uses DutyRateConfig component
 
-**Data Flow Requirements:**
-- **Source**: API fetches aggregated AL totals from `/api/registers/regb/summary/stats`.
-- **Logic**: Client-side preview of liability before finalizing monthly totals.
-- **Sync**: Backend reconciles payments against daily total issues.
+- [ ] Add to navigation:
+  - [ ] Update `client/src/App.jsx` with route
+  - [ ] Add card to `client/src/pages/Registers.jsx`
+
+- [ ] Theme integration:
+  - [ ] Import useTheme hook
+  - [ ] Add Sun/Moon toggle
+  - [ ] Ensure dark mode compatibility
+
+**Reference Documents:**
+- 📖 [PHASE3_CHECKLIST.md](.agent/PHASE3_CHECKLIST.md) - Implementation guide
+- 📖 [PHASE3_API_SPEC.md](.agent/PHASE3_API_SPEC.md) - API integration details
 
 **Files to Create:**
 ```
 client/src/pages/excise/ExciseDutyRegister.jsx
 client/src/components/excise/DutyLedgerTable.jsx
 client/src/components/excise/ChallanForm.jsx
+client/src/components/excise/DutyRateConfig.jsx
 ```
 
 ---
