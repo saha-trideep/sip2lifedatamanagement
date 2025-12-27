@@ -1,0 +1,33 @@
+# Next Session Starter Prompt
+
+## Full Version (Recommended):
+Please read TODO.md and the following handoff documents, then continue Phase 3 implementation from where we left off:
+
+1. .agent/NEXT_SESSION_START_HERE.md - Session handoff and current status
+2. .agent/PHASE3_SCHEMA_DRAFT.md - Database schema specification
+3. .agent/PHASE3_API_SPEC.md - API endpoint specification
+4. .agent/PHASE3_CHECKLIST.md - Implementation checklist
+
+Current status: Phase 2 (Reg-B) is 100% complete and deployed. Phase 3 (Excise Duty Register) documentation is ready. We need to start implementation.
+
+What should we work on first?
+
+---
+
+## Short Version:
+Read TODO.md and .agent/NEXT_SESSION_START_HERE.md, then continue Phase 3 (Excise Duty Register) implementation. Phase 2 is complete and deployed. What task should we start with?
+
+---
+
+## For Backend Implementation:
+Read .agent/PHASE3_SCHEMA_DRAFT.md and .agent/PHASE3_API_SPEC.md. Backend developer is ready to implement. Let's start with Task 3.1: Database Schema for Excise Duty Register.
+
+---
+
+## For Frontend Implementation:
+Read .agent/PHASE3_CHECKLIST.md Task 3.5. Backend API is not ready yet. Let's create frontend UI mockups with dummy data for Excise Duty Register.
+
+---
+
+## For AI Recommendation:
+Read TODO.md and .agent/NEXT_SESSION_START_HERE.md. What's the recommended next step for Phase 3 implementation?
