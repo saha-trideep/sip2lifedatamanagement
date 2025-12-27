@@ -23,6 +23,7 @@ model User {
   reg76Entries   Reg76Entry[]
   reg74Events    Reg74Event[]
   regAVerifications RegAEntry[] @relation("RegAVerifier")
+  regBEntries       RegBEntry[]
 }
 
 model VatMaster {
@@ -93,6 +94,7 @@ model BatchMaster {
   
   events          Reg74Event[]
   regAEntries     RegAEntry[]
+  regBEntries     RegBEntry[]
 }
 
 model RegAEntry {
@@ -270,4 +272,138 @@ model Reg76Entry {
   user                  User     @relation(fields: [createdBy], references: [id])
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+}
+
+model RegBEntry {
+  id              Int      @id @default(autoincrement())
+  entryDate       DateTime
+  batchId         Int?
+  batch           BatchMaster? @relation(fields: [batchId], references: [id])
+  
+  // Opening Stock (6 sizes × 4 strengths = 24 fields)
+  opening750_50   Int      @default(0)
+  opening750_60   Int      @default(0)
+  opening750_70   Int      @default(0)
+  opening750_80   Int      @default(0)
+  opening600_50   Int      @default(0)
+  opening600_60   Int      @default(0)
+  opening600_70   Int      @default(0)
+  opening600_80   Int      @default(0)
+  opening500_50   Int      @default(0)
+  opening500_60   Int      @default(0)
+  opening500_70   Int      @default(0)
+  opening500_80   Int      @default(0)
+  opening375_50   Int      @default(0)
+  opening375_60   Int      @default(0)
+  opening375_70   Int      @default(0)
+  opening375_80   Int      @default(0)
+  opening300_50   Int      @default(0)
+  opening300_60   Int      @default(0)
+  opening300_70   Int      @default(0)
+  opening300_80   Int      @default(0)
+  opening180_50   Int      @default(0)
+  opening180_60   Int      @default(0)
+  opening180_70   Int      @default(0)
+  opening180_80   Int      @default(0)
+  
+  // Receipt from Reg-A (24 fields)
+  receipt750_50   Int      @default(0)
+  receipt750_60   Int      @default(0)
+  receipt750_70   Int      @default(0)
+  receipt750_80   Int      @default(0)
+  receipt600_50   Int      @default(0)
+  receipt600_60   Int      @default(0)
+  receipt600_70   Int      @default(0)
+  receipt600_80   Int      @default(0)
+  receipt500_50   Int      @default(0)
+  receipt500_60   Int      @default(0)
+  receipt500_70   Int      @default(0)
+  receipt500_80   Int      @default(0)
+  receipt375_50   Int      @default(0)
+  receipt375_60   Int      @default(0)
+  receipt375_70   Int      @default(0)
+  receipt375_80   Int      @default(0)
+  receipt300_50   Int      @default(0)
+  receipt300_60   Int      @default(0)
+  receipt300_70   Int      @default(0)
+  receipt300_80   Int      @default(0)
+  receipt180_50   Int      @default(0)
+  receipt180_60   Int      @default(0)
+  receipt180_70   Int      @default(0)
+  receipt180_80   Int      @default(0)
+  
+  // Issues (24 fields)
+  issue750_50     Int      @default(0)
+  issue750_60     Int      @default(0)
+  issue750_70     Int      @default(0)
+  issue750_80     Int      @default(0)
+  issue600_50     Int      @default(0)
+  issue600_60     Int      @default(0)
+  issue600_70     Int      @default(0)
+  issue600_80     Int      @default(0)
+  issue500_50     Int      @default(0)
+  issue500_60     Int      @default(0)
+  issue500_70     Int      @default(0)
+  issue500_80     Int      @default(0)
+  issue375_50     Int      @default(0)
+  issue375_60     Int      @default(0)
+  issue375_70     Int      @default(0)
+  issue375_80     Int      @default(0)
+  issue300_50     Int      @default(0)
+  issue300_60     Int      @default(0)
+  issue300_70     Int      @default(0)
+  issue300_80     Int      @default(0)
+  issue180_50     Int      @default(0)
+  issue180_60     Int      @default(0)
+  issue180_70     Int      @default(0)
+  issue180_80     Int      @default(0)
+  
+  // Wastage/Breakage (24 fields)
+  wastage750_50   Int      @default(0)
+  wastage750_60   Int      @default(0)
+  wastage750_70   Int      @default(0)
+  wastage750_80   Int      @default(0)
+  wastage600_50   Int      @default(0)
+  wastage600_60   Int      @default(0)
+  wastage600_70   Int      @default(0)
+  wastage600_80   Int      @default(0)
+  wastage500_50   Int      @default(0)
+  wastage500_60   Int      @default(0)
+  wastage500_70   Int      @default(0)
+  wastage500_80   Int      @default(0)
+  wastage375_50   Int      @default(0)
+  wastage375_60   Int      @default(0)
+  wastage375_70   Int      @default(0)
+  wastage375_80   Int      @default(0)
+  wastage300_50   Int      @default(0)
+  wastage300_60   Int      @default(0)
+  wastage300_70   Int      @default(0)
+  wastage300_80   Int      @default(0)
+  wastage180_50   Int      @default(0)
+  wastage180_60   Int      @default(0)
+  wastage180_70   Int      @default(0)
+  wastage180_80   Int      @default(0)
+  
+  // Calculated totals
+  totalOpeningBl  Float?
+  totalOpeningAl  Float?
+  totalReceiptBl  Float?
+  totalReceiptAl  Float?
+  totalIssueBl    Float?
+  totalIssueAl    Float?
+  totalWastageBl  Float?
+  totalWastageAl  Float?
+  totalClosingBl  Float?
+  totalClosingAl  Float?
+  
+  productionFees  Float?   // ₹3 per bottle issued
+  
+  remarks         String?
+  createdBy       Int
+  user            User     @relation(fields: [createdBy], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([entryDate])
+  @@index([batchId])
 }
