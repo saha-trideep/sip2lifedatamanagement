@@ -6,7 +6,7 @@ import {
     Package, Edit, Trash2, Plus, Search, Filter, ChevronRight,
     AlertCircle, CheckCircle2, Clock, RefreshCw, Eye, Save,
     Calculator, FileText, Download, ArrowLeft, ArrowRight,
-    Warehouse, Truck, ShoppingCart, Trash, Info, LayoutGrid
+    Warehouse, Truck, ShoppingCart, Trash, Info, LayoutGrid, BookOpen
 } from 'lucide-react';
 import { API_URL } from '../../config';
 import BottleCountGrid from '../../components/excise/BottleCountGrid';
@@ -194,10 +194,10 @@ const RegBRegister = () => {
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
                 {[
-                    { label: 'Total Issued (AL)', value: stats?.totalIssuedAl?.toFixed(2), icon: Truck, color: 'indigo' },
-                    { label: 'Total Wastage (AL)', value: stats?.totalWastageAl?.toFixed(2), icon: Trash, color: 'red' },
-                    { label: 'Production Fees', value: `₹${stats?.totalProductionFees?.toLocaleString()}`, icon: Calculator, color: 'emerald' },
-                    { label: 'Register Entries', value: stats?.totalEntries, icon: FileText, color: 'blue' },
+                    { label: 'Total Issued (AL)', value: (stats?.totalIssuedAl || 0).toFixed(2), icon: Truck, color: 'indigo' },
+                    { label: 'Total Wastage (AL)', value: (stats?.totalWastageAl || 0).toFixed(2), icon: Trash, color: 'red' },
+                    { label: 'Production Fees', value: `₹${(stats?.totalProductionFees || 0).toLocaleString()}`, icon: Calculator, color: 'emerald' },
+                    { label: 'Register Entries', value: stats?.totalEntries || 0, icon: FileText, color: 'blue' },
                 ].map((s, i) => (
                     <div key={i} className="bg-white dark:bg-gray-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 shadow-sm transition-all hover:shadow-xl hover:-translate-y-1">
                         <div className={`p-4 bg-${s.color}-50 dark:bg-${s.color}-900/20 text-${s.color}-600 dark:text-${s.color}-400 rounded-2xl inline-flex mb-6`}>
@@ -276,18 +276,18 @@ const RegBRegister = () => {
                                         </div>
                                     </td>
                                     <td className="px-8 py-6 text-right text-sm font-black text-indigo-600 dark:text-indigo-400">
-                                        {entry.totalReceiptAl?.toFixed(2)}
+                                        {(entry.totalReceiptAl || 0).toFixed(2)}
                                     </td>
                                     <td className="px-8 py-6 text-right text-sm font-black text-gray-900 dark:text-white">
-                                        {entry.totalIssueAl?.toFixed(2)}
+                                        {(entry.totalIssueAl || 0).toFixed(2)}
                                     </td>
                                     <td className="px-8 py-6 text-right">
                                         <span className="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 text-xs font-black rounded-lg">
-                                            ₹{entry.productionFees?.toLocaleString()}
+                                            ₹{(entry.productionFees || 0).toLocaleString()}
                                         </span>
                                     </td>
                                     <td className="px-8 py-6 text-right">
-                                        <div className="text-sm font-black text-gray-900 dark:text-white">{entry.totalClosingAl?.toFixed(2)}</div>
+                                        <div className="text-sm font-black text-gray-900 dark:text-white">{(entry.totalClosingAl || 0).toFixed(2)}</div>
                                         <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mt-1">AL</div>
                                     </td>
                                     <td className="px-8 py-6">
@@ -461,8 +461,8 @@ const RegBRegister = () => {
                                             <div key={i} className="flex items-center justify-between p-4 bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700">
                                                 <div className="text-xs font-black uppercase text-gray-400">{s.label}</div>
                                                 <div className="text-right">
-                                                    <div className={`text-sm font-black text-${s.color}-600`}>{s.bl?.toFixed(2) || '0.00'}<span className="text-[10px] text-gray-400 ml-1">BL</span></div>
-                                                    <div className="text-[10px] font-black text-gray-500">{s.al?.toFixed(2) || '0.00'}<span className="ml-1 text-gray-300">AL</span></div>
+                                                    <div className={`text-sm font-black text-${s.color}-600`}>{(s.bl || 0).toFixed(2)}<span className="text-[10px] text-gray-400 ml-1">BL</span></div>
+                                                    <div className="text-[10px] font-black text-gray-500">{(s.al || 0).toFixed(2)}<span className="ml-1 text-gray-300">AL</span></div>
                                                 </div>
                                             </div>
                                         ))}
@@ -475,11 +475,11 @@ const RegBRegister = () => {
                                             <ArrowRight size={16} className="opacity-70" />
                                         </div>
                                         <div className="flex items-baseline gap-2">
-                                            <span className="text-4xl font-black">{calcPreview?.totals?.totalClosingAl?.toFixed(2) || '0.00'}</span>
+                                            <span className="text-4xl font-black">{(calcPreview?.totals?.totalClosingAl || 0).toFixed(2)}</span>
                                             <span className="text-xs font-black opacity-70 uppercase tracking-widest">Abs Liters</span>
                                         </div>
                                         <div className="mt-1 text-[10px] font-black uppercase tracking-widest opacity-50">
-                                            Total BL: {calcPreview?.totals?.totalClosingBl?.toFixed(2) || '0.00'}
+                                            Total BL: {(calcPreview?.totals?.totalClosingBl || 0).toFixed(2)}
                                         </div>
                                     </div>
 
@@ -490,7 +490,7 @@ const RegBRegister = () => {
                                             <span className="text-emerald-500"><Calculator size={16} /></span>
                                         </div>
                                         <div className="text-3xl font-black text-emerald-700 dark:text-emerald-400">
-                                            ₹ {calcPreview?.totals?.productionFees?.toLocaleString() || '0'}
+                                            ₹ {(calcPreview?.totals?.productionFees || 0).toLocaleString()}
                                         </div>
                                         <div className="text-[10px] font-black text-emerald-500/60 uppercase tracking-widest mt-1">
                                             Rate: ₹3.00 per bottle
@@ -505,7 +505,7 @@ const RegBRegister = () => {
                                         <div>
                                             <div className="text-[10px] font-black uppercase tracking-widest mb-1">Stock Integrity Check</div>
                                             <div className="text-sm font-black uppercase italic">
-                                                {calcPreview?.isValid ? 'Register Balanced ✓' : `Unbalanced: ${calcPreview?.balanceCheck?.difference?.toFixed(2)} BL`}
+                                                {calcPreview?.isValid ? 'Register Balanced ✓' : `Unbalanced: ${(calcPreview?.balanceCheck?.difference || 0).toFixed(2)} BL`}
                                             </div>
                                         </div>
                                     </div>
