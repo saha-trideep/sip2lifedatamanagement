@@ -61,10 +61,10 @@ const Reg76Form = () => {
 
     const fetchVats = async () => {
         try {
-            const res = await axios.get(`${API_URL}/api/excise/vats`);
+            const res = await axios.get(`${API_URL}/api/reg74/vats`);
             setVats(res.data);
             if (!isEdit && res.data.length > 0) {
-                setFormData(prev => ({ ...prev, storageVat: res.data[0].name }));
+                setFormData(prev => ({ ...prev, storageVat: res.data[0].vatCode }));
             }
         } catch (error) {
             console.error(error);
@@ -73,9 +73,12 @@ const Reg76Form = () => {
 
     const fetchEntry = async () => {
         try {
-            const res = await axios.get(`${API_URL}/api/excise/reg76`);
-            const entry = res.data.find(e => e.id === parseInt(id));
-            if (entry) {
+            const token = localStorage.getItem('token');
+            const res = await axios.get(`${API_URL}/api/registers/reg76/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.data.success && res.data.entry) {
+                const entry = res.data.entry;
                 setFormData({
                     ...entry,
                     receiptDate: format(new Date(entry.receiptDate), 'yyyy-MM-dd'),
@@ -86,6 +89,7 @@ const Reg76Form = () => {
             }
         } catch (error) {
             console.error(error);
+            alert('Error loading entry: ' + (error.response?.data?.error || error.message));
         } finally {
             setFetching(false);
         }
@@ -128,18 +132,26 @@ const Reg76Form = () => {
 
         try {
             if (isEdit) {
-                await axios.put(`${API_URL}/api/excise/reg76/${id}`, {
-                    newData: formData,
-                    reason: editReason
-                }, {
+                await axios.put(`${API_URL}/api/registers/reg76/${id}`, formData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 alert("Reg-76 Entry updated successfully!");
             } else {
-                await axios.post(`${API_URL}/api/excise/reg76`, formData, {
+                const response = await axios.post(`${API_URL}/api/registers/reg76`, formData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                alert("Reg-76 Entry saved successfully!");
+
+                // Show calculation results
+                if (response.data.calculated) {
+                    const calc = response.data.calculated;
+                    const message = `Entry saved successfully!\n\n` +
+                        `Received: ${response.data.entry.receivedAl.toFixed(2)} AL\n` +
+                        `Wastage: ${calc.wastageAl || 0} AL (${calc.percentageWastage || 0}%)\n` +
+                        `Status: ${calc.isChargeable ? '⚠️ Chargeable Wastage' : '✅ Within Limits'}`;
+                    alert(message);
+                } else {
+                    alert("Reg-76 Entry saved successfully!");
+                }
             }
             navigate('/registers/reg76');
         } catch (error) {
@@ -216,6 +228,10 @@ const Reg76Form = () => {
                                 <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Vehicle No</label>
                                 <input type="text" name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white placeholder:text-gray-700' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
+                            <div>
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Tanker Make/Model</label>
+                                <input type="text" name="tankerMakeModel" value={formData.tankerMakeModel} onChange={handleChange} placeholder="e.g., Tata 1613" className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white placeholder:text-gray-700' : 'bg-gray-50 text-gray-900'}`} />
+                            </div>
                         </div>
                     </div>
 
@@ -273,6 +289,10 @@ const Reg76Form = () => {
                                 <input type="number" step="0.0001" name="avgDensity" value={formData.avgDensity} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
                             <div>
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Avg Temperature (°C)</label>
+                                <input type="number" step="0.1" name="avgTemperature" value={formData.avgTemperature} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} />
+                            </div>
+                            <div>
                                 <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Received Strength</label>
                                 <input type="number" step="0.1" name="receivedStrength" value={formData.receivedStrength} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`} />
                             </div>
@@ -313,7 +333,7 @@ const Reg76Form = () => {
                         </div>
 
                         {/* Summary / Calculations Sidebar */}
-                        <div className="bg-blue-600 rounded-2xl p-6 text-white shadow-xl space-y-6 h-fit">
+                        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-xl space-y-6 h-fit">
                             <h3 className="font-bold flex items-center gap-2 text-lg border-b border-blue-400 pb-4">
                                 <Calculator size={20} />
                                 Receipt Summary
@@ -332,12 +352,51 @@ const Reg76Form = () => {
                                     <p className="text-blue-100 text-xs uppercase font-medium">Calc. Alcoholic Liters (AL)</p>
                                     <p className="text-2xl font-bold">{formData.calcReceivedAl.toFixed(2)} AL</p>
                                 </div>
-                                <div className={`p-3 rounded-lg ${formData.calcTransitWastageAl > 0 ? 'bg-red-500/20' : 'bg-green-500/20'}`}>
-                                    <p className="text-blue-100 text-xs uppercase font-medium">Transit Difference</p>
-                                    <p className="text-xl font-bold">{formData.calcTransitWastageAl.toFixed(2)} AL</p>
-                                    <p className="text-[10px] text-blue-200 mt-1">
-                                        {formData.calcTransitWastageAl > 0 ? 'Wastage detected' : 'Transit Increase/Exact'}
-                                    </p>
+
+                                {/* Enhanced Wastage Analysis */}
+                                <div className="border-t border-blue-400 pt-4 space-y-3">
+                                    <p className="text-blue-100 text-xs uppercase font-medium mb-2">Wastage Analysis</p>
+
+                                    <div className={`p-3 rounded-lg ${formData.calcTransitWastageAl > 0 ? 'bg-red-500/20' : 'bg-green-500/20'}`}>
+                                        <p className="text-blue-100 text-xs uppercase font-medium">Transit Difference</p>
+                                        <p className="text-xl font-bold">{formData.calcTransitWastageAl.toFixed(2)} AL</p>
+                                        <p className="text-[10px] text-blue-200 mt-1">
+                                            {formData.calcTransitWastageAl > 0 ? 'Wastage detected' : formData.calcTransitWastageAl < 0 ? 'Transit Increase' : 'Exact match'}
+                                        </p>
+                                    </div>
+
+                                    {formData.advisedAl > 0 && (
+                                        <>
+                                            <div className="bg-white/10 p-3 rounded-lg">
+                                                <p className="text-xs text-blue-200">Wastage Percentage</p>
+                                                <p className="text-lg font-bold">
+                                                    {((formData.calcTransitWastageAl / formData.advisedAl) * 100).toFixed(2)}%
+                                                </p>
+                                            </div>
+
+                                            <div className="bg-white/10 p-3 rounded-lg">
+                                                <p className="text-xs text-blue-200">Allowable Limit (0.5%)</p>
+                                                <p className="text-lg font-bold">
+                                                    {(formData.advisedAl * 0.005).toFixed(2)} AL
+                                                </p>
+                                            </div>
+
+                                            {(() => {
+                                                const allowable = formData.advisedAl * 0.005;
+                                                const isChargeable = formData.calcTransitWastageAl > allowable;
+                                                const chargeable = Math.max(0, formData.calcTransitWastageAl - allowable);
+
+                                                return (
+                                                    <div className={`p-3 rounded-lg font-bold ${isChargeable ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}>
+                                                        <p className="text-xs opacity-90">Status</p>
+                                                        <p className="text-sm">
+                                                            {isChargeable ? `⚠️ Chargeable: ${chargeable.toFixed(2)} AL` : '✅ Within Limits'}
+                                                        </p>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </>
+                                    )}
                                 </div>
                             </div>
 

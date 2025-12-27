@@ -4,6 +4,12 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { verifyToken } = require('../middleware/auth');
 const { format } = require('date-fns');
+const {
+    calculateAllRegAValues,
+    analyzeRegAWastage,
+    validateRegAEntry
+} = require('../utils/regACalculations');
+const { logAudit } = require('../utils/auditLogger');
 
 // GET all Reg-A entries
 router.get('/entries', verifyToken, async (req, res) => {
@@ -77,16 +83,39 @@ router.put('/declaration/:id', verifyToken, async (req, res) => {
     const updateData = req.body; // Manual receipts, blending, bottling counts
 
     try {
+        // Auto-calculate bottled BL/AL if counts are present
+        const calculated = calculateAllRegAValues(updateData);
+
         const entry = await prisma.regAEntry.update({
             where: { id: parseInt(id) },
             data: {
                 ...updateData,
+                ...calculated,
                 status: 'ACTIVE'
             }
         });
+
+        await logAudit({
+            userId: req.user.id,
+            action: 'REGA_DECLARATION_UPDATE',
+            entityType: 'REGA',
+            entityId: id,
+            metadata: { updateData, calculated }
+        });
+
         res.json(entry);
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});
+
+// POST Calculate Preview (Real-time feedback for UI)
+router.post('/calculate', verifyToken, async (req, res) => {
+    try {
+        const results = calculateAllRegAValues(req.body);
+        res.json(results);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
 });
 
@@ -163,22 +192,29 @@ router.post('/finalize/:id', verifyToken, async (req, res) => {
         // Production Wastage Rule: 0.1% threshold for MFM vs Bottles
         const mfmAl = entry.mfmTotalAl;
         const bottledAl = entry.spiritBottledAl || 0;
-        const diffAl = mfmAl - bottledAl;
 
-        // 0.1% Allowed for Bottling Operations
-        const allowWastage = mfmAl * 0.001;
+        // Use centralized calculation utility
+        const wastage = analyzeRegAWastage(mfmAl, bottledAl);
 
         const finalized = await prisma.regAEntry.update({
             where: { id: parseInt(id) },
             data: {
                 status: 'COMPLETED',
                 verifiedBy: req.user.id,
-                differenceFoundAl: diffAl,
-                productionWastage: diffAl > 0 ? diffAl : 0,
-                productionIncrease: diffAl < 0 ? Math.abs(diffAl) : 0,
-                allowableWastage: allowWastage,
-                chargeableWastage: (diffAl > allowWastage) ? (diffAl - allowWastage) : 0
+                differenceFoundAl: wastage.differenceFoundAl,
+                productionWastage: wastage.productionWastage,
+                productionIncrease: wastage.productionIncrease,
+                allowableWastage: wastage.allowableWastage,
+                chargeableWastage: wastage.chargeableWastage
             }
+        });
+
+        await logAudit({
+            userId: req.user.id,
+            action: 'REGA_FINALIZE',
+            entityType: 'REGA',
+            entityId: id,
+            metadata: { wastage }
         });
 
         res.json({ message: "Production session finalized and verified", entry: finalized });

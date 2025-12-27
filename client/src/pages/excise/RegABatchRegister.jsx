@@ -18,6 +18,8 @@ const RegABatchRegister = () => {
     const [showPlanModal, setShowPlanModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [currentEntry, setCurrentEntry] = useState(null);
+    const [calcPreview, setCalcPreview] = useState(null);
+    const [calculating, setCalculating] = useState(false);
 
     const fetchData = async () => {
         setLoading(true);
@@ -53,32 +55,44 @@ const RegABatchRegister = () => {
         }
     };
 
+    // Real-time calculation hook
+    useEffect(() => {
+        if (currentEntry && showEditModal) {
+            const timer = setTimeout(async () => {
+                try {
+                    setCalculating(true);
+                    const token = localStorage.getItem('token');
+                    const res = await axios.post(`${API_URL}/api/rega/calculate`, currentEntry, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    setCalcPreview(res.data);
+                } catch (error) {
+                    console.error("Calculation failed", error);
+                } finally {
+                    setCalculating(false);
+                }
+            }, 500); // Debounce
+            return () => clearTimeout(timer);
+        }
+    }, [
+        currentEntry?.bottling750, currentEntry?.bottling600, currentEntry?.bottling500,
+        currentEntry?.bottling375, currentEntry?.bottling300, currentEntry?.bottling180,
+        currentEntry?.avgStrength, showEditModal
+    ]);
+
     const handleUpdateDeclaration = async (e) => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            // Basic mapping for bottling conversion
-            const b750 = parseInt(currentEntry.bottling750 || 0);
-            const b600 = parseInt(currentEntry.bottling600 || 0);
-            const b500 = parseInt(currentEntry.bottling500 || 0);
-            const b375 = parseInt(currentEntry.bottling375 || 0);
-            const b300 = parseInt(currentEntry.bottling300 || 0);
-            const b180 = parseInt(currentEntry.bottling180 || 0);
-
-            const bl = (b750 * 0.75) + (b600 * 0.60) + (b500 * 0.50) + (b375 * 0.375) + (b300 * 0.30) + (b180 * 0.180);
-            const al = bl * (parseFloat(currentEntry.avgStrength || 0) / 100);
-
-            await axios.put(`${API_URL}/api/rega/declaration/${currentEntry.id}`, {
-                ...currentEntry,
-                spiritBottledBl: bl,
-                spiritBottledAl: al
-            }, {
+            await axios.put(`${API_URL}/api/rega/declaration/${currentEntry.id}`, currentEntry, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setShowEditModal(false);
+            setCalcPreview(null);
             fetchData();
         } catch (error) {
             console.error("Update failed", error);
+            alert(error.response?.data?.error || "Update failed");
         }
     };
 
@@ -488,6 +502,59 @@ const RegABatchRegister = () => {
                                         ))}
                                     </div>
                                 </div>
+
+                                {/* Calculation Results & Wastage Analysis */}
+                                {calcPreview && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start animate-in fade-in slide-in-from-top-4 duration-500">
+                                        <div className="bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-700 shadow-sm">
+                                            <div className="flex items-center gap-3 mb-6">
+                                                <div className="p-2 bg-green-50 dark:bg-green-900/30 text-green-600 rounded-lg"><Package size={18} /></div>
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-gray-400">Bottled Total (Calculated)</h4>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-8">
+                                                <div>
+                                                    <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Bulk Liters</div>
+                                                    <div className="text-3xl font-black text-gray-900 dark:text-white">{calcPreview.spiritBottledBl?.toFixed(2)}</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Absolute Liters</div>
+                                                    <div className="text-3xl font-black text-green-600">{calcPreview.spiritBottledAl?.toFixed(2)}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {calcPreview.wastagePreview && (
+                                            <div className={`p-8 rounded-[2.5rem] border-2 shadow-xl transition-all duration-300 ${calcPreview.wastagePreview.isChargeable ? 'bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30' : 'bg-green-50 dark:bg-green-900/10 border-green-100 dark:border-green-900/30'}`}>
+                                                <div className="flex justify-between items-start mb-6">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`p-2 rounded-lg ${calcPreview.wastagePreview.isChargeable ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                                                            {calcPreview.wastagePreview.isChargeable ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
+                                                        </div>
+                                                        <h4 className={`text-xs font-black uppercase tracking-widest ${calcPreview.wastagePreview.isChargeable ? 'text-red-600' : 'text-green-600'}`}>
+                                                            {calcPreview.wastagePreview.isChargeable ? 'Chargeable Wastage Detected' : 'Wastage Within Limits'}
+                                                        </h4>
+                                                    </div>
+                                                    <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${calcPreview.wastagePreview.isChargeable ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}`}>
+                                                        {calcPreview.wastagePreview.percentageWastage}% Wastage
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-6">
+                                                    <div>
+                                                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Difference</div>
+                                                        <div className="text-2xl font-black text-gray-900 dark:text-white">{calcPreview.wastagePreview.differenceFoundAl?.toFixed(2)} <span className="text-xs">AL</span></div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Chargeable Amt</div>
+                                                        <div className={`text-2xl font-black ${calcPreview.wastagePreview.isChargeable ? 'text-red-600' : 'text-gray-400'}`}>
+                                                            {calcPreview.wastagePreview.chargeableWastage?.toFixed(2)} <span className="text-xs">AL</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 <div className="grid grid-cols-2 gap-8 pt-6 border-t border-gray-100 dark:border-gray-800">
                                     <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800 p-6 rounded-3xl">
