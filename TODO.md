@@ -1,12 +1,12 @@
 # 📋 TODO: Register Engine Implementation
 ## SIP2LIFE Data Management System
 
-**Last Updated:** 2025-12-27 14:48 IST  
+**Last Updated:** 2025-12-27 15:45 IST  
 **Project Status:** In Progress - 7 Registers to Implement  
 **Completion:** 3/7 Registers Complete (42.8%)  
 **Phase 1 Progress:** 100% Complete ✅ (4/4 tasks done)
 **Phase 2 Progress:** 100% Complete ✅ (3/3 tasks done)
-**Current Branch:** `feature/phase2-regb-implementation`
+**Current Branch:** `main` (Phase 2 Deployed)
 
 ---
 
@@ -17,7 +17,7 @@ Implementing all **7 Excise Registers** from the Streamlit prototype into SIP2LI
 1. ✅ **Reg-74** - Vat Operations Register (100% Complete)
 2. ⚠️ **Reg-76** - Spirit Receipt Register (40% Complete)
 3. ⚠️ **Reg-A** - Production & Bottling Register (70% Complete)
-4. ❌ **Reg-B** - Issue of Country Liquor in Bottles (0% Complete)
+4. ✅ **Reg-B** - Issue of Country Liquor in Bottles (100% Complete)
 5. ❌ **Excise Duty** - Personal Ledger Account (0% Complete)
 6. ⚠️ **Reg-78** - Account of Spirit / Master Ledger (30% Complete)
 7. ❌ **Daily Handbook** - Consolidated Daily Report (0% Complete)
@@ -57,6 +57,7 @@ git push origin main  # This triggers auto-deployment
 - ✅ **After Task 2.2 (Backend):** Push to feature branch
 - ✅ **After Task 2.3 (Frontend):** Push to feature branch
 - ✅ **After Phase 2 Complete:** Merge to main → Auto-deploy
+- ✅ **Post-Deployment Fix:** Fixed white screen crash (missing icon/safety checks)
 
 **📖 Full Details:** See [DEPLOYMENT_STRATEGY.md](./DEPLOYMENT_STRATEGY.md)
 
@@ -454,9 +455,32 @@ server/utils/exciseDutyCalculations.js
 - [ ] Auto-fill from Reg-B
 - [ ] Balance display
 
+#### **3.4 Phase 3: Frontend UI Blueprint (Excise Duty)**
+**Priority:** 🔥 HIGH
+
+**Conceptual Components:**
+- [ ] **`DutyRateConfig.jsx`**:
+  - Grid to manage duty rates for different liquor categories (IMFL, Beer, Wine, CL).
+  - Effective Date tracking (Rates change by gov policy).
+- [ ] **`DutyDashboard.jsx`**:
+  - **Ledger View**: Monthly balance sheet (Opening Balance + Duty Accrued - Payments = Closing).
+  - **Visual Indicators**: Progress bar for duty paid vs liability.
+- [ ] **`ChallanModal.jsx`**:
+  - Form to record Treasury Receipt (TR) numbers, dates, and amounts.
+  - Image upload for Challan copy (linked to Document Management).
+- [ ] **`AutoCalculation.jsx`**:
+  - Real-time link to Reg-B Data: `Total AL Issued` × `Current Rate` = `Daily Duty Liability`.
+
+**Data Flow Requirements:**
+- **Source**: API fetches aggregated AL totals from `/api/registers/regb/summary/stats`.
+- **Logic**: Client-side preview of liability before finalizing monthly totals.
+- **Sync**: Backend reconciles payments against daily total issues.
+
 **Files to Create:**
 ```
 client/src/pages/excise/ExciseDutyRegister.jsx
+client/src/components/excise/DutyLedgerTable.jsx
+client/src/components/excise/ChallanForm.jsx
 ```
 
 ---
@@ -596,13 +620,13 @@ client/src/pages/excise/DailyHandbook.jsx
 
 ## 📊 PROGRESS TRACKING
 
-**Overall Progress:** 28.5% (2/7 registers complete)
+**Overall Progress:** 42.8% (3/7 registers complete)
 
 | Phase | Status | Completion |
 |-------|--------|------------|
 | Phase 1: Foundation | ✅ Complete | 100% |
-| Phase 2: Reg-B | 🔴 Not Started | 0% |
-| Phase 3: Excise Duty | 🔴 Not Started | 0% |
+| Phase 2: Reg-B | ✅ Complete | 100% |
+| Phase 3: Excise Duty | 🟡 Next Priority | 0% |
 | Phase 4: Reg-78 & Handbook | 🔴 Not Started | 0% |
 | Phase 5: Integration | 🔴 Not Started | 0% |
 

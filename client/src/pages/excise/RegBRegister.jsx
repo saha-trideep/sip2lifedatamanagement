@@ -5,14 +5,16 @@ import { useNavigate } from 'react-router-dom';
 import {
     Package, Edit, Trash2, Plus, Search, Filter, ChevronRight,
     AlertCircle, CheckCircle2, Clock, RefreshCw, Eye, Save,
-    Calculator, FileText, Download, ArrowLeft, ArrowRight,
+    Calculator, FileText, Download, ArrowLeft, ArrowRight, Sun, Moon,
     Warehouse, Truck, ShoppingCart, Trash, Info, LayoutGrid, BookOpen
 } from 'lucide-react';
 import { API_URL } from '../../config';
+import { useTheme } from '../../context/ThemeContext';
 import BottleCountGrid from '../../components/excise/BottleCountGrid';
 
 const RegBRegister = () => {
     const navigate = useNavigate();
+    const { isDark, toggleTheme } = useTheme();
     const [entries, setEntries] = useState([]);
     const [batches, setBatches] = useState([]);
     const [stats, setStats] = useState(null);
@@ -187,6 +189,12 @@ const RegBRegister = () => {
                         className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-3xl text-sm font-black uppercase tracking-widest shadow-xl shadow-indigo-100 dark:shadow-none transition-all flex items-center gap-2"
                     >
                         <Plus size={18} /> New Daily Entry
+                    </button>
+                    <button
+                        onClick={toggleTheme}
+                        className={`p-4 rounded-2xl shadow-lg transition-all ${isDark ? 'bg-gray-800 text-yellow-400' : 'bg-white text-gray-600 border border-gray-100'}`}
+                    >
+                        {isDark ? <Sun size={24} /> : <Moon size={24} />}
                     </button>
                 </div>
             </div>
