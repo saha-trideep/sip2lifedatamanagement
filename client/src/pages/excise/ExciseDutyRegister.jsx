@@ -4,7 +4,7 @@ import { useTheme } from '../../context/ThemeContext';
 import {
     Plus, Download, Filter, Edit, Trash2, Check, X,
     ArrowLeft, Calculator, CreditCard, AlertCircle, TrendingUp,
-    Calendar, Moon, Sun, ChevronRight, FileText, Database
+    Calendar, Moon, Sun, ChevronRight, FileText, Database, Settings
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../../config';
