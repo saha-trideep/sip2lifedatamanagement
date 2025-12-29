@@ -31,6 +31,7 @@ app.use('/api/rega', require('./routes/regA'));
 app.use('/api/reg78', require('./routes/reg78'));
 app.use('/api/registers/reg76', require('./routes/reg76')); // Reg-76 Spirit Receipt Register
 app.use('/api/registers/regb', require('./routes/regB')); // Reg-B Issue of Country Liquor
+app.use('/api/excise-duty', require('./routes/exciseDuty')); // Phase 3: Excise Duty Register
 
 // Database Initialization Endpoint (for production without shell access)
 let dbInitialized = false;
