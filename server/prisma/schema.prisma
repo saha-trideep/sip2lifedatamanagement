@@ -24,6 +24,10 @@ model User {
   reg74Events    Reg74Event[]
   regAVerifications RegAEntry[] @relation("RegAVerifier")
   regBEntries       RegBEntry[]
+  
+  // Phase 3 Relations
+  exciseDutyEntries  ExciseDutyEntry[]
+  treasuryChallans   TreasuryChallan[]
 }
 
 model VatMaster {
@@ -198,6 +202,9 @@ model Document {
   
   folderId    Int?
   folder      Folder?  @relation(fields: [folderId], references: [id])
+  
+  // Phase 3 Relations
+  treasuryChallans TreasuryChallan[]
 }
 
 model RegisterLink {
@@ -406,4 +413,100 @@ model RegBEntry {
   
   @@index([entryDate])
   @@index([batchId])
+}
+
+// Phase 3: Excise Duty Register Models
+
+model DutyRate {
+  id              Int      @id @default(autoincrement())
+  category        String   // IMFL, Beer, Wine, CL (Country Liquor), etc.
+  subcategory     String?  // Optional: Premium IMFL, Regular Beer, etc.
+  ratePerAl       Float    // ₹ per Absolute Liter
+  effectiveFrom   DateTime // Start date for this rate
+  effectiveTo     DateTime? // End date (null = currently active)
+  state           String   @default("West Bengal") // For multi-state support
+  isActive        Boolean  @default(true)
+  
+  remarks         String?  // Notes about rate change (e.g., "Budget 2024 revision")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([category, effectiveFrom])
+  @@index([isActive])
+}
+
+model ExciseDutyEntry {
+  id                Int      @id @default(autoincrement())
+  
+  // Period Information
+  monthYear         DateTime // First day of the month (e.g., 2024-12-01)
+  category          String   // IMFL, Beer, Wine, CL
+  
+  // Opening Balance (from previous month)
+  openingBalance    Float    @default(0) // ₹
+  
+  // Current Month Accruals
+  totalAlIssued     Float    @default(0) // From Reg-B summary
+  applicableRate    Float    // Rate per AL for this period
+  dutyAccrued       Float    // totalAlIssued × applicableRate
+  
+  // Payments Made
+  totalPayments     Float    @default(0) // Sum of all challans
+  
+  // Closing Balance
+  closingBalance    Float    // openingBalance + dutyAccrued - totalPayments
+  
+  // Status
+  status            String   @default("PENDING") // PENDING, PARTIAL_PAID, FULLY_PAID
+  
+  // Audit Trail
+  remarks           String?
+  createdBy         Int
+  user              User     @relation(fields: [createdBy], references: [id])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  challans          TreasuryChallan[]
+  
+  @@unique([monthYear, category]) // One entry per month per category
+  @@index([monthYear])
+  @@index([status])
+}
+
+model TreasuryChallan {
+  id                Int      @id @default(autoincrement())
+  
+  // Link to Duty Entry
+  dutyEntryId       Int
+  dutyEntry         ExciseDutyEntry @relation(fields: [dutyEntryId], references: [id], onDelete: Cascade)
+  
+  // Challan Details
+  challanNumber     String   @unique // TR Number (e.g., TR/2024/12345)
+  challanDate       DateTime
+  amountPaid        Float    // ₹
+  
+  // Bank/Treasury Info
+  bankName          String?
+  branchName        String?
+  
+  // Document Management
+  documentUrl       String?  // Link to scanned challan (Supabase Storage)
+  documentId        Int?     // Optional link to Document model
+  document          Document? @relation(fields: [documentId], references: [id])
+  
+  // Verification
+  verifiedBy        Int?
+  verifiedAt        DateTime?
+  verificationStatus String  @default("PENDING") // PENDING, VERIFIED, REJECTED
+  
+  remarks           String?
+  createdBy         Int
+  user              User     @relation(fields: [createdBy], references: [id])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([dutyEntryId])
+  @@index([challanDate])
+  @@index([verificationStatus])
 }

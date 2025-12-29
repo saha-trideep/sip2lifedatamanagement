@@ -423,28 +423,28 @@ client/src/pages/excise/RegBRegister.jsx
 
 **Status:** 📋 Ready for Implementation
 
-- [ ] Add `DutyRate` model to `server/prisma/schema.prisma`
-  - [ ] Fields: category, ratePerAl, effectiveFrom, effectiveTo, isActive
-  - [ ] Indexes on category and effectiveFrom
-- [ ] Add `ExciseDutyEntry` model
-  - [ ] Fields: monthYear, category, openingBalance, dutyAccrued, totalPayments, closingBalance, status
-  - [ ] Unique constraint on [monthYear, category]
-  - [ ] Relation to TreasuryChallan
-- [ ] Add `TreasuryChallan` model
-  - [ ] Fields: challanNumber, challanDate, amountPaid, documentUrl, verificationStatus
-  - [ ] Unique constraint on challanNumber
-  - [ ] Relation to ExciseDutyEntry (cascade delete)
-- [ ] Update `User` model relations:
+- [x] Add `DutyRate` model to `server/prisma/schema.prisma`
+  - [x] Fields: category, ratePerAl, effectiveFrom, effectiveTo, isActive
+  - [x] Indexes on category and effectiveFrom
+- [x] Add `ExciseDutyEntry` model
+  - [x] Fields: monthYear, category, openingBalance, dutyAccrued, totalPayments, closingBalance, status
+  - [x] Unique constraint on [monthYear, category]
+  - [x] Relation to TreasuryChallan
+- [x] Add `TreasuryChallan` model
+  - [x] Fields: challanNumber, challanDate, amountPaid, documentUrl, verificationStatus
+  - [x] Unique constraint on challanNumber
+  - [x] Relation to ExciseDutyEntry (cascade delete)
+- [x] Update `User` model relations:
   ```prisma
   exciseDutyEntries  ExciseDutyEntry[]
   treasuryChallans   TreasuryChallan[]
   ```
-- [ ] Run migration:
+- [x] Run migration:
   ```bash
   npx prisma db push
   npx prisma generate
   ```
-- [ ] Seed initial duty rates (IMFL, Beer, Wine, CL)
+- [x] Seed initial duty rates (IMFL, Beer, Wine, CL)
 
 **Reference Documents:**
 - 📖 [PHASE3_SCHEMA_DRAFT.md](.agent/PHASE3_SCHEMA_DRAFT.md) - Complete schema specification
