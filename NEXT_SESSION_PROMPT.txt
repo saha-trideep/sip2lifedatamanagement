@@ -1,33 +1,280 @@
-# Next Session Starter Prompt
+# 🚀 NEXT SESSION START HERE - Phase 4 Implementation
 
-## Full Version (Recommended):
-Please read TODO.md and the following handoff documents, then continue Phase 3 implementation from where we left off:
-
-1. .agent/NEXT_SESSION_START_HERE.md - Session handoff and current status
-2. .agent/PHASE3_SCHEMA_DRAFT.md - Database schema specification
-3. .agent/PHASE3_API_SPEC.md - API endpoint specification
-4. .agent/PHASE3_CHECKLIST.md - Implementation checklist
-
-Current status: Phase 2 (Reg-B) is 100% complete and deployed. Phase 3 (Excise Duty Register) documentation is ready. We need to start implementation.
-
-What should we work on first?
+**Date:** 2025-12-29  
+**Status:** Phase 3 Complete ✅ | Phase 4 Ready to Start 🎯  
+**Overall Progress:** 71.4% (5/7 Registers Complete)
 
 ---
 
-## Short Version:
-Read TODO.md and .agent/NEXT_SESSION_START_HERE.md, then continue Phase 3 (Excise Duty Register) implementation. Phase 2 is complete and deployed. What task should we start with?
+## ⚡ QUICK START COMMAND
+
+When you start the next session, use this exact prompt:
+
+```
+Read NEXT_SESSION_PROMPT.txt and implement Reg-78 (Master Spirit Ledger) 
+starting with the database schema.
+```
 
 ---
 
-## For Backend Implementation:
-Read .agent/PHASE3_SCHEMA_DRAFT.md and .agent/PHASE3_API_SPEC.md. Backend developer is ready to implement. Let's start with Task 3.1: Database Schema for Excise Duty Register.
+## 📊 CURRENT STATUS
+
+### ✅ **Completed (5/7 Registers)**
+1. **Reg-74** - Vat Operations Register (100%)
+2. **Reg-76** - Spirit Receipt Register (100%)
+3. **Reg-A** - Production & Bottling Register (100%)
+4. **Reg-B** - Issue of Country Liquor (100%)
+5. **Excise Duty** - Personal Ledger Account (100%)
+
+### 🎯 **Next Priority: Reg-78 (Master Spirit Ledger)**
+- **Status:** 40% Complete (partial UI exists, needs backend)
+- **Estimated Time:** 5-7 days
+- **Why First:** Required for Daily Handbook, compliance critical
+
+### 🔜 **After Reg-78: Daily Handbook**
+- **Status:** 0% Complete
+- **Estimated Time:** 3-5 days
+- **Dependency:** Needs Reg-78 data aggregation
 
 ---
 
-## For Frontend Implementation:
-Read .agent/PHASE3_CHECKLIST.md Task 3.5. Backend API is not ready yet. Let's create frontend UI mockups with dummy data for Excise Duty Register.
+## 🎯 PHASE 4A: REG-78 IMPLEMENTATION PLAN
+
+### **Step 1: Database Schema (Day 1)**
+
+**File to Edit:** `server/prisma/schema.prisma`
+
+Add this model:
+
+```prisma
+model Reg78Entry {
+  id              Int      @id @default(autoincrement())
+  entryDate       DateTime @unique
+  
+  // Opening Balance
+  openingBl       Float
+  openingAl       Float
+  
+  // Receipts (from Reg-76)
+  receiptBl       Float
+  receiptAl       Float
+  
+  // Issues (from Reg-A + Reg-B)
+  issueBl         Float
+  issueAl         Float
+  
+  // Wastage (aggregated from all registers)
+  wastageBl       Float
+  wastageAl       Float
+  
+  // Closing Balance (auto-calculated)
+  closingBl       Float
+  closingBl       Float
+  
+  // Reconciliation
+  variance        Float?   // Difference between calculated vs actual
+  isReconciled    Boolean  @default(false)
+  reconciledBy    Int?
+  reconciledAt    DateTime?
+  
+  remarks         String?
+  createdBy       Int
+  user            User     @relation(fields: [createdBy], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([entryDate])
+  @@index([isReconciled])
+}
+```
+
+**Also update User model:**
+```prisma
+model User {
+  // ... existing fields
+  reg78Entries    Reg78Entry[]
+}
+```
+
+**Run migration:**
+```bash
+cd server
+npx prisma db push
+npx prisma generate
+```
 
 ---
 
-## For AI Recommendation:
-Read TODO.md and .agent/NEXT_SESSION_START_HERE.md. What's the recommended next step for Phase 3 implementation?
+### **Step 2: Backend API (Days 2-3)**
+
+**File to Create:** `server/routes/reg78.js`
+
+**Endpoints to Implement:**
+
+1. **POST `/api/reg78/auto-generate/:date`**
+   - Auto-create entry by aggregating from all registers
+   - Logic:
+     - Opening = Previous day's closing
+     - Receipts = Sum of Reg-76 entries for that date
+     - Issues = Sum of Reg-A + Reg-B for that date
+     - Wastage = Sum of all wastage from Reg-74, Reg-A, Reg-B
+     - Closing = Opening + Receipts - Issues - Wastage
+
+2. **GET `/api/reg78/entries`**
+   - List all entries with filters (date range, reconciled status)
+   - Include pagination
+
+3. **GET `/api/reg78/entries/:id`**
+   - Get single entry with drill-down data
+
+4. **PUT `/api/reg78/entries/:id`**
+   - Manual adjustments (with audit trail)
+
+5. **POST `/api/reg78/reconcile/:id`**
+   - Mark entry as reconciled
+   - Record who reconciled and when
+
+6. **GET `/api/reg78/variance-report`**
+   - Show entries with variance > threshold (e.g., 1%)
+
+**File to Create:** `server/utils/reg78Calculations.js`
+
+Key functions:
+```javascript
+async function aggregateFromAllRegisters(date) {
+  // Get data from Reg-76, Reg-74, Reg-A, Reg-B
+  // Calculate totals
+  // Return aggregated values
+}
+
+function calculateVariance(calculated, actual) {
+  // Return percentage difference
+}
+
+function determineReconciliationStatus(variance, threshold = 1.0) {
+  // Return true if variance < threshold
+}
+```
+
+**Register route in `server/index.js`:**
+```javascript
+app.use('/api/reg78', require('./routes/reg78'));
+```
+
+---
+
+### **Step 3: Frontend UI (Days 4-5)**
+
+**File to Update:** `client/src/pages/excise/Reg78Register.jsx`
+
+**Features to Add:**
+
+1. **Dashboard View:**
+   - Monthly calendar showing reconciliation status
+   - Summary cards (Total Receipts, Issues, Wastage, Closing Stock)
+   - Variance alerts (red badge if > 1%)
+
+2. **Auto-Generate Section:**
+   - Date picker
+   - "Generate Entry" button
+   - Progress indicator during generation
+
+3. **Entry Table:**
+   - Columns: Date, Opening, Receipts, Issues, Wastage, Closing, Variance, Status
+   - Click row to expand drill-down (shows source register data)
+   - Reconcile button for each entry
+
+4. **Reconciliation Modal:**
+   - Show calculated vs actual values
+   - Variance explanation
+   - Confirm reconciliation button
+
+**Reference Files:**
+- `ExciseDutyRegister.jsx` - For dashboard layout
+- `RegBRegister.jsx` - For table structure
+- `DutyLedgerTable.jsx` - For expandable rows
+
+---
+
+## 📋 ACCEPTANCE CRITERIA
+
+### **Reg-78 is Complete When:**
+- ✅ Schema exists and migration is successful
+- ✅ Auto-generation works for any date
+- ✅ Manual entry creation/editing works
+- ✅ Variance calculation is accurate
+- ✅ Reconciliation workflow is functional
+- ✅ UI shows drill-down to source registers
+- ✅ Dark mode support
+- ✅ All data validates correctly
+
+---
+
+## 🔍 TESTING CHECKLIST
+
+Before marking Reg-78 complete:
+
+1. **Data Accuracy:**
+   - [ ] Generate entry for a date with known data
+   - [ ] Verify totals match manual calculation
+   - [ ] Check variance detection works
+
+2. **Edge Cases:**
+   - [ ] First day (no opening balance)
+   - [ ] Missing source data (Reg-76/74/A/B)
+   - [ ] Multiple generations for same date (should prevent duplicates)
+
+3. **UI/UX:**
+   - [ ] Responsive on mobile
+   - [ ] Dark mode works
+   - [ ] Loading states display
+   - [ ] Error messages are clear
+
+---
+
+## 📚 REFERENCE DOCUMENTS
+
+- **TODO.md** - Overall project status
+- **REGISTER_STATUS_MATRIX.md** - Detailed implementation matrix
+- **.agent/NEXT_SESSION_START_HERE.md** - Phase 4 roadmap
+- **.agent/SESSION_SUMMARY_2025-12-29.md** - Today's achievements
+
+---
+
+## 💡 QUICK TIPS
+
+1. **Reuse Existing Code:**
+   - Copy structure from `exciseDuty.js` for routes
+   - Use `spiritCalculations.js` for BL/AL conversions
+   - Reference `ExciseDutyRegister.jsx` for UI patterns
+
+2. **Auto-Generation Logic:**
+   - Query all registers for the target date
+   - Use transactions to ensure data consistency
+   - Handle missing data gracefully (default to 0)
+
+3. **Variance Threshold:**
+   - Start with 1% as acceptable variance
+   - Make it configurable in the future
+   - Log all variances for audit trail
+
+---
+
+## 🚀 IMMEDIATE NEXT STEPS
+
+**When you resume:**
+
+1. Open `server/prisma/schema.prisma`
+2. Add the `Reg78Entry` model (copy from above)
+3. Run `npx prisma db push`
+4. Create `server/routes/reg78.js`
+5. Implement the auto-generation endpoint first
+6. Test with Postman before moving to frontend
+
+---
+
+**Prepared by:** Antigravity AI  
+**Session End:** 2025-12-29 18:15 IST  
+**Next Session:** Ready to implement Reg-78!
+
+**Let's finish strong! 💪**
