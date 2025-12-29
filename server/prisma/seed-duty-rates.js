@@ -4,30 +4,36 @@ const prisma = new PrismaClient();
 async function main() {
     console.log('Seeding initial duty rates...');
 
+    // Strength-based duty rates for Country Liquor (IML)
+    // Rates are per BL (Bulk Liter), not per AL
     const rates = [
         {
-            category: 'IMFL',
-            ratePerAl: 150.00,
+            category: 'CL',
+            subcategory: '50° U.P.',
+            ratePerAl: 50.00, // ₹50 per BL (field name kept for schema compatibility)
             effectiveFrom: new Date('2024-04-01'),
-            remarks: 'Standard Rate 2024'
-        },
-        {
-            category: 'Beer',
-            ratePerAl: 50.00,
-            effectiveFrom: new Date('2024-04-01'),
-            remarks: 'Standard Rate 2024'
-        },
-        {
-            category: 'Wine',
-            ratePerAl: 80.00,
-            effectiveFrom: new Date('2024-04-01'),
-            remarks: 'Standard Rate 2024'
+            remarks: '50° U.P. (28.5% v/v) - Standard Rate 2024'
         },
         {
             category: 'CL',
-            ratePerAl: 30.00,
+            subcategory: '60° U.P.',
+            ratePerAl: 50.00, // ₹50 per BL
             effectiveFrom: new Date('2024-04-01'),
-            remarks: 'Standard Rate 2024'
+            remarks: '60° U.P. (22.8% v/v) - Standard Rate 2024'
+        },
+        {
+            category: 'CL',
+            subcategory: '70° U.P.',
+            ratePerAl: 20.00, // ₹20 per BL
+            effectiveFrom: new Date('2024-04-01'),
+            remarks: '70° U.P. (17.1% v/v) - Standard Rate 2024'
+        },
+        {
+            category: 'CL',
+            subcategory: '80° U.P.',
+            ratePerAl: 17.00, // ₹17 per BL
+            effectiveFrom: new Date('2024-04-01'),
+            remarks: '80° U.P. (11.4% v/v) - Standard Rate 2024'
         }
     ];
 
@@ -47,15 +53,16 @@ async function main() {
         const existing = await prisma.dutyRate.findFirst({
             where: {
                 category: rate.category,
+                subcategory: rate.subcategory,
                 effectiveFrom: rate.effectiveFrom
             }
         });
 
         if (!existing) {
             await prisma.dutyRate.create({ data: rate });
-            console.log(`Created rate for ${rate.category}`);
+            console.log(`Created rate for ${rate.category} - ${rate.subcategory}`);
         } else {
-            console.log(`Rate for ${rate.category} already exists`);
+            console.log(`Rate for ${rate.category} - ${rate.subcategory} already exists`);
         }
     }
 

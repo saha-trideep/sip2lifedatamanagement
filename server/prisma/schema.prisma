@@ -420,8 +420,9 @@ model RegBEntry {
 model DutyRate {
   id              Int      @id @default(autoincrement())
   category        String   // IMFL, Beer, Wine, CL (Country Liquor), etc.
-  subcategory     String?  // Optional: Premium IMFL, Regular Beer, etc.
-  ratePerAl       Float    // ₹ per Absolute Liter
+  subcategory     String?  // For CL: 50° U.P., 60° U.P., 70° U.P., 80° U.P.
+  ratePerAl       Float    // ₹ per BL for Country Liquor (field name kept for compatibility)
+                           // For CL: 50°→₹50/BL, 60°→₹50/BL, 70°→₹20/BL, 80°→₹17/BL
   effectiveFrom   DateTime // Start date for this rate
   effectiveTo     DateTime? // End date (null = currently active)
   state           String   @default("West Bengal") // For multi-state support
@@ -440,15 +441,17 @@ model ExciseDutyEntry {
   
   // Period Information
   monthYear         DateTime // First day of the month (e.g., 2024-12-01)
-  category          String   // IMFL, Beer, Wine, CL
+  category          String   // CL (Country Liquor), IMFL, etc.
+  subcategory       String?  // For CL: 50° U.P., 60° U.P., 70° U.P., 80° U.P.
   
   // Opening Balance (from previous month)
   openingBalance    Float    @default(0) // ₹
   
-  // Current Month Accruals
-  totalAlIssued     Float    @default(0) // From Reg-B summary
-  applicableRate    Float    // Rate per AL for this period
-  dutyAccrued       Float    // totalAlIssued × applicableRate
+  // Current Month Accruals (from Reg-B summary)
+  totalBlIssued     Float    @default(0) // Total BL issued (for CL duty calculation)
+  totalAlIssued     Float    @default(0) // Total AL issued (for reference)
+  applicableRate    Float    // Rate per BL for this strength
+  dutyAccrued       Float    // totalBlIssued × applicableRate (for CL)
   
   // Payments Made
   totalPayments     Float    @default(0) // Sum of all challans
@@ -469,7 +472,7 @@ model ExciseDutyEntry {
   // Relations
   challans          TreasuryChallan[]
   
-  @@unique([monthYear, category]) // One entry per month per category
+  @@unique([monthYear, category, subcategory]) // One entry per month per strength
   @@index([monthYear])
   @@index([status])
 }
