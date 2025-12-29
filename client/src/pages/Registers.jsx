@@ -219,6 +219,26 @@ const Registers = () => {
                                     <ChevronRight className="text-gray-300 group-hover:translate-x-1 transition-transform" />
                                 </div>
                             </div>
+
+                            {/* Excise Duty Register */}
+                            <div
+                                onClick={() => navigate('/registers/excise-duty')}
+                                className={`p-8 transition cursor-pointer group flex items-center justify-between ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}
+                            >
+                                <div className="flex items-center gap-6">
+                                    <div className={`p-4 rounded-2xl transition-all ${isDark ? 'bg-gray-800 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white' : 'bg-gray-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white'}`}>
+                                        <Calculator size={28} />
+                                    </div>
+                                    <div>
+                                        <h3 className={`text-xl font-black ${isDark ? 'text-white' : 'text-gray-800'}`}>Excise Duty Register</h3>
+                                        <p className="text-sm text-gray-500 font-medium tracking-tight">Personal Ledger Account (PLA) for Duty Payments</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1 rounded-full uppercase tracking-widest">New</span>
+                                    <ChevronRight className="text-gray-300 group-hover:translate-x-1 transition-transform" />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
