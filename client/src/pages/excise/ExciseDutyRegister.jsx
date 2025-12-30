@@ -59,6 +59,26 @@ const ExciseDutyRegister = () => {
         }
     };
 
+    const handleGenerateFromRegB = async () => {
+        if (!window.confirm(`Generate/Update all duty entries for ${selectedMonth} from Reg-B production data?`)) return;
+
+        setLoading(true);
+        try {
+            const res = await axios.post(`${API_URL}/api/excise-duty/generate-monthly`, {
+                monthYear: `${selectedMonth}-01`
+            });
+            if (res.data.success) {
+                alert(res.data.message);
+                fetchData();
+            }
+        } catch (err) {
+            console.error(err);
+            alert(err.response?.data?.error || "Error generating duty entries");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleDeleteEntry = async (id) => {
         if (!window.confirm("Are you sure you want to delete this duty entry? This cannot be undone.")) return;
 
@@ -216,6 +236,13 @@ const ExciseDutyRegister = () => {
                             Monthly Duty Ledger
                         </h2>
                         <div className="flex gap-4">
+                            <button
+                                onClick={handleGenerateFromRegB}
+                                className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition shadow-lg flex items-center gap-2 ${isDark ? 'bg-indigo-900/40 text-indigo-300 border border-indigo-900/50 hover:bg-indigo-600 hover:text-white' : 'bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white'}`}
+                                title="Auto-generate duty entries from Reg-B data"
+                            >
+                                <Database size={16} /> Generate from Reg-B
+                            </button>
                             <button
                                 onClick={() => setShowChallanModal(true)}
                                 className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition shadow-lg flex items-center gap-2 ${isDark ? 'bg-gray-800 text-green-400 hover:bg-green-600 hover:text-white' : 'bg-white border border-gray-200 text-green-600 hover:bg-green-600 hover:text-white'}`}

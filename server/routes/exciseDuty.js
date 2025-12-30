@@ -22,12 +22,12 @@ const {
     determineStatus,
     validateDutyEntry,
     validateChallan,
-    calculateAllDutyValues
+    calculateAllDutyValues,
+    getRegBMonthlySummary
 } = require('../utils/exciseDutyCalculations');
 
-// Middleware to verify authentication (assuming it exists)
-// const { verifyToken } = require('../middleware/auth');
-// router.use(verifyToken);
+const { verifyToken } = require('../middleware/auth');
+router.use(verifyToken);
 
 // ============================================
 // DUTY RATES ENDPOINTS (4 endpoints)
@@ -403,12 +403,22 @@ router.post('/ledger', async (req, res) => {
             autoFillFromRegB = false
         } = req.body;
 
+        // Auto-fill from Reg-B if requested
+        let finalBlIssued = totalBlIssued || 0;
+        if (autoFillFromRegB && category === 'CL' && subcategory) {
+            const strength = subcategory.replace('° U.P.', '');
+            const summary = await getRegBMonthlySummary(new Date(monthYear));
+            if (summary[strength]) {
+                finalBlIssued = summary[strength].bl;
+            }
+        }
+
         // Validation
         const validation = validateDutyEntry({
             monthYear: monthYear ? new Date(monthYear) : undefined,
             category,
             subcategory,
-            totalBlIssued: totalBlIssued || 0,
+            totalBlIssued: finalBlIssued,
             totalAlIssued: totalAlIssued || 0,
             applicableRate: 0, // Will be fetched
             dutyAccrued: 0 // Will be calculated
@@ -457,19 +467,19 @@ router.post('/ledger', async (req, res) => {
             monthYear: new Date(monthYear),
             category,
             subcategory,
-            totalBlIssued: totalBlIssued || 0,
+            totalBlIssued: finalBlIssued,
             totalAlIssued: totalAlIssued || 0,
             openingBalance: calculatedOpeningBalance,
             totalPayments: 0,
-            createdBy: req.user?.id || 1
+            createdBy: req.user.id
         });
 
         // Create entry
         const entry = await prisma.exciseDutyEntry.create({
             data: {
                 ...entryData,
-                remarks,
-                createdBy: req.user?.id || 1
+                remarks: remarks || (autoFillFromRegB ? 'Auto-filled from Reg-B' : undefined),
+                createdBy: req.user.id
             },
             include: {
                 user: {
@@ -481,7 +491,7 @@ router.post('/ledger', async (req, res) => {
         // Audit log
         await prisma.auditLog.create({
             data: {
-                userId: req.user?.id || 1,
+                userId: req.user.id,
                 action: 'CREATE_DUTY_ENTRY',
                 entityType: 'ExciseDutyEntry',
                 entityId: entry.id.toString(),
@@ -489,7 +499,8 @@ router.post('/ledger', async (req, res) => {
                     monthYear,
                     category,
                     subcategory,
-                    dutyAccrued: entry.dutyAccrued
+                    dutyAccrued: entry.dutyAccrued,
+                    autoFilled: autoFillFromRegB
                 }
             }
         });
@@ -497,7 +508,7 @@ router.post('/ledger', async (req, res) => {
         res.status(201).json({
             success: true,
             data: entry,
-            message: 'Duty entry created successfully'
+            message: `Duty entry created successfully ${autoFillFromRegB ? '(Auto-filled from Reg-B)' : ''}`
         });
     } catch (error) {
         console.error('Error creating duty entry:', error);
@@ -1026,15 +1037,97 @@ router.post('/generate-monthly', async (req, res) => {
         }
 
         const targetMonth = new Date(monthYear);
+        const startOfMonth = new Date(targetMonth.getFullYear(), targetMonth.getMonth(), 1);
 
-        // TODO: Fetch Reg-B summary for this month
-        // This will be implemented when Reg-B API is available
-        // For now, return a placeholder response
+        // Fetch Reg-B summary for this month
+        const summary = await getRegBMonthlySummary(startOfMonth);
+
+        const results = [];
+        const errors = [];
+
+        // Track total entries processed for the response message
+        let strengthCount = 0;
+
+        // For each strength, create or update duty entry
+        for (const strength of ['50', '60', '70', '80']) {
+            const data = summary[strength];
+            const subcategory = `${strength}° U.P.`;
+
+            // Even if BL is 0, we might want to ensure an entry exists to show 0 duty
+            // but usually we only create for active months.
+            if (data.bl === 0) continue;
+
+            strengthCount++;
+
+            try {
+                // Get previous month closing balance
+                const previousMonth = new Date(startOfMonth);
+                previousMonth.setMonth(previousMonth.getMonth() - 1);
+
+                const previousEntry = await prisma.exciseDutyEntry.findFirst({
+                    where: {
+                        monthYear: previousMonth,
+                        category: 'CL',
+                        subcategory
+                    }
+                });
+
+                const openingBalance = previousEntry?.closingBalance || 0;
+
+                // Calculate all values
+                const entryData = await calculateAllDutyValues({
+                    monthYear: startOfMonth,
+                    category: 'CL',
+                    subcategory,
+                    totalBlIssued: data.bl,
+                    totalAlIssued: 0,
+                    openingBalance,
+                    totalPayments: 0, // This is a new generation
+                    createdBy: req.user.id
+                });
+
+                // Upsert the entry (Update if exists, Create if not)
+                const entry = await prisma.exciseDutyEntry.upsert({
+                    where: {
+                        monthYear_category_subcategory: {
+                            monthYear: startOfMonth,
+                            category: 'CL',
+                            subcategory
+                        }
+                    },
+                    update: {
+                        totalBlIssued: entryData.totalBlIssued,
+                        applicableRate: entryData.applicableRate,
+                        dutyAccrued: entryData.dutyAccrued,
+                        closingBalance: entryData.closingBalance,
+                        status: entryData.status,
+                        remarks: `Auto-updated from Reg-B on ${new Date().toLocaleDateString()}`
+                    },
+                    create: {
+                        ...entryData,
+                        remarks: `Auto-generated from Reg-B on ${new Date().toLocaleDateString()}`,
+                        createdBy: req.user.id
+                    }
+                });
+
+                results.push({
+                    strength,
+                    bl: data.bl,
+                    duty: entry.dutyAccrued,
+                    status: entry.status
+                });
+            } catch (err) {
+                errors.push({ strength, error: err.message });
+            }
+        }
 
         res.json({
             success: true,
-            message: 'Auto-generation from Reg-B not yet implemented',
-            note: 'This endpoint will fetch BL/AL data from Reg-B and create duty entries automatically'
+            message: results.length > 0
+                ? `Successfully processed ${results.length} strengths for ${startOfMonth.toLocaleDateString('default', { month: 'long', year: 'numeric' })}`
+                : 'No active production data found in Reg-B for this month',
+            data: results,
+            errors: errors.length > 0 ? errors : undefined
         });
     } catch (error) {
         console.error('Error generating monthly entries:', error);

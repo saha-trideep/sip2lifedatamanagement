@@ -31,6 +31,9 @@ model User {
   
   // Phase 4 Relations
   reg78Entries       Reg78Entry[]
+  
+  // Phase 5 Relations (Production Fees)
+  productionFeeEntries ProductionFeeEntry[]
 }
 
 model VatMaster {
@@ -566,5 +569,59 @@ model Reg78Entry {
   @@index([entryDate])
   @@index([isReconciled])
   @@index([createdAt])
+}
+
+// Phase 5: Production Fees Register (Bottling Fees)
+model ProductionFeeEntry {
+  id                Int      @id @default(autoincrement())
+  date              DateTime @unique
+  
+  // Financial Section
+  openingBalance    Float    @default(0)
+  depositAmount     Float    @default(0)
+  challanNo         String?
+  challanDate       DateTime?
+  totalCredited     Float?   // openingBalance + depositAmount
+
+  // 50 UP Section
+  count50_750       Int      @default(0)
+  count50_500       Int      @default(0)
+  count50_375       Int      @default(0)
+  count50_300       Int      @default(0)
+  count50_180       Int      @default(0)
+
+  // 60 UP Section
+  count60_600       Int      @default(0)
+  count60_500       Int      @default(0)
+  count60_375       Int      @default(0)
+  count60_300       Int      @default(0)
+  count60_180       Int      @default(0)
+
+  // 70 UP Section
+  count70_300       Int      @default(0)
+
+  // 80 UP Section
+  count80_600       Int      @default(0)
+  count80_500       Int      @default(0)
+  count80_375       Int      @default(0)
+  count80_300       Int      @default(0)
+  count80_180       Int      @default(0)
+
+  // Calculation Section
+  totalProductionBl Float    @default(0)
+  feesDebited       Float    @default(0) // totalProductionBl * 3
+  closingBalance    Float    @default(0) // totalCredited - feesDebited
+
+  remarks           String?
+  status            String   @default("DRAFT") // DRAFT, VERIFIED
+  verifiedBy        Int?
+  verifiedAt        DateTime?
+  
+  createdBy         Int
+  user              User     @relation(fields: [createdBy], references: [id])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([date])
 }
 

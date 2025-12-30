@@ -43,9 +43,10 @@ async function aggregateFromAllRegisters(date) {
     const receiptBl = reg76Entries.reduce((sum, entry) => sum + (entry.receivedBl || 0), 0);
     const receiptAl = reg76Entries.reduce((sum, entry) => sum + (entry.receivedAl || 0), 0);
 
-    // 2. ISSUES: Sum from Reg-A (Production) + Reg-B (Country Liquor Issues)
+    // 2. ISSUES: Sum from Reg-A (Production) only
+    // Note: Reg-B is NOT connected to Reg-78. It connects to Bottling Fees Register.
 
-    // Reg-A: Bottled spirit issued to Reg-B
+    // Reg-A: Bottled spirit issued (production output)
     const regAEntries = await prisma.regAEntry.findMany({
         where: {
             productionDate: {
@@ -56,26 +57,15 @@ async function aggregateFromAllRegisters(date) {
         }
     });
 
-    const regAIssueBl = regAEntries.reduce((sum, entry) => sum + (entry.spiritBottledBl || 0), 0);
-    const regAIssueAl = regAEntries.reduce((sum, entry) => sum + (entry.spiritBottledAl || 0), 0);
+    const issueBl = regAEntries.reduce((sum, entry) => sum + (entry.spiritBottledBl || 0), 0);
+    const issueAl = regAEntries.reduce((sum, entry) => sum + (entry.spiritBottledAl || 0), 0);
 
-    // Reg-B: Country liquor issued to market
-    const regBEntries = await prisma.regBEntry.findMany({
-        where: {
-            entryDate: {
-                gte: startOfDay,
-                lte: endOfDay
-            }
-        }
-    });
+    // 3. WASTAGE: Sum from Reg-76 (Transit), Reg-74 (Storage), Reg-A (Production)
+    // Note: Reg-B wastage is NOT included in Reg-78
 
-    const regBIssueBl = regBEntries.reduce((sum, entry) => sum + (entry.totalIssueBl || 0), 0);
-    const regBIssueAl = regBEntries.reduce((sum, entry) => sum + (entry.totalIssueAl || 0), 0);
-
-    const issueBl = regAIssueBl + regBIssueBl;
-    const issueAl = regAIssueAl + regBIssueAl;
-
-    // 3. WASTAGE: Sum from Reg-74 (Storage), Reg-A (Production), Reg-B (Breakage)
+    // Reg-76: Transit wastage during spirit receipt
+    const reg76WastageBl = reg76Entries.reduce((sum, entry) => sum + (entry.transitWastageBl || 0), 0);
+    const reg76WastageAl = reg76Entries.reduce((sum, entry) => sum + (entry.transitWastageAl || 0), 0);
 
     // Reg-74: Storage wastage from vat operations
     const reg74Events = await prisma.reg74Event.findMany({
@@ -114,12 +104,8 @@ async function aggregateFromAllRegisters(date) {
         return sum + (entry.chargeableWastage || 0);
     }, 0);
 
-    // Reg-B: Breakage/wastage
-    const regBWastageBl = regBEntries.reduce((sum, entry) => sum + (entry.totalWastageBl || 0), 0);
-    const regBWastageAl = regBEntries.reduce((sum, entry) => sum + (entry.totalWastageAl || 0), 0);
-
-    const wastageBl = reg74WastageBl + regAWastageBl + regBWastageBl;
-    const wastageAl = reg74WastageAl + regAWastageAl + regBWastageAl;
+    const wastageBl = reg76WastageBl + reg74WastageBl + regAWastageBl;
+    const wastageAl = reg76WastageAl + reg74WastageAl + regAWastageAl;
 
     // 4. CLOSING BALANCE: Opening + Receipts - Issues - Wastage
     const closingBl = openingBl + receiptBl - issueBl - wastageBl;
@@ -136,11 +122,10 @@ async function aggregateFromAllRegisters(date) {
         wastageAl,
         closingBl,
         closingAl,
-        // Source data for drill-down
+        // Source data for drill-down (only Reg-76, Reg-74, Reg-A)
         sourceData: {
             reg76Count: reg76Entries.length,
             regACount: regAEntries.length,
-            regBCount: regBEntries.length,
             reg74Count: reg74Events.length
         }
     };
@@ -219,7 +204,8 @@ function validateReg78Entry(data) {
 
 /**
  * Get drill-down data for a specific date
- * Shows detailed breakdown of all source register entries
+ * Shows detailed breakdown of source register entries (Reg-76, Reg-74, Reg-A only)
+ * Note: Reg-B is NOT connected to Reg-78
  * 
  * @param {Date} date - The date to get drill-down data for
  * @returns {Object} Detailed breakdown by register
@@ -229,7 +215,7 @@ async function getDrillDownData(date) {
     const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
     const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
 
-    // Get all source entries
+    // Get all source entries (Reg-76, Reg-A, Reg-74 only)
     const reg76Entries = await prisma.reg76Entry.findMany({
         where: {
             receiptDate: { gte: startOfDay, lte: endOfDay }
@@ -240,6 +226,8 @@ async function getDrillDownData(date) {
             exportingDistillery: true,
             receivedBl: true,
             receivedAl: true,
+            transitWastageBl: true,
+            transitWastageAl: true,
             storageVat: true
         }
     });
@@ -248,17 +236,6 @@ async function getDrillDownData(date) {
         where: {
             productionDate: { gte: startOfDay, lte: endOfDay },
             status: 'COMPLETED'
-        },
-        include: {
-            batch: {
-                include: { brand: true }
-            }
-        }
-    });
-
-    const regBEntries = await prisma.regBEntry.findMany({
-        where: {
-            entryDate: { gte: startOfDay, lte: endOfDay }
         },
         include: {
             batch: {
@@ -298,18 +275,16 @@ async function getDrillDownData(date) {
                 bl: e.spiritBottledBl,
                 al: e.spiritBottledAl
             })),
-            regB: regBEntries.map(e => ({
-                id: e.id,
-                batchNo: e.batch?.baseBatchNo,
-                bl: e.totalIssueBl,
-                al: e.totalIssueAl
-            })),
-            totalBl: regAEntries.reduce((sum, e) => sum + (e.spiritBottledBl || 0), 0) +
-                regBEntries.reduce((sum, e) => sum + (e.totalIssueBl || 0), 0),
-            totalAl: regAEntries.reduce((sum, e) => sum + (e.spiritBottledAl || 0), 0) +
-                regBEntries.reduce((sum, e) => sum + (e.totalIssueAl || 0), 0)
+            totalBl: regAEntries.reduce((sum, e) => sum + (e.spiritBottledBl || 0), 0),
+            totalAl: regAEntries.reduce((sum, e) => sum + (e.spiritBottledAl || 0), 0)
         },
         wastage: {
+            reg76: reg76Entries.filter(e => (e.transitWastageBl || 0) > 0 || (e.transitWastageAl || 0) > 0).map(e => ({
+                id: e.id,
+                permitNo: e.permitNo,
+                bl: e.transitWastageBl,
+                al: e.transitWastageAl
+            })),
             reg74: reg74Events.filter(e =>
                 (e.adjustmentData && e.adjustmentData.type === 'WAST') ||
                 (e.productionData && e.productionData.deadStockAl)
@@ -325,12 +300,24 @@ async function getDrillDownData(date) {
                 batchNo: e.batch?.baseBatchNo,
                 wastageAl: e.chargeableWastage
             })),
-            regB: regBEntries.filter(e => (e.totalWastageBl || 0) > 0).map(e => ({
-                id: e.id,
-                batchNo: e.batch?.baseBatchNo,
-                bl: e.totalWastageBl,
-                al: e.totalWastageAl
-            }))
+            totalBl: reg76Entries.reduce((sum, e) => sum + (e.transitWastageBl || 0), 0) +
+                reg74Events.reduce((sum, e) => {
+                    if (e.adjustmentData && e.adjustmentData.type === 'WAST') {
+                        return sum + (e.adjustmentData.qtyBl || 0);
+                    }
+                    return sum;
+                }, 0),
+            totalAl: reg76Entries.reduce((sum, e) => sum + (e.transitWastageAl || 0), 0) +
+                reg74Events.reduce((sum, e) => {
+                    if (e.adjustmentData && e.adjustmentData.type === 'WAST') {
+                        return sum + (e.adjustmentData.qtyAl || 0);
+                    }
+                    if (e.productionData && e.productionData.deadStockAl) {
+                        return sum + (e.productionData.deadStockAl || 0);
+                    }
+                    return sum;
+                }, 0) +
+                regAEntries.reduce((sum, e) => sum + (e.chargeableWastage || 0), 0)
         }
     };
 }

@@ -204,42 +204,89 @@ function validateChallan(data) {
 }
 
 /**
+ * Calculate Bulk Liters (BL) from bottle counts for a specific strength
+ * @param {Object} regBEntry - Reg-B entry object
+ * @param {string} strength - '50', '60', '70', or '80'
+ * @returns {number} - Total BL for that strength
+ */
+function calculateBlByStrength(regBEntry, strength) {
+    const sizes = [
+        { ml: 750, field: `issue750_${strength}` },
+        { ml: 600, field: `issue600_${strength}` },
+        { ml: 500, field: `issue500_${strength}` },
+        { ml: 375, field: `issue375_${strength}` },
+        { ml: 300, field: `issue300_${strength}` },
+        { ml: 180, field: `issue180_${strength}` }
+    ];
+
+    let totalBl = 0;
+    sizes.forEach(size => {
+        const bottles = regBEntry[size.field] || 0;
+        totalBl += (bottles * size.ml) / 1000;
+    });
+
+    return totalBl;
+}
+
+/**
+ * Get monthly summary from Reg-B for excise duty calculation
+ * @param {Date} monthYear - Month and Year (e.g., 2024-12-01)
+ * @returns {Promise<Object>} - Summary by strength
+ */
+async function getRegBMonthlySummary(monthYear) {
+    const startOfMonth = new Date(monthYear.getFullYear(), monthYear.getMonth(), 1);
+    const endOfMonth = new Date(monthYear.getFullYear(), monthYear.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const regBEntries = await prisma.regBEntry.findMany({
+        where: {
+            entryDate: {
+                gte: startOfMonth,
+                lte: endOfMonth
+            }
+        }
+    });
+
+    const summary = {
+        '50': { bl: 0, entries: 0 },
+        '60': { bl: 0, entries: 0 },
+        '70': { bl: 0, entries: 0 },
+        '80': { bl: 0, entries: 0 }
+    };
+
+    regBEntries.forEach(entry => {
+        ['50', '60', '70', '80'].forEach(strength => {
+            const bl = calculateBlByStrength(entry, strength);
+            if (bl > 0) {
+                summary[strength].bl += bl;
+                summary[strength].entries++;
+            }
+        });
+    });
+
+    return summary;
+}
+
+/**
  * Calculate duty breakdown by strength from Reg-B data
  * @param {Object} regBData - Reg-B entry data with bottle counts by strength
  * @returns {Promise<Object>} - Duty breakdown by strength
  */
 async function calculateDutyBreakdown(regBData) {
     try {
-        const breakdown = {
-            '50': { bl: 0, al: 0, rate: 0, duty: 0 },
-            '60': { bl: 0, al: 0, rate: 0, duty: 0 },
-            '70': { bl: 0, al: 0, rate: 0, duty: 0 },
-            '80': { bl: 0, al: 0, rate: 0, duty: 0 }
-        };
+        const entryDate = regBData.entryDate || new Date();
+        const breakdown = {};
 
-        // Get duty rates for all strengths
-        const rates = {
-            '50': await getCurrentDutyRate('CL', '50° U.P.', regBData.entryDate),
-            '60': await getCurrentDutyRate('CL', '60° U.P.', regBData.entryDate),
-            '70': await getCurrentDutyRate('CL', '70° U.P.', regBData.entryDate),
-            '80': await getCurrentDutyRate('CL', '80° U.P.', regBData.entryDate)
-        };
-
-        // Calculate for each strength
         for (const strength of ['50', '60', '70', '80']) {
-            const rate = rates[strength];
-            if (!rate) {
-                console.warn(`No duty rate found for ${strength}° U.P.`);
-                continue;
-            }
+            const bl = calculateBlByStrength(regBData, strength);
+            if (bl === 0) continue;
 
-            // Extract BL and AL for this strength from Reg-B totals
-            // This would come from Reg-B summary endpoint
-            // For now, we'll use the total fields if available
-            breakdown[strength].rate = rate.ratePerAl; // Actually rate per BL
+            const rate = await getCurrentDutyRate('CL', `${strength}° U.P.`, entryDate);
 
-            // Note: In actual implementation, we'll need to call Reg-B API
-            // to get BL/AL breakdown by strength
+            breakdown[strength] = {
+                bl: Math.round(bl * 100) / 100,
+                rate: rate ? rate.ratePerAl : 0, // ratePerAl is used as rate per BL for CL
+                duty: rate ? Math.round(bl * rate.ratePerAl * 100) / 100 : 0
+            };
         }
 
         return breakdown;
@@ -302,5 +349,7 @@ module.exports = {
     validateDutyEntry,
     validateChallan,
     calculateDutyBreakdown,
+    calculateBlByStrength,
+    getRegBMonthlySummary,
     calculateAllDutyValues
 };

@@ -259,6 +259,26 @@ const Registers = () => {
                                     <ChevronRight className="text-gray-300 group-hover:translate-x-1 transition-transform" />
                                 </div>
                             </div>
+
+                            {/* Production Fees Register */}
+                            <div
+                                onClick={() => navigate('/registers/production-fees')}
+                                className={`p-8 transition cursor-pointer group flex items-center justify-between ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}
+                            >
+                                <div className="flex items-center gap-6">
+                                    <div className={`p-4 rounded-2xl transition-all ${isDark ? 'bg-indigo-900/40 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white' : 'bg-green-50 text-green-600 group-hover:bg-green-600 group-hover:text-white'}`}>
+                                        <Calculator size={28} />
+                                    </div>
+                                    <div>
+                                        <h3 className={`text-xl font-black ${isDark ? 'text-white' : 'text-gray-800'}`}>Production Fees Register</h3>
+                                        <p className="text-sm text-gray-500 font-medium tracking-tight">Bottling Fees Account & PLA tracking (₹3/BL)</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1 rounded-full uppercase tracking-widest">New</span>
+                                    <ChevronRight className="text-gray-300 group-hover:translate-x-1 transition-transform" />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

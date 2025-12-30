@@ -16,6 +16,7 @@ import Reg78Register from './pages/excise/Reg78Register';
 import RegBRegister from './pages/excise/RegBRegister';
 import ExciseDutyRegister from './pages/excise/ExciseDutyRegister';
 import DailyHandbook from './pages/excise/DailyHandbook';
+import ProductionFeesRegister from './pages/excise/ProductionFeesRegister';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -85,6 +86,11 @@ function App() {
           <Route path="/registers/daily-handbook" element={
             <ProtectedRoute>
               <DailyHandbook />
+            </ProtectedRoute>
+          } />
+          <Route path="/registers/production-fees" element={
+            <ProtectedRoute>
+              <ProductionFeesRegister />
             </ProtectedRoute>
           } />
           <Route path="/documents" element={
