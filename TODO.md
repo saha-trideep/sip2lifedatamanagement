@@ -1,735 +1,256 @@
-# 📋 TODO: Register Engine Implementation
+# 📋 TODO: Current Tasks & Future Work
 ## SIP2LIFE Data Management System
 
-**Last Updated:** 2025-12-30 11:42 IST  
-**Project Status:** In Progress - 7 Registers to Implement  
-**Completion:** 7/7 Registers Complete (100%) ✅  
-**Phase 1 Progress:** 100% Complete ✅ (4/4 tasks done)
-**Phase 2 Progress:** 100% Complete ✅ (3/3 tasks done)
-**Phase 3 Progress:** 100% Complete ✅ (3/3 tasks done)
-**Phase 4 Progress:** 100% Complete ✅ (4/4 tasks done)
-**Current Branch:** `main` (Phase 4 Complete - All Registers Implemented)
+**Last Updated:** 2025-12-30 12:15 IST  
+**Current Status:** All 7 Registers Complete (100%) ✅  
+**Next Phase:** Integration & Testing
 
 ---
 
-## 🎯 PROJECT OVERVIEW
+## 🎯 CURRENT FOCUS: PHASE 5 - INTEGRATION & TESTING
 
-Implementing all **7 Excise Registers** from the Streamlit prototype into SIP2LIFE:
+**Goal:** Make registers work together seamlessly with intelligent automation
 
-1. ✅ **Reg-74** - Vat Operations Register (100% Complete)
-2. ✅ **Reg-76** - Spirit Receipt Register (100% Complete)
-3. ✅ **Reg-A** - Production & Bottling Register (100% Complete)
-4. ✅ **Reg-B** - Issue of Country Liquor in Bottles (100% Complete)
-5. ✅ **Excise Duty** - Personal Ledger Account (100% Complete)
-6. ✅ **Reg-78** - Account of Spirit / Master Ledger (100% Complete)
-7. ✅ **Daily Handbook** - Consolidated Daily Report (100% Complete)
-
-**Reference:**
-- 📚 Streamlit Demo: https://excise-parallel-register-system-msne7jvz35aflmgvkmefwb.streamlit.app/
-- 💻 Source Code: https://github.com/saha-trideep/excise-parallel-register-system
-- 📖 Developer Guide: https://github.com/saha-trideep/excise-parallel-register-system/blob/main/DEVELOPER_HANDOFF_GUIDE.md
+**Estimated Duration:** 1-2 weeks  
+**Priority:** 🔥 HIGH
 
 ---
 
-## 🚀 DEPLOYMENT STRATEGY
+## 📝 ACTIVE TASKS
 
-**⚠️ IMPORTANT:** Since the app is live in production (Vercel + Render + Supabase), we use a **feature branch workflow** to avoid breaking changes.
-
-### Git Workflow for Phase 2:
-
-```bash
-# Step 1: Create feature branch (do this once)
-git checkout -b feature/phase2-regb-implementation
-
-# Step 2: Work on tasks and commit regularly
-git add .
-git commit -m "feat(regb): add RegBEntry model to schema"
-
-# Step 3: Push to GitHub after each major task
-git push origin feature/phase2-regb-implementation
-
-# Step 4: Only merge to main when Phase 2 is complete and tested
-git checkout main
-git merge feature/phase2-regb-implementation
-git push origin main  # This triggers auto-deployment
-```
-
-### Push Schedule:
-- ✅ **After Task 2.1 (Schema):** Push to feature branch
-- ✅ **After Task 2.2 (Backend):** Push to feature branch
-- ✅ **After Task 2.3 (Frontend):** Push to feature branch
-- ✅ **After Phase 2 Complete:** Merge to main → Auto-deploy
-- ✅ **Post-Deployment Fix:** Fixed white screen crash (missing icon/safety checks)
-
-**📖 Full Details:** See [DEPLOYMENT_STRATEGY.md](./DEPLOYMENT_STRATEGY.md)
-
----
-
-## 📊 CURRENT STATUS SUMMARY
-
-| Component | Status | Files |
-|-----------|--------|-------|
-| **Prisma Schema** | 🟡 Partial | 4/7 models exist |
-| **Backend APIs** | 🟡 Partial | 3/7 complete |
-| **Frontend UI** | 🟡 Partial | 6/7 exist (not all connected) |
-| **Calculations** | 🟡 Partial | 1/7 utility files |
-| **Integration** | 🔴 Missing | No auto-fill mechanisms |
-
----
-
-## 🚀 PHASE 1: FOUNDATION (WEEKS 1-2) - CURRENT PRIORITY
-
-### 1.1 Shared Calculation Utilities Library
-**Priority:** 🔥 CRITICAL - Required by all registers
-
-- [x] Create `server/utils/spiritCalculations.js`
-  - [x] `calculateBL(massKg, densityGmCc)` - Mass to Bulk Liters
-  - [x] `calculateAL(bl, strengthPercent)` - BL to Absolute Liters
-  - [x] `calculateStrength(al, bl)` - AL/BL to Strength %
-  - [x] `calculateMass(bl, density)` - BL to Mass
-  - [x] `temperatureCorrection(bl, currentTemp, targetTemp)` - Temp correction
-  - [x] `densityAtTemperature(density, temp)` - Density correction
-  - [x] `bottlesToBL(bottleCounts)` - Bottle counts to BL
-  - [x] `blToBottles(bl, bottleSize)` - BL to bottle count
-  - [x] `bottlesToAL(bottleCounts, strength)` - Bottle counts to AL
-
-**Files Created:** ✅
-```
-server/utils/spiritCalculations.js
-server/utils/test_spiritCalculations.js
-```
-
-**Test Results:** ✅ All tests passed!
-
----
-
-### 1.2 Reg-76: Spirit Receipt Register - Backend
-**Priority:** 🔥 CRITICAL - Entry point of the system
-
-**Status:** Schema ✅ | API ✅ | UI ⚠️ | Calc ✅
-
-#### Backend API
-- [x] Create `server/routes/reg76.js`
-  - [x] POST `/api/registers/reg76` - Create entry
-  - [x] GET `/api/registers/reg76` - List all entries
-  - [x] GET `/api/registers/reg76/:id` - Get single entry
-  - [x] PUT `/api/registers/reg76/:id` - Update entry
-  - [x] DELETE `/api/registers/reg76/:id` - Delete entry
-  - [x] GET `/api/registers/reg76` with filters - Filter by date/vehicle/distillery
-  - [x] POST `/api/registers/reg76/calculate` - Calculate BL/AL/wastage
-  - [x] GET `/api/registers/reg76/summary/stats` - Summary statistics
-
-#### Calculation Utilities
-- [x] Create `server/utils/reg76Calculations.js`
-  - [x] `calculateReceivedValues()` - Calculate BL/AL from weigh bridge data
-  - [x] `calculateReg76Wastage()` - Transit wastage with 0.5% threshold
-  - [x] `validateReg76Entry()` - Comprehensive validation
-  - [x] `calculateTransitDays()` - Days in transit
-  - [x] `calculateAllReg76Values()` - All calculations at once
-
-#### Integration
-- [x] Register route in `server/index.js`
-  ```javascript
-  app.use('/api/registers/reg76', require('./routes/reg76'));
-  ```
-
-**Files Created:** ✅
-```
-server/routes/reg76.js (500+ lines)
-server/utils/reg76Calculations.js (200+ lines)
-```
-
-**Features Implemented:**
-- ✅ Full CRUD operations
-- ✅ Filtering & pagination
-- ✅ Auto-calculation of all values
-- ✅ Audit logging
-- ✅ Validation
-- ✅ Summary statistics
-
-**Reference:**
-- See: `.agent/QUICK_START_GUIDE.md` → "Step-by-Step: Implementing Reg-76"
-
----
-
-### 1.3 Reg-76: Spirit Receipt Register - Frontend
+### 🔄 5.1 Auto-fill Integrations
+**Status:** 🔴 Not Started  
 **Priority:** 🔥 CRITICAL
 
-**Status:** Form ✅ | API ✅ | Calculations ✅ | UI ✅
+#### Task 5.1.1: Reg-76 → Reg-74 Auto-fill
+- [ ] When spirit received in Reg-76, auto-create UNLOAD event in Reg-74
+- [ ] Auto-populate: vat, BL, AL, strength from permit
+- [ ] Add "Auto-filled from Reg-76" indicator
+- [ ] Test with multiple permits
 
-- [x] Update `client/src/pages/excise/Reg76Form.jsx`
-  - [x] Change API endpoint to `/api/registers/reg76`
-  - [x] Add real-time calculation on field change (already working)
-  - [x] Add calculation preview section (enhanced)
-  - [x] Add wastage indicator with chargeable status
-  - [x] Add validation feedback
-  - [x] Add success/error toast notifications
-  - [x] Add missing field: `tankerMakeModel`
-  - [x] Add missing field: `avgTemperature`
-  - [x] Enhanced wastage display with:
-    - Wastage percentage
-    - Allowable limit (0.5%)
-    - Chargeable wastage amount
-    - Visual status indicator (red/green)
-
-- [x] Update `client/src/pages/excise/Reg76List.jsx`
-  - [x] Connect to new API endpoint
-  - [x] Add filters (date range, vehicle, distillery)
-  - [x] Add wastage summary
-  - [x] Add export to CSV/Excel
-  - [x] Add delete confirmation
-
-**Files Updated:** ✅
+**Files to Modify:**
 ```
-client/src/pages/excise/Reg76Form.jsx (Complete)
-client/src/pages/excise/Reg76List.jsx (Complete)
+client/src/pages/excise/Reg76Form.jsx
+server/routes/reg76.js
 ```
-
-**Features Implemented:**
-- ✅ All required input fields
-- ✅ Real-time BL/AL calculations
-- ✅ Enhanced wastage analysis
-- ✅ Beautiful gradient UI
-- ✅ Dark mode support
-- ✅ Connected to new backend API
-- ✅ Validation and error handling
 
 ---
 
-### 1.4 Reg-A: Production & Bottling - Enhancement
-**Priority:** 🔥 HIGH - 70% complete, needs bottle calculations
+#### Task 5.1.2: Reg-74 → Reg-A Auto-fill
+- [ ] When creating batch in Reg-A, show available spirit from Reg-74
+- [ ] Auto-calculate max bottles based on vat stock
+- [ ] Link batch to source vat
+- [ ] Prevent over-bottling
 
-**Status:** Schema ✅ | API ⚠️ | UI ⚠️ | Calc ❌
-
-#### Backend Enhancement
-- [x] Update `server/routes/regA.js`
-  - [x] Add POST `/api/registers/rega/calculate` endpoint
-  - [x] Add bottle-to-BL/AL calculation in finalize
-  - [x] Fix wastage calculation (0.1% threshold)
-  - [x] Add multi-session validation (already in schema/routes)
-
-- [x] Create `server/utils/regACalculations.js`
-  - [x] `bottlesToBL(bottleCounts)` - Calculate BL from 6 bottle sizes
-  - [x] `bottlesToAL(bottleCounts, strength)` - Calculate AL from bottles
-  - [x] `calculateProductionWastage(mfmAl, bottledAl)` - 0.1% threshold
-  - [x] `validateBottleCounts(counts)` - Ensure realistic values
-
-#### Frontend Enhancement
-- [x] Update `client/src/pages/excise/RegABatchRegister.jsx`
-  - [x] Add real-time BL/AL calculation from bottle counts
-  - [x] Add bottle count input validation
-  - [x] Add wastage indicator
-  - [x] Add calculation preview section
-  - [x] Add session selector for multi-day production
-  - [x] Test bottle calculations match Streamlit
-
-**Files Updated:** ✅
+**Files to Modify:**
 ```
+client/src/pages/excise/RegABatchRegister.jsx
 server/routes/regA.js
-server/utils/regACalculations.js (NEW)
+server/utils/regACalculations.js
+```
+
+---
+
+#### Task 5.1.3: Reg-A → Reg-B Auto-fill
+- [ ] Add "Pull from Reg-A" button in Reg-B receipt section
+- [ ] Auto-fill bottle counts from production
+- [ ] Link to source batch
+- [ ] Update both registers on save
+
+**Files to Modify:**
+```
+client/src/pages/excise/RegBRegister.jsx (already has auto-fill!)
+server/routes/regB.js (already implemented!)
+```
+**Note:** ✅ This is already done! Just needs testing.
+
+---
+
+#### Task 5.1.4: Reg-B → Excise Duty Auto-fill
+- [ ] Calculate duty based on Reg-B issues
+- [ ] Auto-create duty entry when bottles issued
+- [ ] Link to source Reg-B entry
+- [ ] Update balance automatically
+
+**Files to Modify:**
+```
+client/src/pages/excise/ExciseDutyRegister.jsx
+server/routes/exciseDuty.js
+```
+
+---
+
+### ✅ 5.2 Business Rule Validations
+**Status:** 🔴 Not Started  
+**Priority:** 🔥 HIGH
+
+#### Task 5.2.1: Wastage Threshold Alerts
+- [ ] Reg-76: Alert if transit wastage > 0.5%
+- [ ] Reg-74: Alert if storage wastage > 0.3%
+- [ ] Reg-A: Alert if production wastage > 0.1%
+- [ ] Show visual warning (amber/red badge)
+- [ ] Require remarks if threshold exceeded
+
+**Files to Modify:**
+```
+server/utils/reg76Calculations.js
+server/utils/regACalculations.js
+client/src/pages/excise/Reg76Form.jsx
 client/src/pages/excise/RegABatchRegister.jsx
 ```
 
-**Bottle Sizes to Support:**
-- 750ml, 600ml, 500ml, 375ml, 300ml, 180ml
-
 ---
 
-## 🚀 PHASE 2: REG-B IMPLEMENTATION (WEEKS 3-4)
+#### Task 5.2.2: Balance Validations
+- [ ] Prevent negative closing balance
+- [ ] Alert if closing balance < opening balance (without receipts)
+- [ ] Warn if large variance detected
+- [ ] Block save if balance equation fails
 
-### 2.1 Reg-B: Database Schema
-**Priority:** 🔥 CRITICAL - Completely missing
-
-**Status:** ✅ COMPLETE
-
-- [x] Add `RegBEntry` model to `server/prisma/schema.prisma`
-  ```prisma
-  model RegBEntry {
-    id              Int      @id @default(autoincrement())
-    entryDate       DateTime
-    batchId         Int?
-    batch           BatchMaster? @relation(fields: [batchId], references: [id])
-    
-    // Opening Stock (6 sizes × 4 strengths = 24 fields)
-    opening750_50   Int      @default(0)
-    opening750_60   Int      @default(0)
-    opening750_70   Int      @default(0)
-    opening750_80   Int      @default(0)
-    // ... repeat for 600, 500, 375, 300, 180ml
-    
-    // Receipt from Reg-A (24 fields)
-    receipt750_50   Int      @default(0)
-    // ... all sizes and strengths
-    
-    // Issues (24 fields)
-    issue750_50     Int      @default(0)
-    // ... all sizes and strengths
-    
-    // Wastage/Breakage (24 fields)
-    wastage750_50   Int      @default(0)
-    // ... all sizes and strengths
-    
-    // Calculated totals
-    totalOpeningBl  Float?
-    totalOpeningAl  Float?
-    totalReceiptBl  Float?
-    totalReceiptAl  Float?
-    totalIssueBl    Float?
-    totalIssueAl    Float?
-    totalWastageBl  Float?
-    totalWastageAl  Float?
-    totalClosingBl  Float?
-    totalClosingAl  Float?
-    
-    productionFees  Float?   // ₹3 per bottle issued
-    
-    remarks         String?
-    createdBy       Int
-    user            User     @relation(fields: [createdBy], references: [id])
-    createdAt       DateTime @default(now())
-    updatedAt       DateTime @updatedAt
-    
-    @@index([entryDate])
-    @@index([batchId])
-  }
-  ```
-
-- [x] Update `User` model to add relation:
-  ```prisma
-  model User {
-    // ... existing fields
-    regBEntries     RegBEntry[]
-  }
-  ```
-
-- [x] Update `BatchMaster` model to add relation:
-  ```prisma
-  model BatchMaster {
-    // ... existing fields
-    regBEntries     RegBEntry[]
-  }
-  ```
-
-- [x] Run migration:
-  ```bash
-  npx prisma db push
-  npx prisma generate
-  ```
-
-**Files Updated:** ✅
+**Files to Modify:**
 ```
-server/prisma/schema.prisma
-```
-
----
-
-### 2.2 Reg-B: Backend API
-**Priority:** 🔥 CRITICAL
-
-**Status:** ✅ COMPLETE
-
-- [x] Create `server/routes/regB.js`
-  - [x] POST `/api/registers/regb` - Create daily entry
-  - [x] GET `/api/registers/regb` - List all entries
-  - [x] GET `/api/registers/regb/:id` - Get single entry
-  - [x] PUT `/api/registers/regb/:id` - Update entry
-  - [x] DELETE `/api/registers/regb/:id` - Delete entry
-  - [x] POST `/api/registers/regb/auto-fill/:date` - Auto-fill from Reg-A
-  - [x] POST `/api/registers/regb/calculate` - Calculate totals and fees
-  - [x] GET `/api/registers/regb/summary/stats` - Summary statistics
-
-- [x] Create `server/utils/regBCalculations.js`
-  - [x] `calculateSectionTotals()` - Calculate BL/AL for each section
-  - [x] `calculateAllRegBTotals()` - Calculate all totals
-  - [x] `calculateProductionFees()` - ₹3 per bottle
-  - [x] `validateRegBBalance()` - Balance check
-  - [x] `autoFillFromRegA()` - Get production data
-
-- [x] Register route in `server/index.js`:
-  ```javascript
-  app.use('/api/registers/regb', require('./routes/regB'));
-  ```
-
-**Files Created:** ✅
-```
-server/routes/regB.js (400+ lines)
-server/utils/regBCalculations.js (200+ lines)
-```
-
-**API Endpoints:** 8 endpoints
-- ✅ Full CRUD operations
-- ✅ Auto-fill from Reg-A
-- ✅ Balance validation
-- ✅ Production fees calculation
-- ✅ Summary statistics
-- ✅ Audit logging
-
----
-
-### 2.3 Reg-B: Frontend UI
-**Priority:** 🔥 CRITICAL
-
-**Status:** ✅ COMPLETE
-
-- [x] Create `client/src/components/excise/BottleCountGrid.jsx`
-  - [x] 6 sizes (750, 600, 500, 375, 300, 180) × 4 strengths (50°, 60°, 70°, 80°)
-  - [x] Input validation (positive integers only)
-  - [x] Dynamic total calculation (Total Bottles, Total BL/AL preview)
-  - [x] Responsive design (Grid layout)
-  - [x] Dark mode compatibility
-
-- [x] Create `client/src/pages/excise/RegBRegister.jsx`
-  - [x] Dashboard View: Monthly table of entries with summary stats
-  - [x] Entry Modal / Page:
-    - [x] Date selector (Entry Date)
-    - [x] Batch selector (Linked to BatchMaster)
-    - [x] **Tabbed View for Bottle Count Grid:**
-      - [x] Opening Stock
-      - [x] Receipt from Reg-A
-      - [x] Issues
-      - [x] Wastage/Breakage
-    - [x] **Auto-fill Button:** Trigger backend `/auto-fill/:date` endpoint
-    - [x] **Summary Panel:**
-      - [x] Live totals (BL/AL) for all 4 sections
-      - [x] Closing Stock calculation
-      - [x] Production Fees (₹3/bottle) calculation
-      - [x] Balance Validation indicator (Opening+Receipt = Issue+Wastage+Closing)
-  - [x] Form submission to `/api/registers/regb` (POST/PUT)
-  - [x] Delete functionality setup
-  - [x] PDF Export placeholder button
-
-**Files Created:** ✅
-```
-client/src/components/excise/BottleCountGrid.jsx
+server/utils/regBCalculations.js
+server/routes/regB.js
 client/src/pages/excise/RegBRegister.jsx
 ```
 
-**Grid Layout:**
+---
+
+#### Task 5.2.3: Date Validations
+- [ ] Prevent future-dated entries
+- [ ] Warn if backdating > 7 days
+- [ ] Ensure Reg-78 date matches source register dates
+- [ ] Block duplicate entries for same date
+
+**Files to Modify:**
 ```
-         | 50° U.P. | 60° U.P. | 70° U.P. | 80° U.P. |
----------|----------|----------|----------|----------|
-750ml    |    [  ]  |    [  ]  |    [  ]  |    [  ]  |
-600ml    |    [  ]  |    [  ]  |    [  ]  |    [  ]  |
-500ml    |    [  ]  |    [  ]  |    [  ]  |    [  ]  |
-375ml    |    [  ]  |    [  ]  |    [  ]  |    [  ]  |
-300ml    |    [  ]  |    [  ]  |    [  ]  |    [  ]  |
-180ml    |    [  ]  |    [  ]  |    [  ]  |    [  ]  |
+server/routes/reg76.js
+server/routes/regA.js
+server/routes/regB.js
+server/routes/reg78.js
 ```
 
 ---
 
-## 🚀 PHASE 3: EXCISE DUTY REGISTER (WEEKS 5-6)
-
-### 3.1 Excise Duty: Database Schema
-**Priority:** 🔥 HIGH
-**Status:** ✅ COMPLETE
-
-### 3.2 Excise Duty: Backend API
-**Priority:** 🔥 HIGH
-**Status:** ✅ COMPLETE
-
-### 3.3 Excise Duty: Frontend UI
-**Priority:** 🔥 HIGH
-**Status:** ✅ COMPLETE
-
----
-
-## 🚀 PHASE 4: REG-78 & DAILY HANDBOOK (WEEKS 7-8)
-
-### 4.1 Reg-78: Database Schema
-**Priority:** 🔥 CRITICAL
-**Status:** ✅ COMPLETE
-
-- [x] Add `Reg78Entry` model to `server/prisma/schema.prisma`
-- [x] Update `User` model to add `reg78Entries` relation
-- [x] Run migration: `npx prisma db push`
-- [x] Generate Prisma client: `npx prisma generate`
-
-**Files Updated:** ✅
-```
-server/prisma/schema.prisma (lines 520-562)
-```
-
-**Schema Features:**
-- Daily aggregation (one entry per day)
-- Opening/Closing balance tracking (BL & AL)
-- Receipts from Reg-76
-- Issues from Reg-A + Reg-B
-- Wastage from all registers
-- Reconciliation workflow
-- Variance tracking
-
----
-
-### 4.2 Reg-78: Backend API
-**Priority:** 🔥 CRITICAL
-**Status:** ✅ COMPLETE
-
-- [x] Create `server/routes/reg78.js`
-  - [x] POST `/api/reg78/auto-generate/:date` - Auto-create entry
-  - [x] GET `/api/reg78/entries` - List all entries
-  - [x] GET `/api/reg78/entries/:id` - Get single entry
-  - [x] PUT `/api/reg78/entries/:id` - Manual adjustments
-  - [x] POST `/api/reg78/reconcile/:id` - Mark as reconciled
-  - [x] GET `/api/reg78/variance-report` - Variance report
-  - [x] DELETE `/api/reg78/entries/:id` - Delete entry
-  - [x] GET `/api/reg78/summary/stats` - Summary statistics
-
-- [x] Create `server/utils/reg78Calculations.js`
-  - [x] `aggregateFromAllRegisters(date)` - Auto-generate logic
-  - [x] `calculateVariance(calculated, actual)` - Variance calculation
-  - [x] `determineReconciliationStatus(variance, threshold)` - Status check
-  - [x] `validateReg78Entry(data)` - Entry validation
-  - [x] `getDrillDownData(date)` - Drill-down to source registers
-
-- [x] Register route in `server/index.js` (already registered on line 31)
-
-**Files Created:** ✅
-```
-server/routes/reg78.js (600+ lines)
-server/utils/reg78Calculations.js (400+ lines)
-```
-
-**API Endpoints:** 8 endpoints
-- ✅ Full CRUD operations
-- ✅ Auto-generation from all registers
-- ✅ Reconciliation workflow
-- ✅ Variance tracking and reporting
-- ✅ Drill-down to source data
-- ✅ Summary statistics
-- ✅ Audit logging
-
----
-
-### 4.3 Reg-78: Frontend UI
-**Priority:** 🔥 HIGH
-**Status:** ✅ COMPLETE
-
-- [x] Create `client/src/pages/excise/Reg78Register.jsx`
-- [x] Dashboard with summary cards
-- [x] Auto-generator modal
-- [x] Interactive ledger table with BL/AL display
-- [x] Drill-down to source registers
-- [x] Reconciliation modal with variance checking
-- [x] Dark/Light mode support
-- [x] Export to Excel/PDF
-
-**Files Created:** ✅
-```
-client/src/pages/excise/Reg78Register.jsx (530+ lines)
-```
-
-**UI Features:**
-- ✅ Executive dashboard with 5 summary cards
-- ✅ Daily aggregator with date picker
-- ✅ Expandable drill-down (Reg-76, Reg-A, Reg-B, Reg-74)
-- ✅ Reconciliation workflow with variance alerts
-- ✅ Premium glassmorphism design
-- ✅ Full dark mode compatibility
-
----
-
-### 4.4 Daily Handbook: Implementation
+### 🧪 5.3 Testing & QA
+**Status:** 🔴 Not Started  
 **Priority:** 🟡 MEDIUM
-**Status:** ✅ COMPLETE
 
-- [x] Create `server/routes/dailyHandbook.js`
-  - [x] GET `/api/daily-handbook/summary/:date` - Daily summary
-  - [x] GET `/api/daily-handbook/weekly-overview` - Weekly stats
-  - [x] GET `/api/daily-handbook/compliance-checklist/:date` - Checklist
-- [x] Create `client/src/pages/excise/DailyHandbook.jsx`
-  - [x] Compliance score banner
-  - [x] Master ledger summary
-  - [x] Register activity grid (all 6 registers)
-  - [x] Compliance checklist with status tracking
-  - [x] Pending actions alert system
-- [x] PDF generation for statutory reports
-- [x] Register route in `server/index.js`
-- [x] Add route to `client/src/App.jsx`
-
-**Files Created:** ✅
-```
-server/routes/dailyHandbook.js (350+ lines)
-client/src/pages/excise/DailyHandbook.jsx (600+ lines)
-```
-
-**Features:**
-- ✅ Aggregates data from all 6 registers
-- ✅ Compliance scoring (0-100%)
-- ✅ Priority-based task tracking
-- ✅ Weekly overview with trends
-- ✅ Print-ready daily report
-- ✅ Premium dashboard design
+#### Task 5.3.1: End-to-End Workflow Testing
+- [ ] Test full flow: Reg-76 → Reg-74 → Reg-A → Reg-B → Excise → Reg-78
+- [ ] Verify all auto-fills work correctly
+- [ ] Check variance calculations
+- [ ] Test reconciliation workflow
+- [ ] Verify export functions (Excel/PDF)
 
 ---
 
-## 🚀 PHASE 5: INTEGRATION & TESTING (WEEKS 9-10)
-
-### 5.1 Auto-fill Mechanisms
-- [ ] Reg-74 auto-fills from Reg-76 (unloading)
-- [ ] Reg-A auto-fills from Reg-74 (batch creation)
-- [ ] Reg-B auto-fills from Reg-A (production)
-- [ ] Excise Duty auto-fills from Reg-B
-- [ ] Reg-78 auto-aggregates from all
-- [ ] Daily Handbook auto-generates
+#### Task 5.3.2: Edge Case Testing
+- [ ] Test with zero values
+- [ ] Test with very large numbers
+- [ ] Test with multiple entries on same day
+- [ ] Test delete cascades
+- [ ] Test concurrent edits
 
 ---
 
-### 5.2 Validation & Business Rules
-- [ ] Reg-76: Transit wastage (0.5% threshold)
-- [ ] Reg-74: Storage wastage (0.3% threshold)
-- [ ] Reg-A: Production wastage (0.1% threshold)
-- [ ] Reg-B: Balance validation
-- [ ] Excise Duty: Balance validation
-- [ ] Reg-78: Reconciliation
+#### Task 5.3.3: Performance Testing
+- [ ] Test with 1000+ entries
+- [ ] Check page load times
+- [ ] Optimize slow queries
+- [ ] Add pagination where needed
+- [ ] Test on slow network
 
 ---
 
-### 5.3 Testing
-- [ ] Unit tests for calculation utilities
-- [ ] API endpoint tests
-- [ ] Integration tests
-- [ ] E2E tests
-- [ ] Sample data generation
+#### Task 5.3.4: Mobile Responsiveness
+- [ ] Test all pages on mobile (320px - 768px)
+- [ ] Fix any layout issues
+- [ ] Ensure touch targets are large enough
+- [ ] Test dark mode on mobile
 
 ---
 
-### 5.4 Documentation
-- [ ] API documentation
-- [ ] User manual for each register
-- [ ] Calculation formulas reference
-- [ ] Data flow diagrams
+## 🚀 FUTURE ENHANCEMENTS (Phase 6+)
+
+### 📊 Advanced Analytics
+- [ ] Monthly trend charts
+- [ ] Wastage pattern analysis
+- [ ] Production efficiency metrics
+- [ ] Compliance history dashboard
+
+### 🔔 Notification System
+- [ ] Email alerts for high variance
+- [ ] Reconciliation reminders
+- [ ] Duty payment due notifications
+- [ ] Weekly compliance reports
+
+### 📱 Mobile App (PWA)
+- [ ] Offline data entry
+- [ ] Camera integration for permits
+- [ ] Push notifications
+- [ ] Touch-optimized UI
+
+### 🔒 Security Enhancements
+- [ ] Rate limiting
+- [ ] Input sanitization
+- [ ] SQL injection prevention
+- [ ] XSS protection
+- [ ] CSRF tokens
+
+### 💾 Backup & Recovery
+- [ ] Automated database backups
+- [ ] Point-in-time recovery
+- [ ] Disaster recovery plan
+- [ ] Data export/import tools
+
+---
+
+## 📚 DOCUMENTATION TASKS
+
+### User Documentation
+- [ ] User manual (PDF)
+- [ ] Video tutorials
+- [ ] Quick reference guides
+- [ ] FAQ section
+
+### Technical Documentation
+- [ ] API documentation (Swagger)
+- [ ] Database schema diagram
 - [ ] Deployment guide
+- [ ] Troubleshooting guide
+
+### Training Materials
+- [ ] Admin training guide
+- [ ] Operator training guide
+- [ ] Best practices document
 
 ---
 
-## 📦 DELIVERABLES CHECKLIST
+## 🐛 KNOWN ISSUES
 
-### Database
-- [ ] RegBEntry model
-- [ ] ExciseDutyEntry model
-- [ ] Reg78Entry model
-- [ ] DutyRate model
-- [ ] All migrations run
-- [ ] Seed data created
-
-### Backend (9 files)
-- [ ] `server/routes/reg76.js`
-- [ ] `server/routes/regB.js`
-- [ ] `server/routes/exciseDuty.js`
-- [ ] `server/routes/dailyHandbook.js`
-- [ ] `server/utils/spiritCalculations.js`
-- [ ] `server/utils/reg76Calculations.js`
-- [ ] `server/utils/regACalculations.js`
-- [ ] `server/utils/regBCalculations.js`
-- [ ] `server/utils/exciseDutyCalculations.js`
-
-### Frontend (6 files)
-- [ ] `client/src/pages/excise/RegBRegister.jsx`
-- [ ] `client/src/pages/excise/ExciseDutyRegister.jsx`
-- [ ] `client/src/pages/excise/DailyHandbook.jsx`
-- [ ] `client/src/components/registers/BottleCountGrid.jsx`
-- [ ] `client/src/components/registers/CalculationDisplay.jsx`
-- [ ] `client/src/components/registers/WastageIndicator.jsx`
-
-### Testing
-- [ ] Unit tests
-- [ ] API tests
-- [ ] Integration tests
-- [ ] E2E tests
+**None currently!** 🎉
 
 ---
 
-## 🎯 QUICK WINS (Do These First!)
+## 💡 IMPROVEMENT IDEAS
 
-1. ✅ **Create shared calculation utilities** (1-2 days)
-   - Foundation for all registers
-   - Can be tested independently
-
-2. ✅ **Complete Reg-76 backend** (2-3 days)
-   - Entry point of the system
-   - Schema already exists
-
-3. ✅ **Connect Reg-76 frontend** (1 day)
-   - Form already exists
-   - Just needs API connection
-
-4. ✅ **Enhance Reg-A calculations** (1-2 days)
-   - 70% done already
-   - Just add bottle calculations
-
----
-
-## 📊 PROGRESS TRACKING
-
-**Overall Progress:** 100% (7/7 registers complete) ✅ 🎉
-
-| Phase | Status | Completion |
-|-------|--------|------------|
-| Phase 1: Foundation | ✅ Complete | 100% |
-| Phase 2: Reg-B | ✅ Complete | 100% |
-| Phase 3: Excise Duty | ✅ Complete | 100% |
-| Phase 4: Reg-78 & Handbook | ✅ Complete | 100% |
-| Phase 5: Integration | 🔴 Not Started | 0% |
-
-**Phase 1 Details:**
-- ✅ Task 1.1: Shared Calculation Utilities (100%)
-- ✅ Task 1.2: Reg-76 Backend API (100%)
-- ✅ Task 1.3: Reg-76 Frontend (100%)
-- ✅ Task 1.4: Reg-A Enhancement (100%)
-
-**Phase 2 Details:**
-- ✅ Task 2.1: Reg-B Schema (100%)
-- ✅ Task 2.2: Reg-B Backend (100%)
-- ✅ Task 2.3: Reg-B Frontend (100%)
-
-**Phase 3 Details:**
-- ✅ Task 3.1: Excise Duty Schema (100%)
-- ✅ Task 3.2: Excise Duty Backend (100%)
-- ✅ Task 3.3: Excise Duty Frontend (100%)
-
-**Phase 4 Details:**
-- ✅ Task 4.1: Reg-78 Schema (100%)
-- ✅ Task 4.2: Reg-78 Backend API (100%)
-- ✅ Task 4.3: Reg-78 Frontend UI (100%)
-- ✅ Task 4.4: Daily Handbook (100%)
+1. **Bulk Import** - Import multiple entries from Excel
+2. **Batch Operations** - Reconcile multiple days at once
+3. **Custom Reports** - User-defined report templates
+4. **Role-based Permissions** - Different access levels
+5. **Audit Trail Search** - Advanced filtering for audit logs
 
 ---
 
 ## 📞 RESOURCES
 
-### Documentation
-- 📖 [REGISTER_STATUS_MATRIX.md](.agent/REGISTER_STATUS_MATRIX.md) - Current status
-- 📖 [COMPLETE_REGISTER_IMPLEMENTATION_PLAN.md](.agent/COMPLETE_REGISTER_IMPLEMENTATION_PLAN.md) - Full plan
-- 📖 [QUICK_START_GUIDE.md](.agent/QUICK_START_GUIDE.md) - Code examples
-
-### External Links
-- 🌐 [Streamlit Demo](https://excise-parallel-register-system-msne7jvz35aflmgvkmefwb.streamlit.app/)
-- 💻 [GitHub Source](https://github.com/saha-trideep/excise-parallel-register-system)
-- 📚 [Developer Guide](https://github.com/saha-trideep/excise-parallel-register-system/blob/main/DEVELOPER_HANDOFF_GUIDE.md)
+- **Streamlit Demo:** https://excise-parallel-register-system-msne7jvz35aflmgvkmefwb.streamlit.app/
+- **GitHub Repo:** https://github.com/saha-trideep/sip2lifedatamanagement
+- **Completed Work:** See `COMPLETED_PHASES.md`
+- **Phase 5 Details:** See `PHASE5_PLAN.md`
 
 ---
 
-## 🔄 NEXT SESSION INSTRUCTIONS
-
-**When you start a new session with the AI, say:**
-
-> "Please read TODO.md and continue from where we left off."
-
-The AI will:
-1. Read this TODO.md file
-2. Check what's completed
-3. Suggest the next task to work on
-4. Continue implementation
-
-**To mark a task as complete:**
-- Change `- [ ]` to `- [x]`
-- Update the progress tracking section
-- Commit your changes
-
----
-
-**Last Updated:** 2025-12-30 11:30 IST  
-**Next Review:** When starting next session  
-**Estimated Completion:** 10 weeks from start date
-
+**Last Updated:** 2025-12-30 12:15 IST  
+**Next Review:** Weekly on Mondays
