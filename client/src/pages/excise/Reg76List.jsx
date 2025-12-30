@@ -202,7 +202,7 @@ const Reg76List = () => {
                             className={`w-full p-2.5 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`}
                         >
                             <option value="">All Vats</option>
-                            {vats.map(v => <option key={v.id} value={v.name}>{v.name}</option>)}
+                            {vats.map(v => <option key={v.id} value={v.vatCode}>{v.vatCode}</option>)}
                         </select>
                     </div>
                     <div>

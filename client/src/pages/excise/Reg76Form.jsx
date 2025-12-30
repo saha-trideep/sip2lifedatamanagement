@@ -231,7 +231,7 @@ const Reg76Form = () => {
                                 <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Storage Vat</label>
                                 <select name="storageVat" value={formData.storageVat} onChange={handleChange} required className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`}>
                                     <option value="">Select Vat</option>
-                                    {vats.map(v => <option key={v.id} value={v.name}>{v.name}</option>)}
+                                    {vats.map(v => <option key={v.id} value={v.vatCode}>{v.vatCode}</option>)}
                                 </select>
                             </div>
                             <div>
@@ -375,7 +375,7 @@ const Reg76Form = () => {
                                                     <option value="">Select Vat for Unloading</option>
                                                     {vats.map(v => (
                                                         <option key={v.id} value={v.id}>
-                                                            {v.vatCode} - {v.name} ({v.capacity} L)
+                                                            {v.vatCode} - {v.vatType} ({v.capacityBl} BL)
                                                         </option>
                                                     ))}
                                                 </select>
