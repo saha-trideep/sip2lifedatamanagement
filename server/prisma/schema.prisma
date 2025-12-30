@@ -63,6 +63,10 @@ model Reg74Event {
   batchId          Int?
   batch            BatchMaster? @relation(fields: [batchId], references: [id])
 
+  // Link to Reg-76 entry (for UNLOADING events)
+  reg76EntryId     Int?
+  reg76Entry       Reg76Entry? @relation(fields: [reg76EntryId], references: [id])
+
   remarks          String?
   createdBy        Int
   user             User     @relation(fields: [createdBy], references: [id])
@@ -277,6 +281,9 @@ model Reg76Entry {
   receivedAl            Float
   transitWastageBl      Float
   transitWastageAl      Float
+
+  // Reverse relation to Reg-74 events
+  reg74Events           Reg74Event[]
 
   createdBy             Int
   user                  User     @relation(fields: [createdBy], references: [id])

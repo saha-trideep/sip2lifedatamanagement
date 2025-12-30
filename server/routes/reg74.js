@@ -39,6 +39,76 @@ router.post('/brands', verifyToken, async (req, res) => {
     }
 });
 
+// POST /api/reg74/auto-unload/:reg76Id
+// Auto-create UNLOADING event from Reg-76 receipt
+// NOTE: Strength field is auto-filled but should be manually verified after mixing
+router.post('/auto-unload/:reg76Id', verifyToken, async (req, res) => {
+    const { reg76Id } = req.params;
+    const { vatId, eventDateTime, finalStrength } = req.body;
+
+    try {
+        // Fetch Reg-76 entry
+        const reg76Entry = await prisma.reg76Entry.findUnique({
+            where: { id: parseInt(reg76Id) }
+        });
+
+        if (!reg76Entry) {
+            return res.status(404).json({ error: 'Reg-76 entry not found' });
+        }
+
+        // Check if unload event already exists for this Reg-76 entry
+        const existing = await prisma.reg74Event.findFirst({
+            where: { reg76EntryId: parseInt(reg76Id) }
+        });
+
+        if (existing) {
+            return res.status(400).json({
+                error: 'Unload event already created for this Reg-76 entry',
+                eventId: existing.id
+            });
+        }
+
+        // Auto-create UNLOADING event
+        // NOTE: Strength is pre-filled from Reg-76 but MUST be manually verified
+        const event = await prisma.reg74Event.create({
+            data: {
+                vatId: parseInt(vatId),
+                eventDateTime: eventDateTime ? new Date(eventDateTime) : new Date(),
+                eventType: 'UNLOADING',
+                receiptData: {
+                    source: `Permit ${reg76Entry.permitNo} from ${reg76Entry.exportingDistillery}`,
+                    qtyBl: reg76Entry.receivedBl,
+                    // Pre-fill strength from Reg-76, but user should verify after mixing
+                    strength: finalStrength || reg76Entry.receivedStrength
+                },
+                reg76EntryId: parseInt(reg76Id),
+                remarks: `Auto-generated from Reg-76 Entry #${reg76Id}. Strength should be verified after mixing.`,
+                createdBy: req.user.id
+            },
+            include: { vat: true, reg76Entry: true }
+        });
+
+        // Update vat status
+        await prisma.vatMaster.update({
+            where: { id: parseInt(vatId) },
+            data: { status: 'FILLING' }
+        });
+
+        await logAudit({
+            userId: req.user.id,
+            action: 'REG74_AUTO_UNLOAD',
+            entityType: 'REG74',
+            entityId: event.id,
+            metadata: { event, reg76EntryId: reg76Id }
+        });
+
+        res.json(event);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to auto-create unload event' });
+    }
+});
+
 // GET /api/reg74/batches
 router.get('/batches', verifyToken, async (req, res) => {
     const { status, vatId } = req.query;
