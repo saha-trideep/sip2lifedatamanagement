@@ -29,6 +29,53 @@ router.get('/entries', verifyToken, async (req, res) => {
     }
 });
 
+// GET recent Reg-74 PRODUCTION events for auto-fill
+router.get('/reg74-production-events', verifyToken, async (req, res) => {
+    try {
+        const events = await prisma.reg74Event.findMany({
+            where: {
+                eventType: 'PRODUCTION'
+            },
+            include: {
+                batch: {
+                    include: {
+                        brand: true,
+                        vat: true
+                    }
+                },
+                vat: true
+            },
+            orderBy: { eventDateTime: 'desc' },
+            take: 20 // Last 20 production events
+        });
+
+        // Format for frontend
+        const formatted = events.map(event => {
+            const sessionSuffix = event.productionData?.batchSessionSuffix || '-1';
+            const batchNumber = event.batch ? `${event.batch.baseBatchNo}${sessionSuffix}` : 'Unknown';
+
+            return {
+                id: event.id,
+                batchId: event.batchId,
+                batchNumber: batchNumber,
+                baseBatchNo: event.batch?.baseBatchNo,
+                sessionSuffix: sessionSuffix,
+                brandName: event.batch?.brand?.name || 'Unknown',
+                eventDate: event.eventDateTime,
+                vatCode: event.vat?.vatCode,
+                mfmBl: event.productionData?.mfmBl || 0,
+                strength: event.productionData?.mfmStrength || event.productionData?.strength || 0,
+                mfmAl: event.productionData?.mfmAl || 0
+            };
+        });
+
+        res.json(formatted);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch Reg-74 production events' });
+    }
+});
+
 // CREATE a new planned entry with auto-fetched details and session support
 router.post('/plan', verifyToken, async (req, res) => {
     const { batchId, sessionNo = 1 } = req.body;

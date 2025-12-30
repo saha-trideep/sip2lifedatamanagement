@@ -21,6 +21,10 @@ const RegABatchRegister = () => {
     const [calcPreview, setCalcPreview] = useState(null);
     const [calculating, setCalculating] = useState(false);
 
+    // Reg-74 integration state
+    const [showReg74Selector, setShowReg74Selector] = useState(false);
+    const [reg74Events, setReg74Events] = useState([]);
+
     const fetchData = async () => {
         setLoading(true);
         try {
@@ -53,6 +57,34 @@ const RegABatchRegister = () => {
         } catch (error) {
             alert(error.response?.data?.error || "Planning failed");
         }
+    };
+
+    const fetchReg74Events = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.get(`${API_URL}/api/rega/reg74-production-events`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setReg74Events(res.data);
+            setShowReg74Selector(true);
+        } catch (error) {
+            console.error('Failed to fetch Reg-74 events', error);
+            alert('Failed to load Reg-74 production events');
+        }
+    };
+
+    const handleAutoFillFromReg74 = (event) => {
+        if (!currentEntry) return;
+
+        // Auto-fill ONLY first 3 columns: Batch Number, Start Date, Brand
+        setCurrentEntry({
+            ...currentEntry,
+            batchNoDate: `${event.batchNumber} (${format(new Date(event.eventDate), 'dd MMM')})`,
+            productionDate: new Date(event.eventDate)
+        });
+
+        setShowReg74Selector(false);
+        alert(`✅ Auto-filled from Reg-74!\n\nBatch: ${event.batchNumber}\nDate: ${format(new Date(event.eventDate), 'dd MMM yyyy')}\nBrand: ${event.brandName}`);
     };
 
     // Real-time calculation hook
@@ -407,6 +439,18 @@ const RegABatchRegister = () => {
                                 </div>
                             </div>
 
+                            {/* Pull from Reg-74 Button */}
+                            <div className="mb-6">
+                                <button
+                                    type="button"
+                                    onClick={fetchReg74Events}
+                                    className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:from-indigo-700 hover:to-purple-700 transition-all flex items-center justify-center gap-3"
+                                >
+                                    <LinkIcon size={20} />
+                                    Pull Basic Info from Reg-74 Production Event
+                                </button>
+                            </div>
+
                             <form onSubmit={handleUpdateDeclaration} className="space-y-10">
                                 {/* Section 1: Receipts & Blends (Auto-Fetched from Batch Creation) */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-indigo-50/20 dark:bg-indigo-900/10 p-8 rounded-[2.5rem] border border-indigo-100 dark:border-indigo-900/30">
@@ -570,6 +614,75 @@ const RegABatchRegister = () => {
                                     </div>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Reg-74 Event Selector Modal */}
+            {showReg74Selector && (
+                <div className="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-gray-900 rounded-[3rem] shadow-2xl w-full max-w-3xl overflow-hidden border border-white dark:border-gray-800">
+                        <div className="p-10">
+                            <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Select Reg-74 Production Event</h3>
+                            <p className="text-gray-400 font-medium uppercase text-[10px] tracking-widest mb-8">
+                                Auto-fill: Batch Number, Start Date, Brand Name
+                            </p>
+
+                            <div className="space-y-3 max-h-96 overflow-y-auto">
+                                {reg74Events.map(event => (
+                                    <button
+                                        key={event.id}
+                                        type="button"
+                                        onClick={() => handleAutoFillFromReg74(event)}
+                                        className="w-full p-6 text-left border border-gray-100 dark:border-gray-800 rounded-3xl hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 group transition-all"
+                                    >
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex-1">
+                                                <div className="font-black text-xl text-gray-900 dark:text-white group-hover:text-indigo-600 mb-2">
+                                                    {event.batchNumber}
+                                                </div>
+                                                <div className="grid grid-cols-3 gap-4 text-xs">
+                                                    <div>
+                                                        <div className="text-gray-400 font-bold uppercase text-[8px]">Brand</div>
+                                                        <div className="font-black text-gray-700 dark:text-gray-300">{event.brandName}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-gray-400 font-bold uppercase text-[8px]">Date</div>
+                                                        <div className="font-black text-gray-700 dark:text-gray-300">
+                                                            {format(new Date(event.eventDate), 'dd MMM yyyy')}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-gray-400 font-bold uppercase text-[8px]">Vat</div>
+                                                        <div className="font-black text-gray-700 dark:text-gray-300">{event.vatCode}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-3 flex gap-4 text-[10px]">
+                                                    <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-full font-black">
+                                                        {event.mfmBl.toFixed(2)} BL
+                                                    </span>
+                                                    <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-full font-black">
+                                                        {event.strength}% v/v
+                                                    </span>
+                                                    <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full font-black">
+                                                        {event.mfmAl.toFixed(2)} AL
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <ChevronRight className="text-gray-300 group-hover:text-indigo-600 transition-all" size={24} />
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setShowReg74Selector(false)}
+                                className="w-full py-5 mt-6 bg-gray-50 dark:bg-gray-800 text-gray-400 rounded-3xl font-black uppercase text-xs tracking-widest hover:bg-gray-100 transition-all"
+                            >
+                                Cancel
+                            </button>
                         </div>
                     </div>
                 </div>
