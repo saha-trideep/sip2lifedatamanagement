@@ -70,9 +70,11 @@ const Reg76Form = () => {
             const res = await axios.get(`${API_URL}/api/reg74/vats`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setVats(res.data);
-            if (!isEdit && res.data.length > 0) {
-                setFormData(prev => ({ ...prev, storageVat: res.data[0].vatCode }));
+            // Filter to show only Storage Vats (SST), not Blending Vats (BRT)
+            const storageVats = res.data.filter(v => v.vatType === 'SST');
+            setVats(storageVats);
+            if (!isEdit && storageVats.length > 0) {
+                setFormData(prev => ({ ...prev, storageVat: storageVats[0].vatCode }));
             }
         } catch (error) {
             console.error('Error fetching vats:', error);

@@ -34,7 +34,9 @@ const Reg76List = () => {
     const fetchVats = async () => {
         try {
             const res = await axios.get(`${API_URL}/api/excise/vats`);
-            setVats(res.data);
+            // Filter to show only Storage Vats (SST), not Blending Vats (BRT)
+            const storageVats = res.data.filter(v => v.vatType === 'SST');
+            setVats(storageVats);
         } catch (error) {
             console.error(error);
         }
