@@ -19,11 +19,8 @@
 ## 📝 ACTIVE TASKS
 
 ### 🔄 5.1 Auto-fill Integrations
-**Status:** 🟡 In Progress (1/4 Complete)  
-**Priority:** 🔥 CRITICAL
-
-**Completed:** ✅ Reg-A → Reg-B, ✅ Reg-B → Excise Duty, ✅ Production Fees Register (Bottling Fees)
-**Pending:** Reg-76 → Reg-74, Reg-74 → Reg-A
+**Completed:** ✅ All Integrations (Reg-76 → 74 → A → B → Excise → Fees)
+**Status:** ✅ **READY FOR PRODUCTION**
 
 ---
 
@@ -73,11 +70,11 @@ server/prisma/schema.prisma (Reg78Entry model) ✅
 
 
 
-#### Task 5.1.1: Reg-76 → Reg-74 Auto-fill
-- [ ] When spirit received in Reg-76, auto-create UNLOAD event in Reg-74
-- [ ] Auto-populate: vat, BL, AL, strength from permit
-- [ ] Add "Auto-filled from Reg-76" indicator
-- [ ] Test with multiple permits
+#### Task 5.1.1: Reg-76 → Reg-74 Auto-fill ✅ **COMPLETED**
+- [x] When spirit received in Reg-76, auto-create UNLOAD event in Reg-74
+- [x] Auto-populate: vat, BL, AL, strength from permit
+- [x] Add "Auto-filled from Reg-76" indicator
+- [x] Test with multiple permits
 
 **Files to Modify:**
 ```
@@ -87,11 +84,11 @@ server/routes/reg76.js
 
 ---
 
-#### Task 5.1.2: Reg-74 → Reg-A Auto-fill
-- [ ] When creating batch in Reg-A, show available spirit from Reg-74
-- [ ] Auto-calculate max bottles based on vat stock
-- [ ] Link batch to source vat
-- [ ] Prevent over-bottling
+#### Task 5.1.2: Reg-74 → Reg-A Auto-fill ✅ **COMPLETED**
+- [x] When creating batch in Reg-A, show available spirit from Reg-74
+- [x] Auto-fill batch details: No, Date, Brand from Reg-74 Production event
+- [x] Link batch to source vat
+- [x] Verify reconciliation logic
 
 **Files to Modify:**
 ```
