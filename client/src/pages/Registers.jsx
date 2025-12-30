@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useTheme } from '../context/ThemeContext';
 import {
     Plus, Trash2, ExternalLink, FileSpreadsheet, ArrowLeft, Loader, Edit,
-    Database, FileText, LayoutDashboard, ChevronRight, Calculator, Moon, Sun
+    Database, FileText, LayoutDashboard, ChevronRight, Calculator, Moon, Sun, ClipboardList
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../config';
@@ -236,6 +236,26 @@ const Registers = () => {
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1 rounded-full uppercase tracking-widest">New</span>
+                                    <ChevronRight className="text-gray-300 group-hover:translate-x-1 transition-transform" />
+                                </div>
+                            </div>
+
+                            {/* Daily Handbook */}
+                            <div
+                                onClick={() => navigate('/registers/daily-handbook')}
+                                className={`p-8 transition cursor-pointer group flex items-center justify-between ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}
+                            >
+                                <div className="flex items-center gap-6">
+                                    <div className={`p-4 rounded-2xl transition-all ${isDark ? 'bg-gray-800 text-purple-400 group-hover:bg-purple-600 group-hover:text-white' : 'bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white'}`}>
+                                        <ClipboardList size={28} />
+                                    </div>
+                                    <div>
+                                        <h3 className={`text-xl font-black ${isDark ? 'text-white' : 'text-gray-800'}`}>Daily Handbook</h3>
+                                        <p className="text-sm text-gray-500 font-medium tracking-tight">Consolidated Operations Dashboard & Compliance</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-[10px] font-black text-purple-600 bg-purple-50 dark:bg-purple-900/20 px-3 py-1 rounded-full uppercase tracking-widest">New</span>
                                     <ChevronRight className="text-gray-300 group-hover:translate-x-1 transition-transform" />
                                 </div>
                             </div>
