@@ -28,6 +28,9 @@ model User {
   // Phase 3 Relations
   exciseDutyEntries  ExciseDutyEntry[]
   treasuryChallans   TreasuryChallan[]
+  
+  // Phase 4 Relations
+  reg78Entries       Reg78Entry[]
 }
 
 model VatMaster {
@@ -513,3 +516,48 @@ model TreasuryChallan {
   @@index([challanDate])
   @@index([verificationStatus])
 }
+
+// Phase 4: Reg-78 Master Spirit Ledger
+
+model Reg78Entry {
+  id              Int      @id @default(autoincrement())
+  entryDate       DateTime @unique // One entry per day
+  
+  // Opening Balance (BL = Bulk Litres, AL = Absolute Litres)
+  openingBl       Float    @default(0)
+  openingAl       Float    @default(0)
+  
+  // Receipts (aggregated from Reg-76)
+  receiptBl       Float    @default(0)
+  receiptAl       Float    @default(0)
+  
+  // Issues (aggregated from Reg-A + Reg-B)
+  issueBl         Float    @default(0)
+  issueAl         Float    @default(0)
+  
+  // Wastage (aggregated from all registers: Reg-74, Reg-A, Reg-B)
+  wastageBl       Float    @default(0)
+  wastageAl       Float    @default(0)
+  
+  // Closing Balance (auto-calculated: Opening + Receipts - Issues - Wastage)
+  closingBl       Float    @default(0)
+  closingAl       Float    @default(0)
+  
+  // Reconciliation & Variance Tracking
+  variance        Float?   // Percentage difference between calculated vs actual
+  isReconciled    Boolean  @default(false)
+  reconciledBy    Int?
+  reconciledAt    DateTime?
+  
+  // Audit Trail
+  remarks         String?
+  createdBy       Int
+  user            User     @relation(fields: [createdBy], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([entryDate])
+  @@index([isReconciled])
+  @@index([createdAt])
+}
+
