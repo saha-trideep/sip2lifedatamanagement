@@ -54,6 +54,11 @@ const Reg76Form = () => {
 
     const [editReason, setEditReason] = useState('');
 
+    // Auto-unload to Reg-74 state
+    const [autoUnload, setAutoUnload] = useState(false);
+    const [unloadVatId, setUnloadVatId] = useState('');
+    const [finalStrength, setFinalStrength] = useState('');
+
     useEffect(() => {
         fetchVats();
         if (isEdit) fetchEntry();
@@ -131,6 +136,8 @@ const Reg76Form = () => {
         const token = localStorage.getItem('token');
 
         try {
+            let savedEntryId = null;
+
             if (isEdit) {
                 await axios.put(`${API_URL}/api/registers/reg76/${id}`, formData, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -140,6 +147,8 @@ const Reg76Form = () => {
                 const response = await axios.post(`${API_URL}/api/registers/reg76`, formData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
+
+                savedEntryId = response.data.entry.id;
 
                 // Show calculation results
                 if (response.data.calculated) {
@@ -152,7 +161,28 @@ const Reg76Form = () => {
                 } else {
                     alert("Reg-76 Entry saved successfully!");
                 }
+
+                // AUTO-UNLOAD: Create Reg-74 event if checkbox is checked
+                if (autoUnload && savedEntryId && unloadVatId) {
+                    try {
+                        const unloadResponse = await axios.post(
+                            `${API_URL}/api/reg74/auto-unload/${savedEntryId}`,
+                            {
+                                vatId: parseInt(unloadVatId),
+                                eventDateTime: new Date().toISOString(),
+                                finalStrength: finalStrength ? parseFloat(finalStrength) : null
+                            },
+                            { headers: { Authorization: `Bearer ${token}` } }
+                        );
+
+                        alert(`✅ Vat unload event created successfully in Reg-74!\n\nEvent ID: ${unloadResponse.data.id}\nVat: ${unloadResponse.data.vat.vatCode}\nStrength: ${unloadResponse.data.receiptData.strength}%`);
+                    } catch (unloadError) {
+                        console.error('Auto-unload failed:', unloadError);
+                        alert(`⚠️ Reg-76 saved, but auto-unload failed:\n${unloadError.response?.data?.error || unloadError.message}\n\nYou can manually create the unload event in Reg-74.`);
+                    }
+                }
             }
+
             navigate('/registers/reg76');
         } catch (error) {
             console.error(error);
@@ -313,6 +343,75 @@ const Reg76Form = () => {
                                     placeholder="Enter any transit notes or wastage explanations..."
                                 ></textarea>
                             </div>
+
+                            {/* Auto-Unload to Reg-74 */}
+                            {!isEdit && (
+                                <div className={`${isDark ? 'bg-indigo-950/20 border-indigo-900/40' : 'bg-indigo-50 border-indigo-200'} p-6 rounded-2xl border`}>
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <input
+                                            type="checkbox"
+                                            id="autoUnload"
+                                            checked={autoUnload}
+                                            onChange={e => setAutoUnload(e.target.checked)}
+                                            className="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500"
+                                        />
+                                        <label htmlFor="autoUnload" className={`text-sm font-bold ${isDark ? 'text-indigo-300' : 'text-indigo-700'}`}>
+                                            ✨ Auto-create vat unload event in Reg-74
+                                        </label>
+                                    </div>
+
+                                    {autoUnload && (
+                                        <div className="space-y-4 pl-8 animate-in slide-in-from-top-2">
+                                            <div>
+                                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                                                    Destination Vat (for unloading)
+                                                </label>
+                                                <select
+                                                    value={unloadVatId}
+                                                    onChange={e => setUnloadVatId(e.target.value)}
+                                                    required={autoUnload}
+                                                    className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+                                                >
+                                                    <option value="">Select Vat for Unloading</option>
+                                                    {vats.map(v => (
+                                                        <option key={v.id} value={v.id}>
+                                                            {v.vatCode} - {v.name} ({v.capacity} L)
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                                                    Final Strength After Mixing (% v/v) - Optional
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    step="0.1"
+                                                    value={finalStrength}
+                                                    onChange={e => setFinalStrength(e.target.value)}
+                                                    placeholder={`Default: ${formData.receivedStrength}% (from Reg-76)`}
+                                                    className={`w-full p-3 rounded-xl font-bold border-0 focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-gray-800 text-white placeholder:text-gray-600' : 'bg-white text-gray-900'}`}
+                                                />
+                                                <p className="text-xs text-gray-500 mt-2 italic">
+                                                    💡 Leave blank to use Reg-76 strength ({formData.receivedStrength}%).
+                                                    Enter manually verified strength after mixing with existing vat spirit.
+                                                </p>
+                                            </div>
+
+                                            <div className={`p-4 rounded-xl ${isDark ? 'bg-amber-900/20 border border-amber-800/30' : 'bg-amber-50 border border-amber-200'}`}>
+                                                <div className="flex items-start gap-2">
+                                                    <AlertTriangle size={16} className="text-amber-600 mt-0.5" />
+                                                    <div className="text-xs text-amber-700 dark:text-amber-400">
+                                                        <strong>Important:</strong> The strength will be pre-filled from Reg-76 ({formData.receivedStrength}%),
+                                                        but you should manually verify it after mixing. You can edit the Reg-74 event later to update the final strength.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {isEdit && (
                                 <div className={`${isDark ? 'bg-orange-950/20 border-orange-900/40' : 'bg-orange-50 border-orange-200'} p-6 rounded-2xl border`}>
