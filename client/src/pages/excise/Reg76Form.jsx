@@ -66,13 +66,17 @@ const Reg76Form = () => {
 
     const fetchVats = async () => {
         try {
-            const res = await axios.get(`${API_URL}/api/reg74/vats`);
+            const token = localStorage.getItem('token');
+            const res = await axios.get(`${API_URL}/api/reg74/vats`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             setVats(res.data);
             if (!isEdit && res.data.length > 0) {
                 setFormData(prev => ({ ...prev, storageVat: res.data[0].vatCode }));
             }
         } catch (error) {
-            console.error(error);
+            console.error('Error fetching vats:', error);
+            alert('Failed to load vats. Please refresh the page.');
         }
     };
 
